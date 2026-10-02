@@ -264,3 +264,4 @@ Some art is reused across homes (reason: a real village repeats its builders' pa
 
 - `loc_well` — stone well with a small timber roof and windlass.
 - `loc_shrine` — small weathered stone shrine with an offering shelf, river-worn and old.
+- Villager visual variety (colors, hats, props) — 12 MiniCharacters models serve 20 villagers; fine for the prototype, vary later.

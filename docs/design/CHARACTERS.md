@@ -24,7 +24,7 @@ Millbrook's prototype simulates 20 people in 11 households: the Alder farming fa
 | npc_tom_fenn | Tom Fenn | 12 | male | Baker's son, errand-runner | loc_home_fenn | loc_bakery |
 | npc_sella_wren | Sella Wren | 60 | female | Healer | loc_healer_hut | loc_healer_hut |
 | npc_garrick_alder | Garrick Alder | 38 | male | Miller (widower) | loc_home_miller | loc_mill |
-| npc_wren_alder | Wren Alder | 10 | female | Child (miller's daughter) | loc_home_miller | — |
+| npc_tansy_alder | Tansy Alder | 10 | female | Child (miller's daughter) | loc_home_miller | — |
 | npc_elswith_alder | Elswith Alder | 71 | female | Village elder, holds the granary key | loc_home_elder | loc_square |
 | npc_tam_oakes | Tam Oakes | 36 | male | Woodcutter | loc_home_woodcutter | loc_forest_edge |
 | npc_brynn_oakes | Brynn Oakes | 34 | female | Woodcutter's wife (weaving, herbs) | loc_home_woodcutter | loc_home_woodcutter |
@@ -114,9 +114,9 @@ Note: `item_` ids used in possessions (e.g. `item_knife`, `item_axe`) are provis
 - Need rates: hunger 7/hr (reason: small, growing, always moving), energy 3/hr (reason: children recover fast — 8h play costs ~24), social 4/hr.
 - Money: 8 copper. Possessions: a wooden chicken (carved by Tam), a ribbon.
 - Schedule (workday): 06:30–07:00 eat; 07:00–09:00 chicken feeding, chatter (loc_farm); 09:00–12:00 lessons with Maren / play; 12:00–12:30 eat; 12:30–17:00 play, errands, garden help; 17:00–18:00 supper; 18:00–20:00 family; 20:00–06:30 sleep (reason: children sleep ~10.5h).
-- Restday: much the same, more play, sometimes the square with Wren.
+- Restday: much the same, more play, sometimes the square with Tansy.
 - Goals: short-term — teach the speckled hen to come when called (type bond; she believes it's working). Long-term — have a goat of her very own (type acquire_asset).
-- Relationships: Maren (trust 85, affection 95); Wren Alder (trust 70, affection 80 — best friend); the speckled hen (trust 90, affection 100 — one-sided, she believes).
+- Relationships: Maren (trust 85, affection 95); Tansy Alder (trust 70, affection 80 — best friend); the speckled hen (trust 90, affection 100 — one-sided, she believes).
 - Knowledge: knows every chicken by name (true, to her); believes the speckled hen understands her (unknown — the hen does come for corn); knows Tom took windfalls (true — saw him, told no one; children keep children's secrets).
 - If she learned of the theft: wide-eyed, asks if the thief was hungry, offers to share her apple.
 - Voice: "Speckle says the fox was back. She saw it, I asked her." / "Can I keep him? I'll feed him. I'll feed him every day forever."
@@ -140,7 +140,7 @@ Note: `item_` ids used in possessions (e.g. `item_knife`, `item_axe`) are provis
 
 **npc_doran_kettle — Doran Kettle, 48, male, blacksmith.** Widower five years; the forge is his company. Forges and repairs tools; iron itself is imported, so every nail is precious. Gruff, fair, unexpectedly gentle with children.
 - Appearance: soot in the creases, forearms like oak roots, kind eyes. Model: `Assets/Packs/Kenney/MiniCharacters/character-male-c.glb`.
-- Final model map (females): Mira female-b, Maren female-a, Lida female-e (child scale), Bessa female-c, Tilda female-d, Sima female-a, Sella female-f, Wren female-e (child scale), Elswith female-f, Brynn female-d.
+- Final model map (females): Mira female-b, Maren female-a, Lida female-e (child scale), Bessa female-c, Tilda female-d, Sima female-a, Sella female-f, Tansy female-e (child scale), Elswith female-f, Brynn female-d.
 - Final model map (males): Corvin male-a, Piotr male-b, Doran male-c, Bram male-d, Oda male-e, Garrick male-f, Tam male-a, Jory male-b, Ralf male-c, Tom male-d (child scale).
 - Traits: friendly 50, honest 85, greedy 30, brave 60, curious 45, cautious 60, lazy 20, generous 60, ambitious 40, gossipy 25.
 - Need rates: hunger 7/hr (reason: forge work), energy 5/hr, social 2/hr.
@@ -194,7 +194,7 @@ Note: `item_` ids used in possessions (e.g. `item_knife`, `item_axe`) are provis
 - Restday: bakes festival bread only; slower day; afternoon nap is sacred.
 - Goals: short-term — get through harvest season without the oven cracking (type maintain). Long-term — build a second oven so the village never runs short (type build, target 5000).
 - Relationships: Sima Fenn (trust 85, affection 85 — wife, baking partner); Garrick Alder (trust 70, affection 60 — flour supplier); Maren Alder (trust 75, affection 70 — preserves for bread, the eternal trade).
-- Knowledge: knows the mill's flour by the handful (true); knows Tom sneaks bread to Wren sometimes (true — pretends not to); believes a baker should never be woken after noon (strongly held).
+- Knowledge: knows the mill's flour by the handful (true); knows Tom sneaks bread to Tansy sometimes (true — pretends not to); believes a baker should never be woken after noon (strongly held).
 - If he learned of the theft: "Apples! At least they didn't take bread," then sends Tom with a loaf for Mira.
 - Voice: "Bread's done when it's done. Not before." / "You want it cheaper? The oven doesn't care what you want."
 
@@ -216,10 +216,10 @@ Note: `item_` ids used in possessions (e.g. `item_knife`, `item_axe`) are provis
 - Traits: friendly 70, honest 60, greedy 30, brave 60, curious 90, cautious 35, lazy 45, generous 60, ambitious 40, gossipy 55.
 - Need rates: hunger 7/hr (reason: growing, always running), energy 3/hr, social 4/hr.
 - Money: 30 copper. Possessions: a slingshot (never used on anything living — his mother's rule), interesting stones.
-- Schedule (workday): 06:00–06:30 eat; 06:30–08:00 help at bakery (loc_bakery); 08:00–12:00 errands, lessons with Sima; 12:00–12:30 eat; 12:30–17:00 errands, play, orchard vicinity (loc_farm — windfalls); 17:00–18:00 supper (loc_home_fenn); 18:00–20:00 square with Piotr or Wren; 20:30–06:00 sleep.
+- Schedule (workday): 06:00–06:30 eat; 06:30–08:00 help at bakery (loc_bakery); 08:00–12:00 errands, lessons with Sima; 12:00–12:30 eat; 12:30–17:00 errands, play, orchard vicinity (loc_farm — windfalls); 17:00–18:00 supper (loc_home_fenn); 18:00–20:00 square with Piotr or Tansy; 20:30–06:00 sleep.
 - Restday: errands done early, then freedom.
 - Goals: short-term — be allowed to work the forge with Doran one full day (type learn). Long-term — decide: baker like father or smith like Doran (type choose; genuinely undecided).
-- Relationships: Piotr Alder (trust 65, affection 70 — hero-worships him slightly); Wren Alder (trust 60, affection 65 — friend); Sima (trust 80, affection 90 — she covers for him); Doran Kettle (trust 55, affection 60 — wants to impress him).
+- Relationships: Piotr Alder (trust 65, affection 70 — hero-worships him slightly); Tansy Alder (trust 60, affection 65 — friend); Sima (trust 80, affection 90 — she covers for him); Doran Kettle (trust 55, affection 60 — wants to impress him).
 - Knowledge: knows he took windfalls twice (true — secret, though Sima, Lida, and Ralf know); knows the orchard's best climbing tree (true); believes the Grey is "hunters' talk" (skeptical, curious anyway).
 - If he learned of the theft: thrilled and terrified in equal measure — a REAL thief — and very careful not to look guilty.
 - Voice: "I didn't take anything! ...This time." / "Piotr says the capital has buildings taller than the mill. Taller!"
@@ -239,22 +239,22 @@ Note: `item_` ids used in possessions (e.g. `item_knife`, `item_axe`) are provis
 - If she learned of the theft: brings Mira willowbark tea "for the nerves" and listens — healing by listening is half her craft.
 - Voice: "Drink it all. Yes, it's bitter. Bitter is how you know it's working." / "The forest provides, child. We just have to ask properly."
 
-### The mill — Garrick and Wren Alder
+### The mill — Garrick and Tansy Alder
 
-**npc_garrick_alder — Garrick Alder, 38, male, miller.** Grandson of founder Tomas Alder; runs the watermill with its cracking wheel (WORLD.md's current problem — everyone knows the sound it makes). Widower three winters (fever winter); quietly blames Sella. His youngest daughter Wren found the player on day 1.
+**npc_garrick_alder — Garrick Alder, 38, male, miller.** Grandson of founder Tomas Alder; runs the watermill with its cracking wheel (WORLD.md's current problem — everyone knows the sound it makes). Widower three winters (fever winter); quietly blames Sella. His youngest daughter Tansy found the player on day 1.
 - Appearance: dust-pale hair, strong back, tired eyes that smile anyway. Model: `Assets/Packs/Kenney/MiniCharacters/character-male-f.glb`.
 - Traits: friendly 60, honest 80, greedy 30, brave 50, curious 45, cautious 65, lazy 25, generous 65, ambitious 50, gossipy 35.
 - Need rates: hunger 6/hr, energy 5/hr (reason: mill work is heavy), social 3/hr.
 - Money: 600 copper. Possessions: the mill (his inheritance and burden), miller's toll grain, his wife's shawl (kept, individual item).
-- Schedule (workday): 05:30–06:00 eat (loc_home_miller); 06:00–12:00 mill work (loc_mill); 12:00–12:45 eat; 12:45–18:00 mill work; 18:00–19:00 supper with Wren (loc_home_miller); 19:00–20:30 the wheel — listening, patching, worrying (loc_mill); 20:30–21:30 home; 21:30–05:30 sleep.
-- Restday: morning with Wren, afternoon the wheel, evening tavern (one ale, quiet corner).
+- Schedule (workday): 05:30–06:00 eat (loc_home_miller); 06:00–12:00 mill work (loc_mill); 12:00–12:45 eat; 12:45–18:00 mill work; 18:00–19:00 supper with Tansy (loc_home_miller); 19:00–20:30 the wheel — listening, patching, worrying (loc_mill); 20:30–21:30 home; 21:30–05:30 sleep.
+- Restday: morning with Tansy, afternoon the wheel, evening tavern (one ale, quiet corner).
 - Goals: short-term — nurse the wheel through winter (type maintain; everyone knows it's failing). Long-term — save for a new wheel the village can't yet afford (type save_money, target 8000 — the village's shared hope).
-- Relationships: Wren Alder (trust 85, affection 95 — his world); Corvin Alder (trust 75, affection 70 — cousin, grain); Oda Fenn (trust 70, affection 60 — flour); Sella Wren (trust 40, affection 55 — the wound); Elswith Alder (trust 75, affection 70 — aunt, council).
+- Relationships: Tansy Alder (trust 85, affection 95 — his world); Corvin Alder (trust 75, affection 70 — cousin, grain); Oda Fenn (trust 70, affection 60 — flour); Sella Wren (trust 40, affection 55 — the wound); Elswith Alder (trust 75, affection 70 — aunt, council).
 - Knowledge: knows the wheel's every groan (true); knows the granary is half-full (true — council); believes Sella could have done more (belief — unfair, and half of him knows it).
-- If he learned of the theft: shakes his head, tells Wren that taking what isn't yours hollows you out, and offers Mira free grinding for a month.
-- Voice: "The wheel's older than me and more stubborn. We'll see which of us outlasts the other." / "Your mother would've known what to say, Wren. I just know about flour."
+- If he learned of the theft: shakes his head, tells Tansy that taking what isn't yours hollows you out, and offers Mira free grinding for a month.
+- Voice: "The wheel's older than me and more stubborn. We'll see which of us outlasts the other." / "Your mother would've known what to say, Tansy. I just know about flour."
 
-**npc_wren_alder — Wren Alder, 10, female, miller's daughter.** Finds the player on the riverbank on day 1 — the first face the player sees. Curious, brave for ten, still grieving her mother in the way children do (in bursts, between adventures).
+**npc_tansy_alder — Tansy Alder, 10, female, miller's daughter.** Finds the player on the riverbank on day 1 — the first face the player sees. Curious, brave for ten, still grieving her mother in the way children do (in bursts, between adventures).
 - Appearance: Garrick's dust-pale hair in one thick plait, scraped knees, fearless grin. Model: `Assets/Packs/Kenney/MiniCharacters/character-female-e.glb` (child — reuse at smaller scale).
 - Traits: friendly 75, honest 85, greedy 20, brave 65, curious 95, cautious 40, lazy 35, generous 70, ambitious 35, gossipy 50.
 - Need rates: hunger 7/hr, energy 3/hr, social 4/hr (reasons: as Lida — children eat often, recover fast, need company).
@@ -265,7 +265,7 @@ Note: `item_` ids used in possessions (e.g. `item_knife`, `item_axe`) are provis
 - Relationships: Garrick (trust 90, affection 95); Lida Alder (trust 70, affection 80 — best friend); Elswith Alder (trust 70, affection 75 — teacher); Tom Fenn (trust 60, affection 65).
 - Knowledge: knows the riverbank paths blind (true); knows her father cries sometimes when he thinks she's asleep (true — secret, never told); believes the shrine keeps travelers safe (belief — she'll tell the player so on day 1).
 - If she learned of the theft: asks Garrick a hundred questions about why, then decides the thief must have been very hungry and leaves an apple on the shrine "just in case."
-- Voice: "Are you the stranger? I'm Wren. Papa says you're to come for supper." / "The shrine keeps people safe. Mostly. I think. It kept you, didn't it?"
+- Voice: "Are you the stranger? I'm Tansy. Papa says you're to come for supper." / "The shrine keeps people safe. Mostly. I think. It kept you, didn't it?"
 
 ### The elder — Elswith Alder
 
@@ -274,7 +274,7 @@ Note: `item_` ids used in possessions (e.g. `item_knife`, `item_axe`) are provis
 - Traits: friendly 65, honest 95, greedy 10, brave 70, curious 60, cautious 85, lazy 15, generous 70, ambitious 30, gossipy 40.
 - Need rates: hunger 5/hr, energy 2/hr (reason: 71 — short days, long rests; ~10h active), social 3/hr.
 - Money: 500 copper. Possessions: the granary key (individual item — the village's trust made physical), letters from her son in King's Rest.
-- Schedule (workday): 07:00–07:30 eat (loc_home_elder); 07:30–09:00 slow morning, shrine shelf (loc_home_elder); 09:00–11:00 council business, granary check twice a week (loc_square, loc_granary); 11:00–12:00 rest; 12:00–12:30 eat; 12:30–15:00 visits, teaches Wren twice a week; 15:00–17:00 rest; 17:00–18:00 supper; 18:00–20:00 quiet evening, letters; 20:30–07:00 sleep.
+- Schedule (workday): 07:00–07:30 eat (loc_home_elder); 07:30–09:00 slow morning, shrine shelf (loc_home_elder); 09:00–11:00 council business, granary check twice a week (loc_square, loc_granary); 11:00–12:00 rest; 12:00–12:30 eat; 12:30–15:00 visits, teaches Tansy twice a week; 15:00–17:00 rest; 17:00–18:00 supper; 18:00–20:00 quiet evening, letters; 20:30–07:00 sleep.
 - Restday: leads the Restday gathering; public apologies happen here (WORLD.md law).
 - Goals: short-term — stretch the granary to spring without panic (type manage; secret — the village must not worry). Long-term — see the mill wheel replaced before she dies (type legacy).
 - Relationships: Garrick Alder (trust 75, affection 70 — nephew, council); Bram Stone (trust 80, affection 60 — her guard); Tilda Bray (trust 75, affection 65); Sella Wren (trust 70, affection 65).
@@ -320,7 +320,7 @@ Note: `item_` ids used in possessions (e.g. `item_knife`, `item_axe`) are provis
 - Schedule (workday): 05:30–06:00 eat (loc_river_alder); 06:00–10:00 check traps, fish (loc_river_alder); 10:00–11:00 sell/gut at the square twice a week (loc_square); 11:00–12:00 mend nets; 12:00–12:30 eat; 12:30–16:00 fish, traps; 16:00–17:30 smoke/dry the catch; 17:30–18:30 supper; 18:30–20:00 tavern twice a week, otherwise the riverbank; 21:00–05:30 sleep.
 - Restday: mends everything, visits the tavern, feeds the ducks (he denies this).
 - Goals: short-term — smoke 50 fish for winter (type stockpile, target 50). Long-term — build a proper smokehouse before his back gives out (type build, target 1500).
-- Relationships: Bessa Marlowe (trust 60, affection 55 — buys his smoked fish); Corvin Alder (trust 55, affection 50); Ralf Hale (trust 55, affection 55 — fellow solitary); Wren Alder (trust 50, affection 60 — she visits the river; he pretends to mind).
+- Relationships: Bessa Marlowe (trust 60, affection 55 — buys his smoked fish); Corvin Alder (trust 55, affection 50); Ralf Hale (trust 55, affection 55 — fellow solitary); Tansy Alder (trust 50, affection 60 — she visits the river; he pretends to mind).
 - Knowledge: knows the river's moods and the ford's depth by the stone (true); knows fish stocks are steady "if you don't get greedy" (true); believes the river takes a toll when disrespected (superstition — he leaves a crust at the shrine all the same).
 - If he learned of the theft: "Hungry thieves I understand. It's the other kind you watch," and keeps his traps closer for a while.
 - Voice: "River gives. River takes. Mostly it just flows." / "You want to know the ford? Ask the stones. They've been here longer than all of us."
@@ -341,17 +341,17 @@ FARM HOUSEHOLD (loc_farm)
   Corvin → Mira (70/50) — supplier and biggest customer, haggles hard
 
 MILLER'S HOUSEHOLD (loc_home_miller) + ELDER
-  Garrick → Wren (85/95) — his world since the fever winter
+  Garrick → Tansy (85/95) — his world since the fever winter
   Garrick ⇄ Corvin (75/70) — cousins, grain
   Garrick → Sella (40/55) — the wound: blames her, half-knows it's unfair
   Elswith → Garrick (75/70) — nephew, fellow councillor
-  Wren → Elswith (70/75) — teacher; Wren is learning to read
-  Wren ⇄ Lida (70/80) — best friends, river partners
+  Tansy → Elswith (70/75) — teacher; Tansy is learning to read
+  Tansy ⇄ Lida (70/80) — best friends, river partners
 
 BAKER'S HOUSEHOLD (loc_home_fenn)
   Oda ⇄ Sima (85/85) — baking partners, twenty years
   Sima → Tom (80/95) — covers for his windfalls
-  Tom → Piotr (65/70) — hero-worship; Tom → Wren (60/65) — friend
+  Tom → Piotr (65/70) — hero-worship; Tom → Tansy (60/65) — friend
   Doran → Tom (55/60) — potential apprentice, watching him
   Oda → Garrick (70/60) — flour; Sima ⇄ Maren (75/75) — preserves for bread
 
@@ -373,7 +373,7 @@ SINGLES & THEIR WEBS
   Tilda (loc_general_store) → Elswith (75/65 — witnessed her husband's debts), Mira (60/55 — friendly rivalry), Sella (65/60)
   Sella (loc_healer_hut) → Brynn (75/70), Elswith (70/65), Doran (55/50 — eased his wife's last days)
   Doran (loc_blacksmith) → Corvin (65/55 — farm tools), Bram (60/50 — gear repairs)
-  Jory (loc_river_alder) → Bessa (60/55 — smoked fish), Ralf (55/55 — fellow solitary), Wren (50/60 — pretends to mind her visits)
+  Jory (loc_river_alder) → Bessa (60/55 — smoked fish), Ralf (55/55 — fellow solitary), Tansy (50/60 — pretends to mind her visits)
 ```
 
 Tensions (the friction that keeps the village alive): Garrick ⇄ Sella (unspoken blame); Corvin ⇄ Tam (the east field); Piotr's secret plan vs. Corvin's need; Mira suspects Tom (windfalls) but is half-fond; Tilda's secret ledger; Elswith's secret rationing; Ralf's doubt about what he saw.
@@ -404,8 +404,8 @@ Truth vs. belief — what each person knows that others don't. (`true` = accurat
 | Doran | Every tool in the village by its wear; iron prices | true | — |
 | Bram | The law is evidence-first; every hiding spot in the village | true | — |
 | Lida | Believes the speckled hen understands her | unknown | The hen (unconfirmed) |
-| Wren | Her father cries when he thinks she's asleep | true | No one (never told) |
-| Oda | Tom sneaks bread to Wren sometimes | true | — (pretends not to see) |
+| Tansy | Her father cries when he thinks she's asleep | true | No one (never told) |
+| Oda | Tom sneaks bread to Tansy sometimes | true | — (pretends not to see) |
 | Elswith | Believes the village survives winter "if we're careful and kind" | belief | — (she works to make it true) |
 
 Nobody knows: who will steal from the apple stall (the Apple Test's premise); whether the Grey is real; whether Piotr will actually leave; whether the wheel lasts the winter.
@@ -424,10 +424,12 @@ Nobody knows: who will steal from the apple stall (the Apple Test's premise); wh
 
 ---
 
-## 6. Open questions for the human
+## 6. Decisions made (2026-10-02, with the human)
 
-1. **Ralf's Grey story — how often?** He tells it at the tavern "when the ale is good." Should D-09 make this a rare, seeded rumor event, or leave it as background color he only mentions if asked?
-2. **Piotr's plan — how visible?** Currently Maren has guessed and Corvin doesn't know. Should there be a small chance Corvin finds the saved coins (a discovery event), or stay fully secret until Piotr acts?
-3. **Tilda's tab ledger — mechanical or flavor?** Should D-04 model the secret tabs as real debts in the economy, or keep them as character color the simulation doesn't track?
-4. **Sella's apprentice — seed now or later?** Brynn is learning herb lore informally. Should D-03-adjacent design name her the likely successor, or keep the succession genuinely open?
-5. **Model reuse — acceptable?** 12 MiniCharacters models serve 20 NPCs (children reuse adult models at smaller scale). Fine for the prototype, or should some villagers be marked MISSING ART for distinct models?
+1. **Ralf's Grey story is a starting belief**, not a scripted event — it spreads only through the normal rumor rules designed in D-09.
+2. **Corvin can discover Piotr's savings**, but only through normal perception rules (the hiding place, attention, chance) — no special trigger.
+3. **Tilda's tabs are real debts.** D-04 (economy) must model them: who owes what, and what happens when debts go unpaid.
+4. **Brynn's apprenticeship stays open** — it should emerge from the simulation, not be decided now.
+5. **12 models for 20 villagers is fine for the prototype.** Added to the art list: "villager visual variety (colors, hats, props)" for later.
+6. **Name clash fixed:** Garrick's daughter is now **Tansy Alder** (`npc_tansy_alder`); the healer stays Sella Wren.
+7. **Tom's windfall stealing stays.** It lets Mira suspect the wrong person — exactly the truth-vs-knowledge behavior D-09 must support.
