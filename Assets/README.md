@@ -33,5 +33,5 @@ All game art and audio. Units in GLB models are metres, Y-up, unless a pack says
 - **Village:** `FantasyTownKit` (walls, roofs, roads, fountains, market carts), `CastleKit`, and the farmhouse, barn, coop, palisade and great hall in `Models/Buildings`.
 - **Nature:** `NatureKit` (329 trees, rocks, plants, cliffs, river pieces and crops), plus the apple tree in `Models/Nature/Trees`.
 - **Cooking and food:** `FoodKit`, `Models/Food`, and the campfire and cooking hearth in `Models/Props/Cooking`.
-- **Swords and tools:** `WeaponKit`, `SurvivalKit`, `RetroFantasyKit`.
+- **Tools:** `SurvivalKit` (axe, pickaxe, campfire gear). No swords or shields yet. `RetroFantasyKit` is medieval building pieces.
 - **iPad controls:** `UI/Kenney_MobileControls` (joystick and touch buttons).
