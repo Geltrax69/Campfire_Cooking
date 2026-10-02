@@ -1,0 +1,440 @@
+{
+  "events": [
+    {
+      "canFollow": [
+        "event_fever",
+        "event_theft_wave"
+      ],
+      "conditions": [
+        {
+          "fact": "stat_food_supply",
+          "op": "<",
+          "value": 25
+        },
+        {
+          "fact": "season",
+          "op": "==",
+          "value": "winter"
+        }
+      ],
+      "happens": "Rationing becomes public; bread hits scarcity price cap; NPCs skip meals (hunger rises, health falls slowly); food-theft chance rises; happiness -10/month while active.",
+      "id": "event_food_shortage",
+      "name": "Food shortage",
+      "reason": "The granary starts half-full; one bad winter away. The stakes WORLD.md ordered."
+    },
+    {
+      "canFollow": [],
+      "conditions": [
+        {
+          "fact": "season",
+          "op": "==",
+          "value": "winter"
+        },
+        {
+          "fact": "livestockAtFarm",
+          "op": ">",
+          "value": 0
+        },
+        {
+          "fact": "daysSinceSnow",
+          "op": ">",
+          "value": 20
+        }
+      ],
+      "happens": "Wolves take 1-3 livestock at loc_farm; npc_ralf_hale and the night watch respond; 50-copper bounty per pelt claimable; safety -15 for the month; tavern talk for days.",
+      "id": "event_wolf_attack",
+      "name": "Wolf attack",
+      "reason": "2-4 incidents per winter is the budgeted danger; the event is the budget made mechanical."
+    },
+    {
+      "canFollow": [
+        "event_merchant_arrival",
+        "event_theft_wave"
+      ],
+      "conditions": [
+        {
+          "fact": "dayOfYear",
+          "op": "in",
+          "value": [
+            "festival_thawday",
+            "festival_harvest_feast",
+            "festival_longnight"
+          ]
+        }
+      ],
+      "happens": "Work pauses; gathering at loc_square; happiness +15 for the month; tavern revenue doubles that week. Harvest Feast: debts under 20 copper forgiven. Longnight: bonfire consumes extra item_firewood.",
+      "id": "event_festival",
+      "name": "Festival",
+      "reason": "Festivals are the village heartbeat; calendar dates are facts, not story beats."
+    },
+    {
+      "canFollow": [
+        "event_food_shortage"
+      ],
+      "conditions": [
+        {
+          "fact": "season",
+          "op": "==",
+          "value": "summer"
+        },
+        {
+          "fact": "daysSinceRain",
+          "op": ">=",
+          "value": 14
+        }
+      ],
+      "happens": "A building catches fire (small daily seeded chance: forge left hot, hearth accident). Each household water barrel gives a containment roll; usually limited to one building. Infrastructure -10 per building damaged; community fund pays repairs; happiness -5.",
+      "id": "event_fire",
+      "name": "Fire",
+      "reason": "Fire kills more villagers than monsters; the water-barrel law must matter mechanically."
+    },
+    {
+      "canFollow": [],
+      "conditions": [
+        {
+          "fact": "crimePerMonth",
+          "op": ">=",
+          "value": 6
+        }
+      ],
+      "happens": "npc_bram_stone doubles patrols (schedule shifts); households lock doors earlier (evening schedules shift); shop wariness rises (prices +1, stranger suspicion); travelers warned at loc_tavern. A player flaunting wealth can be the trigger. If evidence surfaces, npc_bram_stone acts under village law (restitution, public apology, stocks, or banishment).",
+      "id": "event_theft_wave",
+      "name": "Theft wave",
+      "reason": "The Apple Test's social aftermath, generalized: the village learns, systemically."
+    },
+    {
+      "canFollow": [
+        "event_festival",
+        "event_theft_wave"
+      ],
+      "conditions": [
+        {
+          "fact": "season",
+          "op": "!=",
+          "value": "winter"
+        },
+        {
+          "fact": "roadPassable",
+          "op": "==",
+          "value": true
+        },
+        {
+          "fact": "lastMerchantDaysAgo",
+          "op": ">=",
+          "value": 21
+        }
+      ],
+      "happens": "Merchants at loc_square for 2-3 days: npc_tilda_bray restocks imports; npc_doran_kettle buys item_iron_stock; villagers sell apples, pelts, honey (~800 copper inflow); import prices dip 10%; news from King's Rest arrives as rumor input.",
+      "id": "event_merchant_arrival",
+      "name": "Merchant arrival",
+      "reason": "The village lifeline and the money source the economy balances on."
+    },
+    {
+      "canFollow": [
+        "event_food_shortage"
+      ],
+      "conditions": [
+        {
+          "fact": "dayOfYear",
+          "op": "in",
+          "value": [
+            "late_winter"
+          ]
+        },
+        {
+          "fact": "stat_food_supply",
+          "op": "<",
+          "value": 40
+        }
+      ],
+      "happens": "Illness spreads by contact (sim's contact rules pick the sick; no targeting). Demand spikes for item_remedy and item_fever_tea; sick NPCs miss work (production dips). In harsh runs the old or weak can die: from the numbers, never scripted.",
+      "id": "event_fever",
+      "name": "Fever",
+      "reason": "The fever winter that widowed Mira, Garrick and Doran is in living memory."
+    },
+    {
+      "canFollow": [
+        "event_food_shortage",
+        "event_fire"
+      ],
+      "conditions": [
+        {
+          "fact": "season",
+          "op": "==",
+          "value": "summer"
+        },
+        {
+          "fact": "daysSinceRain",
+          "op": ">=",
+          "value": 30
+        }
+      ],
+      "happens": "Autumn harvest yields x0.6 (item_grain and item_apple); river runs low (ford easy: trade briefly up; fish stock down); fire risk rises. Corvin's east-field clearing argument gains urgency.",
+      "id": "event_drought",
+      "name": "Drought",
+      "reason": "Weather is the slow disaster: it never attacks, it just doesn't rain."
+    },
+    {
+      "canFollow": [
+        "event_food_shortage"
+      ],
+      "conditions": [
+        {
+          "fact": "wheelCondition",
+          "op": "<=",
+          "value": 0
+        }
+      ],
+      "happens": "loc_mill stops: no item_flour within days, npc_oda_fenn cannot bake, bread hits scarcity cap. Replacement becomes an open community project: 8000 copper + timber from npc_tam_oakes + iron fittings from npc_doran_kettle + labor. Until then, hand querns (slow, poor quality).",
+      "id": "event_wheel_failure",
+      "name": "The wheel fails",
+      "reason": "The cracking wheel is the village's most visible shared problem: failure is a when, not an if."
+    },
+    {
+      "canFollow": [],
+      "conditions": [
+        {
+          "fact": "communityFund",
+          "op": ">=",
+          "value": 5000
+        },
+        {
+          "fact": "season",
+          "op": "!=",
+          "value": "winter"
+        },
+        {
+          "fact": "councilAgrees",
+          "op": "==",
+          "value": true
+        }
+      ],
+      "happens": "Multi-season community project over loc_river_alder ford: ~40 item_log, item_iron_stock fittings, Restday labor (villagers and player can contribute labor, timber, or coin). When done: winter trade no longer drops to zero, trade +10 permanently, infrastructure +10.",
+      "id": "event_bridge_project",
+      "name": "Building the bridge",
+      "reason": "The hope nobody says aloud, turned into conditions and work, never a quest. councilAgrees is read from npc_elswith_alder, npc_garrick_alder and npc_bram_stone goals/relationships each season."
+    }
+  ],
+  "growth": {
+    "inMigration": {
+      "conditions": [
+        "stat_happiness >= 65",
+        "stat_employment >= 80",
+        "stat_food_supply >= 50",
+        "stat_housing >= 70"
+      ],
+      "effect": "At most one new background household (+3-5 people) per season. The 20 simulated NPCs stay fixed in the prototype.",
+      "reason": "A frontier village absorbs newcomers slowly; word travels by merchant and traveler, and there must be a roof."
+    },
+    "outMigration": {
+      "conditions": [
+        "spring",
+        "per-NPC: age 15-25, ambition >= 70, low prospects or family tension"
+      ],
+      "effect": "Youth may leave for King's Rest (Piotr's plan, generalized per-NPC). Population -1 each; household happiness dips.",
+      "reason": "The young keep leaving (WORLD.md); decline runs through departures, not death, except harsh winters."
+    },
+    "villageToTown": {
+      "reachableInPrototype": false,
+      "reason": "The sim runs months, not the years 4x population growth needs. Thresholds exist so growth has a direction, not a button.",
+      "thresholds": {
+        "stat_food_supply": 60,
+        "stat_housing": 70,
+        "stat_infrastructure": 70,
+        "stat_population": 500,
+        "stat_trade": ">= 70 for 4 consecutive seasons"
+      }
+    }
+  },
+  "playerInfluence": [
+    {
+      "paths": [
+        "Make the village thrive: newcomers arrive over seasons",
+        "Drive people away with crime and fear"
+      ],
+      "stat": "stat_population"
+    },
+    {
+      "paths": [
+        "Work, sell, donate to the community fund",
+        "Steal it away"
+      ],
+      "stat": "stat_wealth"
+    },
+    {
+      "paths": [
+        "Help with harvest; donate item_grain",
+        "Hunt and share meat",
+        "Improve yields with old-world knowledge (visible: draws attention)"
+      ],
+      "stat": "stat_food_supply"
+    },
+    {
+      "paths": [
+        "Join the night watch (skill_swordsmanship)",
+        "Hunt wolves for bounties (skill_taming -> trained dogs)",
+        "Escort travelers"
+      ],
+      "stat": "stat_safety"
+    },
+    {
+      "paths": [
+        "Haul item_log; help raise a roof; repair storm damage"
+      ],
+      "stat": "stat_housing"
+    },
+    {
+      "paths": [
+        "Hire help; take an apprentice; create work (second oven, bridge)"
+      ],
+      "stat": "stat_employment"
+    },
+    {
+      "paths": [
+        "Cooking: make the Hearthside famous -> travelers stay longer",
+        "Escort travelers safely (skill_swordsmanship)"
+      ],
+      "stat": "stat_trade"
+    },
+    {
+      "paths": [
+        "Cook good food; help at festivals; small daily kindnesses",
+        "Or be the reason for fear"
+      ],
+      "stat": "stat_happiness"
+    },
+    {
+      "paths": [
+        "Simply don't steal",
+        "Be the theft wave",
+        "Help npc_bram_stone watch"
+      ],
+      "stat": "stat_crime"
+    },
+    {
+      "paths": [
+        "Contribute coin, timber, labor to the wheel fund and bridge",
+        "Help rebuild after fire"
+      ],
+      "stat": "stat_infrastructure"
+    },
+    {
+      "paths": [
+        "Travelers carry stories out: feed strangers, keep the road safe",
+        "A village of thieves is spoken of too"
+      ],
+      "stat": "stat_reputation"
+    }
+  ],
+  "stats": [
+    {
+      "calculation": "living simulated NPCs + background villagers (100, abstracted)",
+      "id": "stat_population",
+      "name": "Population",
+      "reason": "WORLD.md: ~120 people in 30 households; 20 simulated in full.",
+      "scale": "count",
+      "startValue": 120,
+      "unit": "people"
+    },
+    {
+      "calculation": "sum of simulated NPC money + village fund + granary stock at base price + shop stocks at base price",
+      "id": "stat_wealth",
+      "name": "Wealth",
+      "reason": "20 NPCs hold ~9,600 copper (CHARACTERS.md) + fund ~1,000 + granary 50 sacks x 8 = 400; sim computes exactly.",
+      "scale": "count",
+      "startValue": 11000,
+      "unit": "copper"
+    },
+    {
+      "calculation": "days of village food in storage (granary + household cellars) / 180 * 100, capped at 100",
+      "id": "stat_food_supply",
+      "name": "Food supply",
+      "reason": "Granary ~50 of 100 sacks ~= 23 days for 30 households + ~40 days household stores ~= 63 days -> 35. Deliberately worried entering winter.",
+      "scale": "0-100",
+      "startValue": 35,
+      "unit": "index"
+    },
+    {
+      "calculation": "100 - (wolf incidents this winter * 15) - (unresolved crimes * 5) + (night watch active ? 10 : 0) + palisade bonus 0-10",
+      "id": "stat_safety",
+      "name": "Safety",
+      "reason": "Wolves bolder the last two winters; palisade sound; one guard. Danger at the edges, not the square.",
+      "scale": "0-100",
+      "startValue": 65,
+      "unit": "index"
+    },
+    {
+      "calculation": "sound roofs / households needing them * 100",
+      "id": "stat_housing",
+      "name": "Housing",
+      "reason": "Everyone housed, no slack: young adults double up. A new household would wait.",
+      "scale": "0-100",
+      "startValue": 85,
+      "unit": "index"
+    },
+    {
+      "calculation": "working-age NPCs with productive work / working-age NPCs * 100",
+      "id": "stat_employment",
+      "name": "Employment",
+      "reason": "Almost everyone works; children and elders excluded from the denominator.",
+      "scale": "0-100",
+      "startValue": 90,
+      "unit": "index"
+    },
+    {
+      "calculation": "this month's traveler + merchant copper / 1700 (peak warm month) * 100",
+      "id": "stat_trade",
+      "name": "Trade",
+      "reason": "Early autumn: ~900 traveler copper + a merchant visit ~= 1275/1700. Follows ECONOMY.md's seasonal curve.",
+      "scale": "0-100",
+      "startValue": 75,
+      "unit": "index"
+    },
+    {
+      "calculation": "average over simulated NPCs of (social need met * 0.4 + food security * 0.3 + recent festival * 0.2 - fear events * 0.1)",
+      "id": "stat_happiness",
+      "name": "Happiness",
+      "reason": "Cozy baseline; Harvest Feast approaching; the granary worry drags below 75.",
+      "scale": "0-100",
+      "startValue": 70,
+      "unit": "index"
+    },
+    {
+      "calculation": "theft + burglary + vandalism events logged in the last 30 days",
+      "id": "stat_crime",
+      "name": "Crime",
+      "reason": "Low baseline (Tom's windfalls) so a real theft wave is noticeable. A count, not a scale: 2 vs 8 is legible.",
+      "scale": "count",
+      "startValue": 2,
+      "unit": "incidents/month"
+    },
+    {
+      "calculation": "wheel condition * 0.4 + palisade * 0.25 + well and roads * 0.2 + granary building * 0.15",
+      "id": "stat_infrastructure",
+      "name": "Infrastructure",
+      "reason": "Wheel 30 -> 12; palisade 80 -> 20; well/roads 70 -> 14; granary 75 -> 11. The wheel is the big drag.",
+      "scale": "0-100",
+      "startValue": 57,
+      "unit": "index"
+    },
+    {
+      "calculation": "(apple fame 70 + road safety 60 + hospitality 65) / 3, moved by traveler experiences",
+      "id": "stat_reputation",
+      "name": "Outward reputation",
+      "reason": "How outsiders see Millbrook; distinct from D-09's player-reputation-by-group.",
+      "scale": "0-100",
+      "startValue": 65,
+      "unit": "index"
+    }
+  ],
+  "town": {
+    "foundedYearsAgo": 80,
+    "households": 30,
+    "id": "town_millbrook",
+    "name": "Millbrook",
+    "populationSimulated": 20,
+    "populationTotal": 120,
+    "region": "Eastmarch, kingdom of Wesmark"
+  },
+  "version": 1
+}
