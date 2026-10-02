@@ -1,8 +1,8 @@
 # Living World — Isekai Life RPG
 
-A third-person, anime-inspired fantasy life RPG designed for iPad.
+A third-person, anime-inspired fantasy life RPG for iPad first, then iPhone and Mac. Built in Unity by AI coding agents, play-tested by a human.
 
-> **Status:** Design phase. No code yet. This document is the working design spec and will change as discussion continues.
+> **Status:** Setup done, Phase 1 (the Apple Test simulation) not started. This document is the game design. For how the game is built, see [AGENTS.md](AGENTS.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ---
 
@@ -350,14 +350,22 @@ The central experience is the player shifting from *"What quest does the game wa
 
 ---
 
+## Decisions made
+
+| Area | Decision |
+|---|---|
+| Engine | Unity 6 with URP |
+| Platforms | iPad (primary), iPhone, Mac |
+| Development | AI coding agents (Muse agent "Geltrax" with sub-agents) following [AGENTS.md](AGENTS.md); the human tests on device |
+| Prototype visuals | Text-only simulation first (Phase 1), then a 3D village (Phase 2) |
+| Art style | Kenney low-poly as the main look |
+| Simulation | Pure C#, deterministic, 1 tick = 1 game minute, integer money |
+
 ## Open decisions
 
-- **Engine:** Unity, Godot, or native Swift with RealityKit
-- **Prototype visuals:** full 3D, or a simple top-down/text view to test the simulation first
-- **Dialogue AI:** on-device (offline, free per use) or cloud (higher quality, costs per request, needs a connection)
-- **Time scale:** how many real minutes equal one in-game day
-- **Off-screen simulation:** how much detail runs away from the player, and how the world catches up on return
-- **Measurable pass/fail for the apple experiment**
+- **Time scale:** how many real minutes equal one in-game day (default: 24 real minutes)
+- **Dialogue AI:** on-device or cloud (Phase 9)
+- **Off-screen simulation detail** (Phase 7)
 
 ---
 
@@ -365,12 +373,18 @@ The central experience is the player shifting from *"What quest does the game wa
 
 ```
 /
-├── README.md     ← this design document
-└── Assets/       ← art, models, audio and UI (see Assets/README.md for layout and licenses)
-    ├── Models/   ← loose models sorted by use
-    ├── Packs/    ← complete third-party packs (Kenney, Crayon)
-    ├── Audio/    ← sound effects
-    ├── UI/       ← touch controls, icons, panels
-    ├── Sky/      ← skies and clouds
-    └── _OffTheme/← modern/sci-fi assets kept aside
+├── README.md        ← this game design document
+├── AGENTS.md        ← rules and workflow for AI agents (read first)
+├── CLAUDE.md        ← points to AGENTS.md
+├── docs/
+│   ├── ARCHITECTURE.md  ← how the simulation and Unity fit together
+│   ├── ROADMAP.md       ← phases and task list with status
+│   ├── KICKOFF_PROMPT.md← prompt to start the main agent
+│   └── tasks/           ← task briefs (created as work starts)
+├── Packages/com.geltrax.livingworld.simulation/  ← pure C# simulation (no Unity)
+├── SimulationTests/ ← automated tests, run with `dotnet test SimulationTests`
+└── Assets/          ← Unity project assets (see Assets/README.md)
+    ├── _Game/       ← our Unity code, scenes, prefabs, data
+    ├── Models/  Packs/  Audio/  UI/  Sky/   ← art and audio
+    └── _OffTheme/   ← modern/sci-fi assets kept aside
 ```
