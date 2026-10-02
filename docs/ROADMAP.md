@@ -29,11 +29,11 @@ The human approves every area before it's marked `done`.
 | D-04 | Money and economy | 4 | D-01–D-03 | `ECONOMY.md`, `Content/economy/economy.json` | done |
 | D-05 | Items and resources | 5 | D-02, D-04 | `ITEMS.md`, `Content/items/items.json` | done |
 | D-06 | Skills | 6 | D-01, D-04, D-05 | `SKILLS.md`, `Content/skills/skills.json` | done |
-| D-07 | Recipes and crafting | 7 | D-05, D-06 | `RECIPES.md`, `Content/recipes/recipes.json` | todo |
+| D-07 | Recipes and crafting | 7 | D-05, D-06 | `RECIPES.md`, `Content/recipes/recipes.json` | done |
 | D-08 | Animals and taming | 8 | D-01, D-02, D-05 | `ANIMALS.md`, `Content/animals/species.json` | done |
 | D-09 | Knowledge, rumors, reputation | 9 | D-03 | `KNOWLEDGE.md`, `Content/social/social.json` | done |
 | D-10 | Town state and emergent events | 10 | D-02–D-04 | `TOWN.md`, `Content/world/town.json` | done |
-| D-11 | Player start | 11 | D-01–D-06 | `PLAYER_START.md`, `Content/player/start.json` | todo |
+| D-11 | Player start | 11 | D-01–D-06 | `PLAYER_START.md`, `Content/player/start.json` | done |
 | D-12 | Consistency check and glossary | 12 | all above | fixes + `GLOSSARY.md` | todo |
 
 Parallel-safe once dependencies are approved: {D-05, D-09}, {D-06, D-08, D-10}.

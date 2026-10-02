@@ -152,3 +152,36 @@ Services (not items): `service_lodging` (tavern bed, 10 copper), `service_grindi
 | stat_trade | town stat/event |
 | stat_wealth | town stat/event |
 | town_millbrook | town stat/event |
+
+## Recipes and new items (D-07)
+
+| ID | Name |
+|---|---|
+| recipe_campfire_stew | Campfire Stew |
+| recipe_roast_fish | Roast Fish |
+| recipe_porridge | Grain Porridge |
+| recipe_broth | Thin Broth |
+| recipe_bake_bread_rye | Rye Loaf (batch) |
+| recipe_roast_pork | Roast Pork |
+| recipe_brew_ale | Ale (batch) |
+| recipe_apple_pie | Apple Pie |
+| recipe_meat_pie | Meat Pie |
+| recipe_seed_cake | Festival Seed-Cakes |
+| recipe_feast_stew | Feast Stew |
+| recipe_smoke_fish | Smoked Fish |
+| recipe_master_stew | The Stew They Cross the Ford For |
+| recipe_forge_nails | Nails (batch) |
+| recipe_forge_horseshoes | Horseshoes (2 sets) |
+| recipe_forge_knife | Knife |
+| recipe_forge_hoe | Hoe |
+| recipe_make_spear | Spear |
+| recipe_carve_fishing_rod | Fishing Rod |
+| recipe_patch_tool | Patch a Tool |
+| recipe_sharpen_blade | Sharpen a Blade |
+| item_roasted_fish | Roast Fish |
+| item_porridge | Grain Porridge |
+| item_broth | Thin Broth |
+| item_apple_pie | Apple Pie |
+| item_roast_pork | Roast Pork |
+| item_seed_cake | Festival Seed-Cake |
+| item_meat_pie | Meat Pie |

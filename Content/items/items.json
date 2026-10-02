@@ -1186,6 +1186,213 @@
       "tracked": true,
       "usedBy": "Sima (baking; teaching Tom)",
       "weight": 0.8
+    },
+    {
+      "art": "Assets/Packs/Kenney/FoodKit/Models/GLB format/fish.glb",
+      "baseValue": 5,
+      "category": "food",
+      "effects": {
+        "health": 1,
+        "hunger": 25
+      },
+      "id": "item_roasted_fish",
+      "name": "Roast Fish",
+      "perishable": {
+        "freshDays": 2,
+        "spoiledName": "spoiled roast fish",
+        "spoiledUse": "animal feed or compost",
+        "staleDays": 2,
+        "staleEffect": {
+          "hunger": -12
+        },
+        "staleName": "stale roast fish",
+        "stalePriceFactor": 0.5
+      },
+      "phase": 3,
+      "qualityRange": [
+        0,
+        100
+      ],
+      "stack": 20,
+      "tracked": false,
+      "weight": 0.5
+    },
+    {
+      "art": "Assets/Packs/Kenney/FoodKit/Models/GLB format/bowl-cereal.glb",
+      "baseValue": 3,
+      "category": "food",
+      "effects": {
+        "hunger": 28
+      },
+      "id": "item_porridge",
+      "name": "Grain Porridge",
+      "perishable": {
+        "freshDays": 1,
+        "spoiledName": "spoiled grain porridge",
+        "spoiledUse": "animal feed or compost",
+        "staleDays": 1,
+        "staleEffect": {
+          "hunger": -14
+        },
+        "staleName": "stale grain porridge",
+        "stalePriceFactor": 0.5
+      },
+      "phase": 3,
+      "qualityRange": [
+        0,
+        100
+      ],
+      "stack": 10,
+      "tracked": false,
+      "weight": 0.5
+    },
+    {
+      "art": "Assets/Packs/Kenney/FoodKit/Models/GLB format/bowl-broth.glb",
+      "baseValue": 3,
+      "category": "food",
+      "effects": {
+        "health": 2,
+        "hunger": 20
+      },
+      "id": "item_broth",
+      "name": "Thin Broth",
+      "perishable": {
+        "freshDays": 1,
+        "spoiledName": "spoiled thin broth",
+        "spoiledUse": "animal feed or compost",
+        "staleDays": 1,
+        "staleEffect": {
+          "hunger": -10
+        },
+        "staleName": "stale thin broth",
+        "stalePriceFactor": 0.5
+      },
+      "phase": 3,
+      "qualityRange": [
+        0,
+        100
+      ],
+      "stack": 10,
+      "tracked": false,
+      "weight": 0.5
+    },
+    {
+      "art": "Assets/Packs/Kenney/FoodKit/Models/GLB format/pie.glb",
+      "baseValue": 8,
+      "category": "food",
+      "effects": {
+        "health": 1,
+        "hunger": 30
+      },
+      "id": "item_apple_pie",
+      "name": "Apple Pie",
+      "perishable": {
+        "freshDays": 3,
+        "spoiledName": "spoiled apple pie",
+        "spoiledUse": "animal feed or compost",
+        "staleDays": 3,
+        "staleEffect": {
+          "hunger": -15
+        },
+        "staleName": "stale apple pie",
+        "stalePriceFactor": 0.5
+      },
+      "phase": 3,
+      "qualityRange": [
+        0,
+        100
+      ],
+      "stack": 10,
+      "tracked": false,
+      "weight": 0.6
+    },
+    {
+      "art": "Assets/Packs/Kenney/FoodKit/Models/GLB format/meat-cooked.glb",
+      "baseValue": 18,
+      "category": "food",
+      "effects": {
+        "health": 2,
+        "hunger": 40
+      },
+      "id": "item_roast_pork",
+      "name": "Roast Pork",
+      "perishable": {
+        "freshDays": 2,
+        "spoiledName": "spoiled roast pork",
+        "spoiledUse": "animal feed or compost",
+        "staleDays": 2,
+        "staleEffect": {
+          "hunger": -20
+        },
+        "staleName": "stale roast pork",
+        "stalePriceFactor": 0.5
+      },
+      "phase": 3,
+      "qualityRange": [
+        0,
+        100
+      ],
+      "stack": 10,
+      "tracked": false,
+      "weight": 1.2
+    },
+    {
+      "art": "Assets/Packs/Kenney/FoodKit/Models/GLB format/cake.glb",
+      "baseValue": 3,
+      "category": "food",
+      "effects": {
+        "hunger": 15
+      },
+      "id": "item_seed_cake",
+      "name": "Festival Seed-Cake",
+      "perishable": {
+        "freshDays": 4,
+        "spoiledName": "spoiled festival seed-cake",
+        "spoiledUse": "animal feed or compost",
+        "staleDays": 4,
+        "staleEffect": {
+          "hunger": -8
+        },
+        "staleName": "stale festival seed-cake",
+        "stalePriceFactor": 0.5
+      },
+      "phase": 3,
+      "qualityRange": [
+        0,
+        100
+      ],
+      "stack": 20,
+      "tracked": false,
+      "weight": 0.2
+    },
+    {
+      "art": "Assets/Packs/Kenney/FoodKit/Models/GLB format/mincemeat-pie.glb",
+      "baseValue": 10,
+      "category": "food",
+      "effects": {
+        "hunger": 35
+      },
+      "id": "item_meat_pie",
+      "name": "Meat Pie",
+      "perishable": {
+        "freshDays": 2,
+        "spoiledName": "spoiled meat pie",
+        "spoiledUse": "animal feed or compost",
+        "staleDays": 2,
+        "staleEffect": {
+          "hunger": -18
+        },
+        "staleName": "stale meat pie",
+        "stalePriceFactor": 0.5
+      },
+      "phase": 3,
+      "qualityRange": [
+        0,
+        100
+      ],
+      "stack": 10,
+      "tracked": false,
+      "weight": 0.6
     }
   ],
   "version": 1

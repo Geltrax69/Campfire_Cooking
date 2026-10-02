@@ -1,1 +1,301 @@
-{"skills":[{"affects":["food_quality","npc_happiness","npc_health","tavern_popularity","food_prices","farm_demand","relationships","spoilage_waste"],"costs":{"ingredients":"consumed per session (waste ~30% at levels 1-2, halved at 2+)","notes":"No free levels; failure at low levels wastes ingredients and is witnessed.","risk":"burned/ruined batches at levels 1-2","timeMinutesPerSession":"30-90"},"description":"Cooking real meals from real ingredients. The village eats three times a day; the person who feeds it well becomes someone.","id":"skill_cooking","levels":[{"level":1,"qualityBonus":0,"unlocks":["action_cook_basic_meals"]},{"level":2,"qualityBonus":1,"unlocks":["action_tavern_kitchen_work","action_reliable_cooking"]},{"level":3,"qualityBonus":2,"unlocks":["action_sell_own_dishes","action_cook_for_events"]},{"level":4,"qualityBonus":3,"unlocks":["action_run_tavern_kitchen","action_festival_head_cook"]},{"level":5,"qualityBonus":4,"unlocks":["action_teach_cooking","action_dishes_worth_traveling_for"]}],"maxLevel":5,"name":"Cooking","practice":{"dailyCap":20,"levelThresholds":[0,100,300,700,1500],"perUse":1,"taughtBy":["npc_bessa_marlowe"],"taughtMultiplier":2},"reputation":{"groups":{"merchants":"positive (travelers spread word)","tavern":"positive (Bessa offers work at level 2)","villagers":"positive (feeding people is the Hearth's virtue)"},"notes":"Safest skill to be seen using. Visibility still accrues at level 3+ (D-09)."}},{"affects":["animal_trust","village_safety","livestock_losses","hunting","wolf_bounties","npc_fear","npc_affection","farm_labor"],"costs":{"ingredients":"real food items to feed animals (fish, meat, eggs)","notes":"Trust takes days to weeks; a level-5 wolf bond is a season's work.","risk":"nips and kicks at levels 1-2; serious injury risk at 4-5 (needs Sella's remedies)","timeMinutesPerSession":"60-180"},"description":"Building trust with animals - reading them, feeding them right, patience, the right kind of strength. Taming is a relationship, not a button.","id":"skill_taming","levels":[{"level":1,"qualityBonus":0,"unlocks":["action_calm_livestock","action_help_with_animals"]},{"level":2,"qualityBonus":0,"trustGainMultiplier":1.5,"unlocks":["action_train_dog_basic","action_help_trap_lines"]},{"level":3,"qualityBonus":0,"trustGainMultiplier":2.0,"unlocks":["action_train_guard_dog","action_night_watch_dogs"]},{"level":4,"qualityBonus":0,"trustGainMultiplier":2.5,"unlocks":["action_befriend_wild_animals","action_find_lost_livestock"]},{"level":5,"qualityBonus":0,"trustGainMultiplier":3.0,"unlocks":["action_befriend_wolf","action_wolf_companion"]}],"maxLevel":5,"name":"Taming","practice":{"dailyCap":20,"levelThresholds":[0,100,300,700,1500],"perUse":1,"taughtBy":["npc_ralf_hale","npc_jory_reed"],"taughtMultiplier":2},"reputation":{"groups":{"children":"positive, fast (Lida, Tansy, Tom adore the animal person)","guards":"positive at 3+ (Bram values guard dogs)","hunters":"positive (Ralf respects competence)","villagers_cautious":"negative at 4-5 (fear of wolves is honest)"},"notes":"Level 5 with a wolf generates strong visibility - fear and admiration together (D-09)."}},{"affects":["village_safety","wolf_livestock_incidents","traveler_volume","guard_workload","npc_respect","npc_fear","escort_economy","injury_healing_demand"],"costs":{"ingredients":"none directly; a sword costs 120 copper imported (first great goal); spear 45 is the practical start","notes":"Watch shifts are whole nights. Injury costs Sella's remedies (5-10 copper) and lost days.","risk":"genuinely dangerous at levels 1-2 vs boar/wolf; social cost at 4-5 (most dangerous person in a cozy village)","timeMinutesPerSession":"120-480"},"description":"Watchfulness, not heroism. A spear on the night watch, an escort on the road, a steady hand when the wolves come down.","id":"skill_swordsmanship","levels":[{"level":1,"qualityBonus":0,"unlocks":["action_night_watch"]},{"level":2,"qualityBonus":0,"unlocks":["action_escort_travelers"]},{"level":3,"qualityBonus":0,"unlocks":["action_defend_livestock","action_train_with_guard"]},{"level":4,"qualityBonus":0,"unlocks":["action_lead_winter_watch"]},{"level":5,"qualityBonus":0,"unlocks":["action_teach_swordsmanship"]}],"maxLevel":5,"name":"Swordsmanship","practice":{"dailyCap":20,"levelThresholds":[0,100,300,700,1500],"perUse":1,"taughtBy":["npc_ralf_hale","npc_bram_stone"],"taughtMultiplier":2},"reputation":{"groups":{"guards":"positive (Bram offers watch work; watches how the player fights)","travelers":"positive (grateful; the road carries the word)","villagers_cautious":"negative until proven (Elswith, Tilda wary of an armed stranger)","young":"positive (Piotr hero-worships)"},"notes":"WORLD.md decision 5 applies double at levels 4-5: visibility draws attention, wanted or not."}}],"system":{"dailyCap":20,"learnNewSkillPointsToLevel1":20,"levelThresholds":[0,100,300,700,1500],"maxLevel":5,"noDecay":true,"noDecayReason":"cozy, not punishing - reputation fades, competence does not","perUse":1,"startingSkillLevel":1,"taughtMultiplier":2,"visibilityPerSkillScale":"0-100; public use at level 3+ generates visibility, consumed by D-09 reputation"},"version":1}
+{
+  "skills": [
+    {
+      "affects": [
+        "food_quality",
+        "npc_happiness",
+        "npc_health",
+        "tavern_popularity",
+        "food_prices",
+        "farm_demand",
+        "relationships",
+        "spoilage_waste"
+      ],
+      "costs": {
+        "ingredients": "consumed per session (waste ~30% at levels 1-2, halved at 2+)",
+        "notes": "No free levels; failure at low levels wastes ingredients and is witnessed.",
+        "risk": "burned/ruined batches at levels 1-2",
+        "timeMinutesPerSession": "30-90"
+      },
+      "description": "Cooking real meals from real ingredients. The village eats three times a day; the person who feeds it well becomes someone.",
+      "id": "skill_cooking",
+      "levels": [
+        {
+          "level": 1,
+          "qualityBonus": 0,
+          "unlocks": [
+            "action_cook_basic_meals",
+            "recipe_campfire_stew",
+            "recipe_roast_fish",
+            "recipe_porridge",
+            "recipe_broth"
+          ]
+        },
+        {
+          "level": 2,
+          "qualityBonus": 1,
+          "unlocks": [
+            "action_tavern_kitchen_work",
+            "action_reliable_cooking",
+            "recipe_bake_bread_rye",
+            "recipe_roast_pork",
+            "recipe_brew_ale"
+          ]
+        },
+        {
+          "level": 3,
+          "qualityBonus": 2,
+          "unlocks": [
+            "action_sell_own_dishes",
+            "action_cook_for_events",
+            "recipe_apple_pie",
+            "recipe_meat_pie",
+            "recipe_seed_cake"
+          ]
+        },
+        {
+          "level": 4,
+          "qualityBonus": 3,
+          "unlocks": [
+            "action_run_tavern_kitchen",
+            "action_festival_head_cook",
+            "recipe_feast_stew",
+            "recipe_smoke_fish"
+          ]
+        },
+        {
+          "level": 5,
+          "qualityBonus": 4,
+          "unlocks": [
+            "action_teach_cooking",
+            "action_dishes_worth_traveling_for",
+            "recipe_master_stew"
+          ]
+        }
+      ],
+      "maxLevel": 5,
+      "name": "Cooking",
+      "practice": {
+        "dailyCap": 20,
+        "levelThresholds": [
+          0,
+          100,
+          300,
+          700,
+          1500
+        ],
+        "perUse": 1,
+        "taughtBy": [
+          "npc_bessa_marlowe"
+        ],
+        "taughtMultiplier": 2
+      },
+      "reputation": {
+        "groups": {
+          "merchants": "positive (travelers spread word)",
+          "tavern": "positive (Bessa offers work at level 2)",
+          "villagers": "positive (feeding people is the Hearth's virtue)"
+        },
+        "notes": "Safest skill to be seen using. Visibility still accrues at level 3+ (D-09)."
+      }
+    },
+    {
+      "affects": [
+        "animal_trust",
+        "village_safety",
+        "livestock_losses",
+        "hunting",
+        "wolf_bounties",
+        "npc_fear",
+        "npc_affection",
+        "farm_labor"
+      ],
+      "costs": {
+        "ingredients": "real food items to feed animals (fish, meat, eggs)",
+        "notes": "Trust takes days to weeks; a level-5 wolf bond is a season's work.",
+        "risk": "nips and kicks at levels 1-2; serious injury risk at 4-5 (needs Sella's remedies)",
+        "timeMinutesPerSession": "60-180"
+      },
+      "description": "Building trust with animals - reading them, feeding them right, patience, the right kind of strength. Taming is a relationship, not a button.",
+      "id": "skill_taming",
+      "levels": [
+        {
+          "level": 1,
+          "qualityBonus": 0,
+          "unlocks": [
+            "action_calm_livestock",
+            "action_help_with_animals"
+          ]
+        },
+        {
+          "level": 2,
+          "qualityBonus": 0,
+          "trustGainMultiplier": 1.5,
+          "unlocks": [
+            "action_train_dog_basic",
+            "action_help_trap_lines"
+          ]
+        },
+        {
+          "level": 3,
+          "qualityBonus": 0,
+          "trustGainMultiplier": 2.0,
+          "unlocks": [
+            "action_train_guard_dog",
+            "action_night_watch_dogs"
+          ]
+        },
+        {
+          "level": 4,
+          "qualityBonus": 0,
+          "trustGainMultiplier": 2.5,
+          "unlocks": [
+            "action_befriend_wild_animals",
+            "action_find_lost_livestock"
+          ]
+        },
+        {
+          "level": 5,
+          "qualityBonus": 0,
+          "trustGainMultiplier": 3.0,
+          "unlocks": [
+            "action_befriend_wolf",
+            "action_wolf_companion"
+          ]
+        }
+      ],
+      "maxLevel": 5,
+      "name": "Taming",
+      "practice": {
+        "dailyCap": 20,
+        "levelThresholds": [
+          0,
+          100,
+          300,
+          700,
+          1500
+        ],
+        "perUse": 1,
+        "taughtBy": [
+          "npc_ralf_hale",
+          "npc_jory_reed"
+        ],
+        "taughtMultiplier": 2
+      },
+      "reputation": {
+        "groups": {
+          "children": "positive, fast (Lida, Tansy, Tom adore the animal person)",
+          "guards": "positive at 3+ (Bram values guard dogs)",
+          "hunters": "positive (Ralf respects competence)",
+          "villagers_cautious": "negative at 4-5 (fear of wolves is honest)"
+        },
+        "notes": "Level 5 with a wolf generates strong visibility - fear and admiration together (D-09)."
+      }
+    },
+    {
+      "affects": [
+        "village_safety",
+        "wolf_livestock_incidents",
+        "traveler_volume",
+        "guard_workload",
+        "npc_respect",
+        "npc_fear",
+        "escort_economy",
+        "injury_healing_demand"
+      ],
+      "costs": {
+        "ingredients": "none directly; a sword costs 120 copper imported (first great goal); spear 45 is the practical start",
+        "notes": "Watch shifts are whole nights. Injury costs Sella's remedies (5-10 copper) and lost days.",
+        "risk": "genuinely dangerous at levels 1-2 vs boar/wolf; social cost at 4-5 (most dangerous person in a cozy village)",
+        "timeMinutesPerSession": "120-480"
+      },
+      "description": "Watchfulness, not heroism. A spear on the night watch, an escort on the road, a steady hand when the wolves come down.",
+      "id": "skill_swordsmanship",
+      "levels": [
+        {
+          "level": 1,
+          "qualityBonus": 0,
+          "unlocks": [
+            "action_night_watch",
+            "recipe_sharpen_blade"
+          ]
+        },
+        {
+          "level": 2,
+          "qualityBonus": 0,
+          "unlocks": [
+            "action_escort_travelers"
+          ]
+        },
+        {
+          "level": 3,
+          "qualityBonus": 0,
+          "unlocks": [
+            "action_defend_livestock",
+            "action_train_with_guard"
+          ]
+        },
+        {
+          "level": 4,
+          "qualityBonus": 0,
+          "unlocks": [
+            "action_lead_winter_watch"
+          ]
+        },
+        {
+          "level": 5,
+          "qualityBonus": 0,
+          "unlocks": [
+            "action_teach_swordsmanship"
+          ]
+        }
+      ],
+      "maxLevel": 5,
+      "name": "Swordsmanship",
+      "practice": {
+        "dailyCap": 20,
+        "levelThresholds": [
+          0,
+          100,
+          300,
+          700,
+          1500
+        ],
+        "perUse": 1,
+        "taughtBy": [
+          "npc_ralf_hale",
+          "npc_bram_stone"
+        ],
+        "taughtMultiplier": 2
+      },
+      "reputation": {
+        "groups": {
+          "guards": "positive (Bram offers watch work; watches how the player fights)",
+          "travelers": "positive (grateful; the road carries the word)",
+          "villagers_cautious": "negative until proven (Elswith, Tilda wary of an armed stranger)",
+          "young": "positive (Piotr hero-worships)"
+        },
+        "notes": "WORLD.md decision 5 applies double at levels 4-5: visibility draws attention, wanted or not."
+      }
+    }
+  ],
+  "system": {
+    "dailyCap": 20,
+    "learnNewSkillPointsToLevel1": 20,
+    "levelThresholds": [
+      0,
+      100,
+      300,
+      700,
+      1500
+    ],
+    "maxLevel": 5,
+    "noDecay": true,
+    "noDecayReason": "cozy, not punishing - reputation fades, competence does not",
+    "perUse": 1,
+    "startingSkillLevel": 1,
+    "taughtMultiplier": 2,
+    "visibilityPerSkillScale": "0-100; public use at level 3+ generates visibility, consumed by D-09 reputation"
+  },
+  "version": 1
+}
