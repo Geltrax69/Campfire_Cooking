@@ -26,7 +26,7 @@ The human approves every area before it's marked `done`.
 | D-01 | World, setting and tone | 1 | none | `docs/design/WORLD.md` | done |
 | D-02 | Village map and locations | 2 | D-01 | `LOCATIONS.md`, `Content/world/locations.json` | done |
 | D-03 | Characters (~20 villagers) | 3 | D-01, D-02 | `CHARACTERS.md`, `Content/npcs/npcs.json` | done |
-| D-04 | Money and economy | 4 | D-01–D-03 | `ECONOMY.md`, `Content/economy/economy.json` | todo |
+| D-04 | Money and economy | 4 | D-01–D-03 | `ECONOMY.md`, `Content/economy/economy.json` | done |
 | D-05 | Items and resources | 5 | D-02, D-04 | `ITEMS.md`, `Content/items/items.json` | todo |
 | D-06 | Skills | 6 | D-01, D-04, D-05 | `SKILLS.md`, `Content/skills/skills.json` | todo |
 | D-07 | Recipes and crafting | 7 | D-05, D-06 | `RECIPES.md`, `Content/recipes/recipes.json` | todo |

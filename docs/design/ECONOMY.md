@@ -61,7 +61,7 @@ A normal adult needs about **10 copper a day** to live: ~7 for food (bread 5–6
 
 Every chain states who produces what, how much, and what it costs them. Quantities are per day unless noted; seasons are 90 days.
 
-**Apples: orchard → stall.** Alder Farm's orchard yields ~40 pickable apples/day in autumn (reason: ~30 mature trees × ~120 apples per season, picked over 90 days). Corvin delivers **45 apples twice a week** (Secondday and Fifthday, 08:00, 1 minute's walk per the travel table) to Mira's stall at **1 copper each** wholesale (reason: farmgate price ≈ a third of retail — the stall's work is the other two thirds). Mira retails at 3. Windfalls (~10/day in autumn) go to cider, children, and Tom. In winter the orchard sleeps: deliveries drop to 20 twice a week from the root cellar (~1,000 stored), and the price rules (section 4) lift the retail price. **The stall never resets** — its stock is last delivery minus sales minus theft, full stop.
+**Apples: orchard → stall.** Alder Farm's orchard yields ~40 pickable apples/day in autumn (reason: ~30 mature trees × ~120 apples per season, picked over 90 days). Corvin delivers **45 apples twice a week** (Secondday and Fifthday, 08:00, 1 minute's walk per the travel table) to Mira's stall at a wholesale price that **starts at 1 copper each** (reason: farmgate price ≈ a third of retail — the stall's work is the other two thirds). The price is **not fixed**: Corvin can raise it when apples are scarce or demand is high, through normal negotiation bounded by the price rules in section 4 (reason: a single supplier with visible shortages has real bargaining power). Mira retails at 3. Windfalls (~10/day in autumn) go to cider, children, and Tom. In winter the orchard sleeps: deliveries drop to 20 twice a week from the root cellar (~1,000 stored), and the price rules (section 4) lift the retail price. **The stall never resets** — its stock is last delivery minus sales minus theft, full stop.
 
 **Grain: farm → mill → bakery.** Autumn harvest: ~60 sacks wheat, ~40 sacks barley from Alder Farm (reason: one farm feeds ~120 people; a sack feeds a household ~2 weeks). Corvin carts grain to the mill; Garrick takes the **miller's toll of 1/12 in kind** (reason: the traditional toll — paid in grain, not coin, per LOCATIONS.md) and grinds the rest. Oda buys flour at **10 copper/sack**, ~2.5 sacks/day, and bakes ~40 loaves/day (reason: one oven, morning bake only — the bakery sells out by early afternoon). The communal granary holds the village reserve: currently ~50 sacks against ~100 needed (reason: last year's thin barley — WORLD.md's problem; Elswith rations quietly).
 
@@ -121,7 +121,7 @@ Money must be conserved: every copper is tracked, and coins only enter or leave 
 
 **Sources (money enters the village):**
 1. **Traveling merchants** buy village goods — apples, timber, honey, smoked meat, Ralf's pelts. Every ~3 weeks in warm months, ~800 copper per visit (reason: a merchant's cart holds only so much, and Millbrook is one stop of many).
-2. **Travelers** spend at the tavern and stores — beds, ale, meals, horseshoes. ~750 copper/month in warm months, ~200 in winter (reason: the Alder Road quiets when the ford runs high and cold).
+2. **Travelers** spend at the tavern and stores — beds, ale, meals, horseshoes. Seasonal: ~900 copper/month in summer and harvest (the road is busy), ~500 in spring/autumn, **almost none in winter** (the ford runs high and cold). Total ≈ 750/month averaged over warm months (reason: the Alder Road justifies the traffic, but strangers are noticeably scarce in winter — which also makes a stranger *more* noticeable in quiet seasons).
 3. **Wolf bounties** — the kingdom pays 50 copper per wolf pelt in winter, 2–4 incidents per winter (reason: WORLD.md — the crown wants the roads safe; this is the village's winter windfall).
 
 **Sinks (money leaves the village):**
@@ -169,8 +169,8 @@ Total outstanding: **340 copper**. Terms: **no interest** (reason: Tilda believe
 Setup: game starts on a **Thirdday morning in early autumn**. The stall holds **20 apples** at **3 copper** each. Corvin's deliveries come **Secondday and Fifthday at 08:00, 45 apples at 1 copper wholesale**. Daily demand is ~13 apples: Bessa 3 (tavern), Sima 2, Tilda 1, Elswith 1, Oda 1, Garrick 1 (Tansy), Maren 1, Sella 1, Doran 1, miscellaneous 1.
 
 **The test, tick by tick:**
-- Morning: Mira sells ~5 → 15 on display by 14:00.
-- **14:00 — the player steals 6** → 9 left. (Theft event, visibility per perception rules.)
+- Day 1 starts with **20 apples** on the display. **Morning: ~5 sell → 15 remain by 14:00.**
+- **14:00 — the player steals 6 of the remaining 15** → 9 left. (Theft event, visibility per perception rules.)
 - Afternoon: buyers take ~5 → **4 left at closing**.
 - **19:00 — Mira counts.** Her tally says 20 − 5 − 5 = 10; the display says 4. **Belief formed: "6 apples missing."** She does not know who took them. She suspects Tom (windfalls) — wrong person, right habit.
 - Evening: Mira tells Bessa. The tavern talks. (If a witness saw the theft, the rumor carries a description; if not, it carries only "someone.")
@@ -203,10 +203,12 @@ The player starts with **15 copper**, strange clothes, and an empty stomach.
 - Counterfeit worries if silver starts circulating more (a merchant-phase problem).
 - Crop futures and forward contracts (a merchant-playstyle toy for much later).
 
-## 13. Open questions for the human
+## 13. Decisions made (2026-10-02, with the human)
 
-1. **Tax numbers:** the reeve takes ~1,200 per collection from the 20 (~2,400/year). Is that the right weight — felt but not crushing — or should taxes bite harder?
-2. **Traveler volume:** ~750 copper/month from travelers in warm months. Too many strangers for a frontier village, or does the Alder Road justify it?
-3. **Apple wholesale:** Corvin sells to Mira at 1 copper (a third of retail). Fair for kin and a steady buyer, or should he drive a harder bargain?
-4. **Bounties:** 50 copper per wolf pelt from the crown. Enough to make winter wolf work tempting but not a gold rush?
-5. **Feast forgiveness:** Harvest Feast forgives debts under 20 copper. Keep it purely symbolic, or should bigger debts ever be renegotiated there?
+1. **Taxes: keep ~1,200 per collection for now;** tune after the simulation runs.
+2. **Travelers: keep the monthly total but seasonal** — ~900/month in summer and harvest, ~500 in spring/autumn, almost none in winter, so strangers are more noticeable in quiet seasons.
+3. **Apple wholesale starts at 1 copper but is not fixed** — Corvin can raise it when apples are scarce or demand is high, through normal negotiation bounded by the price rules.
+4. **Wolf bounty 50 copper/pelt: approved.**
+5. **Feast debt forgiveness stays symbolic (under 20 copper).** Bigger renegotiations can come later through relationships.
+
+**Clarification (load-bearing for the Apple Test):** the stall starts Day 1 with 20 apples; ~5 sell in the morning, so the 14:00 theft takes 6 of the remaining 15. Later Apple Test simulations must use these numbers.
