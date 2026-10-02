@@ -40,6 +40,8 @@ Parallel-safe once dependencies are approved: {D-05, D-09}, {D-06, D-08, D-10}.
 
 **Design Phase exit:** D-12 passes and the human approves the whole set.
 
+**Design Phase: DONE.** 2026-10-02 — the human reviewed the full summary and all D-06–D-12 autonomous decisions, and approved the Design Phase. All D-01–D-12 marked `done`, committed, and pushed to `claude/wizardly-clarke-tigogn`.
+
 ---
 
 ## Phase 0: Code setup (no Unity)
@@ -47,9 +49,11 @@ Parallel-safe once dependencies are approved: {D-05, D-09}, {D-06, D-08, D-10}.
 | ID | Task | Who | Status |
 |---|---|---|---|
 | P0-01 | Install the .NET 8 SDK so `dotnet test SimulationTests` works | Human | todo |
-| P0-02 | Confirm the agent can read/write the repo and run `dotnet test` | Human | todo |
-| P0-03 | GitHub Actions workflow that runs `dotnet test SimulationTests` on every push | Orchestrator | todo |
-| P0-04 | Decide the time scale (default 1 real second = 1 game minute) | Human | todo |
+| P0-02 | Confirm the agent can read/write the repo and run `dotnet test` | Human | done (2026-10-02, with caveat — see note) |
+
+**P0-02 note (agent environment, 2026-10-02):** the agent's sandbox runs .NET 8 SDK 8.0.131 from `~/.dotnet` (persistent across VM restarts). `dotnet build` works via a local NuGet feed (`~/nuget-local`, 48 packages incl. NUnit 5 / NUnitLite / Microsoft.NET.Test.Sdk — the sandbox proxy does TLS interception that .NET's TLS stack can't complete, so nuget.org is unreachable from `dotnet` directly; `curl` works and was used to populate the feed). NUnit tests compile and pass (verified with the NUnitLite self-executing runner). Plain `dotnet test` can **not** run in the sandbox: `vstest.console` ↔ `testhost` communicate over TCP on `127.0.0.1`, and the sandbox transparently redirects all IPv4 TCP (including localhost) to the egress proxy, so the testhost never connects. GitHub Actions (P0-03) is therefore the authoritative `dotnet test SimulationTests` runner; the agent verifies locally with `dotnet build` + NUnitLite.
+| P0-03 | GitHub Actions workflow that runs `dotnet test SimulationTests` on every push | Orchestrator | done (2026-10-02) |
+| P0-04 | Decide the time scale: **1 real second = 1 game minute** (one game day = 24 real minutes) | Human | done (2026-10-02) |
 
 ---
 
