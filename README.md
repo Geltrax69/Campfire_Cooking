@@ -366,5 +366,11 @@ The central experience is the player shifting from *"What quest does the game wa
 ```
 /
 ├── README.md     ← this design document
-└── Assets/       ← art, models, audio, and other game assets (uploaded separately)
+└── Assets/       ← art, models, audio and UI (see Assets/README.md for layout and licenses)
+    ├── Models/   ← loose models sorted by use
+    ├── Packs/    ← complete third-party packs (Kenney, Crayon)
+    ├── Audio/    ← sound effects
+    ├── UI/       ← touch controls, icons, panels
+    ├── Sky/      ← skies and clouds
+    └── _OffTheme/← modern/sci-fi assets kept aside
 ```
