@@ -112,3 +112,43 @@ Phase 1 = Apple Test + daily life; 2 = economy expansion; 3 = skills/crafting an
 | item_wooden_toy | Carved wooden chicken | 3 |
 
 Services (not items): `service_lodging` (tavern bed, 10 copper), `service_grinding` (miller's toll, in kind), `service_repair` (8/25 copper).
+## Skills, species, groups, town (D-06, D-08, D-09, D-10)
+
+| ID | Name |
+|---|---|
+| skill_cooking | Cooking |
+| skill_taming | Taming |
+| skill_swordsmanship | Swordsmanship |
+| species_chicken | Chicken |
+| species_pig | Pig (domestic) / Boar (wild) |
+| species_deer | Deer |
+| species_wolf | Wolf |
+| species_brambleback | Brambleback |
+| group_children | reputation group |
+| group_council | reputation group |
+| group_farmers | reputation group |
+| group_guards | reputation group |
+| group_merchants | reputation group |
+| group_villagers | reputation group |
+| event_bridge_project | town stat/event |
+| event_drought | town stat/event |
+| event_festival | town stat/event |
+| event_fever | town stat/event |
+| event_fire | town stat/event |
+| event_food_shortage | town stat/event |
+| event_merchant_arrival | town stat/event |
+| event_theft_wave | town stat/event |
+| event_wheel_failure | town stat/event |
+| event_wolf_attack | town stat/event |
+| stat_crime | town stat/event |
+| stat_employment | town stat/event |
+| stat_food_supply | town stat/event |
+| stat_happiness | town stat/event |
+| stat_housing | town stat/event |
+| stat_infrastructure | town stat/event |
+| stat_population | town stat/event |
+| stat_reputation | town stat/event |
+| stat_safety | town stat/event |
+| stat_trade | town stat/event |
+| stat_wealth | town stat/event |
+| town_millbrook | town stat/event |
