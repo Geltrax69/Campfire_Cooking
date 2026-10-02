@@ -98,10 +98,10 @@ The player **wakes up on the riverbank below the old shrine, on a Thirdday morni
 - The sea, three weeks south — fish, salt, ships, and people who've seen stranger things than a reincarnated stranger.
 - Other reincarnated people: is the player the only one? (A question for Phase 7+, not now.)
 
-## 10. Open questions for the human
+## 10. Decisions made (2026-10-02, with the human)
 
-1. **Does the village know about reincarnation?** Is rebirth part of the Hearth faith (making the player's story believable but unremarkable), or would claiming it get the player laughed at — or feared? This changes early dialogue and suspicion a lot.
-2. **Should the healer be one of the 20 simulated villagers?** It would make magic visible in the prototype (remedies, a hut, a daily routine), but it spends one of our 20 NPC slots on someone the Apple Test doesn't need.
-3. **How harsh may failure get?** In a truly bad winter, can villagers go hungry or worse — or should hardship always stop short of real suffering? This sets the stakes for the whole simulation.
-4. **Seed the "Grey" mystery or keep the wilds purely natural?** Option A: hunters occasionally mention it in the tavern (a rumor thread for later). Option B: wolves and weather only, no supernatural hints at all in the prototype.
-5. **The player's old-world knowledge:** may the player freely use modern knowledge (crop rotation, basic medicine, literacy) as an advantage, or should the world push back (disbelief, accusations of witchcraft)? This affects how powerful "reincarnated with memories" really is.
+1. **The reincarnation stays secret.** Rebirth is not part of the Hearth faith — claiming it would get the player laughed at or feared. The default play is secrecy: whether the player tells anyone is itself a social risk with real consequences.
+2. **The healer is one of the 20 simulated villagers.** She gets a full NPC profile in D-03 (remedies, hut, daily routine) — magic becomes visible through items and routines, never through spells in the simulation.
+3. **Failure can be harsh.** In a truly bad winter, villagers can go genuinely hungry; stores can run out and people suffer. Hardship is real, but never scripted to punish the player.
+4. **Seed the Grey.** Hunters occasionally mention "the Grey" in the deep forest in the tavern — a rumor thread for later phases, never encountered in the prototype.
+5. **Old-world knowledge is usable but visible.** The player may freely use modern knowledge (crop rotation, basic medicine, literacy), but conspicuous displays draw attention: notoriety can attract thieves, kidnappers, or people who want to make the player work for them. Visibility has a cost, enforced through the reputation and rumor systems (designed in D-09).
