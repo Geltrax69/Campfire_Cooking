@@ -18,7 +18,7 @@
       "sells": [
         "item_apple",
         "item_pear",
-        "item_berry"
+        "item_berries"
       ],
       "startStock": {
         "item_apple": 20
@@ -53,7 +53,7 @@
       },
       "sells": [
         "item_salt",
-        "item_cloth",
+        "item_cloth_imported",
         "item_lamp_oil",
         "item_nails",
         "item_rope",
@@ -61,7 +61,7 @@
       ],
       "stealable": [
         "item_salt",
-        "item_cloth",
+        "item_cloth_imported",
         "item_tool_basic",
         "coin_box"
       ],
@@ -118,8 +118,8 @@
       },
       "produces": [
         "item_apple",
-        "item_wheat",
-        "item_barley",
+        "item_grain",
+        "item_grain",
         "item_egg",
         "item_pork",
         "item_honey"
@@ -133,7 +133,7 @@
         "item_apple",
         "item_egg",
         "item_tool_basic",
-        "item_grain_sack"
+        "item_grain"
       ],
       "tags": [
         "production",
@@ -168,7 +168,7 @@
         "item_ale",
         "item_small_beer",
         "item_stew",
-        "item_bed_night"
+        "service_lodging"
       ],
       "stealable": [
         "item_ale",
@@ -202,7 +202,7 @@
       "sells": [
         "item_tool_basic",
         "item_nails",
-        "item_horseshoe",
+        "item_horseshoes",
         "service_repair"
       ],
       "stealable": [
@@ -232,15 +232,15 @@
         "y": -2
       },
       "produces": [
-        "item_flour_wheat",
-        "item_flour_barley"
+        "item_flour",
+        "item_flour"
       ],
       "provides": [
         "service_grinding"
       ],
       "stealable": [
-        "item_flour_sack",
-        "item_grain_sack"
+        "item_flour",
+        "item_grain"
       ],
       "tags": [
         "production",
@@ -316,7 +316,7 @@
         "winter_food_reserve"
       ],
       "stealable": [
-        "item_grain_sack"
+        "item_grain"
       ],
       "tags": [
         "storage",
@@ -373,10 +373,10 @@
       "sells": [
         "item_remedy",
         "item_fever_tea",
-        "item_poulitice"
+        "item_remedy"
       ],
       "stealable": [
-        "item_herb_dried",
+        "item_herb_bundle",
         "item_remedy"
       ],
       "tags": [

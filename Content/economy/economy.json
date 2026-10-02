@@ -1,1 +1,631 @@
-{"appleTest":{"basePrice":3,"buyers":[{"npc":"npc_bessa_marlowe","perDay":3},{"npc":"npc_sima_fenn","perDay":2},{"npc":"npc_tilda_bray","perDay":1},{"npc":"npc_elswith_alder","perDay":1},{"npc":"npc_oda_fenn","perDay":1},{"npc":"npc_garrick_alder","perDay":1},{"npc":"npc_maren_alder","perDay":1},{"npc":"npc_sella_wren","perDay":1},{"npc":"npc_doran_kettle","perDay":1},{"npc":"misc","perDay":1}],"deliveries":[{"at":"08:00","day":"Secondday","from":"loc_farm","qty":45,"wholesalePrice":1},{"at":"08:00","day":"Fifthday","from":"loc_farm","qty":45,"wholesalePrice":1}],"demandPerDay":13,"expectedOutcome":"Day 1: 20 - 5 (morning sales) - 6 (theft) - 5 (afternoon) = 4 at dusk count; Mira believes 6 are missing. Day 2: 4 - 8 (morning) = sold out ~11:00; failed purchases. Day 3 (Fifthday) 08:00: 45 arrive; scarcity pricing lifts retail to 4 for a few days. Bram logs the complaint; no evidence, no action.","startDay":"Thirdday, early autumn","startStock":20,"stockRule":"carries_over_no_reset","theft":{"at":"14:00","count":6}},"costOfLiving":{"adultPerDay":10,"childPerDay":6,"note":"Adult: ~7 food, ~2 household, ~1 amortized clothes/tools."},"currency":[{"id":"coin_copper","name":"Copper penny","valueCopper":1},{"id":"coin_silver","name":"Silver mark","valueCopper":100},{"id":"coin_gold","name":"Gold crown","valueCopper":10000}],"debtRules":{"consequence":"After ~60 days overdue, Tilda tells Elswith; the council witnesses the debt; the debtor's standing drops — no credit extended, tabs refused, tavern hears. Enforced by reputation, not force.","feastForgivenessBelow":20,"interest":0,"overdueDays":60},"debts":[{"amount":120,"creditor":"npc_tilda_bray","debtor":"npc_doran_kettle","for":"Iron stock bought on credit before the autumn merchant visit","id":"debt_doran_iron","interest":0,"repaymentPerWeek":10},{"amount":80,"creditor":"npc_tilda_bray","debtor":"npc_bessa_marlowe","for":"Salt and lamp oil over the summer","id":"debt_bessa_staples","interest":0,"repaymentPerWeek":5},{"amount":60,"creditor":"npc_tilda_bray","debtor":"npc_garrick_alder","for":"Nails and pitch for wheel patching","id":"debt_garrick_nails","interest":0,"note":"Behind; Tilda is patient for Tansy's sake.","repaymentPerWeek":0},{"amount":45,"creditor":"npc_tilda_bray","debtor":"npc_jory_reed","for":"Rope and tar","id":"debt_jory_rope","interest":0,"repaymentInKind":"smoked fish","repaymentPerWeek":8},{"amount":35,"creditor":"npc_tilda_bray","debtor":"npc_tam_oakes","for":"Salt pork last winter","id":"debt_tam_pork","interest":0,"repaymentPerWeek":3}],"playerStart":{"money":15,"note":"Strange clothes, empty stomach. Day labor 5-8/day; knife 30 is the first real goal."},"priceRules":{"maxDailyChangePercent":10,"minDailyChangeCopper":1,"qualityModifiers":{"bruised":-1,"fine":1},"scarcityMaxIncreasePercent":50,"scarcityThreshold":0.3,"seasonalModifiers":{"item_apple":{"autumn":-20,"spring":60,"summer":30,"winter":50},"item_firewood":{"winter":100},"item_fish":{"summer":-20},"item_remedy":{"winter":50}},"surplusMaxDecreasePercent":30,"surplusThreshold":1.5},"prices":{"item_ale":2,"item_apple":3,"item_axe":60,"item_bed_night":10,"item_berry":4,"item_bow":80,"item_bread_barley":2,"item_bread_rye":3,"item_cheese":6,"item_cloth_imported":40,"item_cloth_local":25,"item_dye":20,"item_egg":1,"item_firewood":2,"item_fish":3,"item_fish_smoked":4,"item_flour_sack":10,"item_hammer":40,"item_herb_bundle":3,"item_hoe":35,"item_honey":8,"item_horseshoes":12,"item_iron_stock_kg":15,"item_knife":30,"item_lamp_oil":12,"item_log":8,"item_nails":1,"item_pear":4,"item_pork":12,"item_remedy":8,"item_roll":1,"item_rope":5,"item_salt":6,"item_small_beer":1,"item_stew":4},"producers":[{"inputs":[],"item":"item_apple","location":"loc_farm","note":"Orchard yield in autumn. Winter: 20 twice weekly from the root cellar (~1000 stored).","perDay":40,"seasons":["autumn"]},{"inputs":[],"item":"item_grain","location":"loc_farm","note":"Autumn harvest only: ~60 sacks wheat + 40 sacks barley for the year.","perDay":0,"seasons":["autumn"]},{"inputs":[],"item":"item_egg","location":"loc_farm","note":"Maren's hens; ~5 sold at the farmgate daily.","perDay":8,"seasons":["spring","summer","autumn","winter"]},{"inputs":[],"item":"item_pork","location":"loc_farm","note":"Autumn slaughter: ~200 cuts at 12 copper.","perDay":0,"seasons":["autumn"]},{"inputs":[],"item":"item_honey","location":"loc_farm","note":"~10 jars per autumn at 8 copper.","perDay":0,"seasons":["autumn"]},{"inputs":["item_grain"],"item":"item_flour_sack","location":"loc_mill","note":"Miller's toll is 1/12 of grain in kind. Oda buys ~2.5 sacks/day at 10 copper.","perDay":3,"seasons":["spring","summer","autumn","winter"]},{"inputs":["item_grain","well_water"],"item":"item_ale","location":"loc_tavern","note":"Bessa brews 2 batches/week, 20 mugs per batch. Grain 8 copper/sack from Corvin.","perDay":0,"seasons":["spring","summer","autumn","winter"]},{"inputs":[],"item":"item_log","location":"loc_forest_edge","note":"Tam's sustainable cut: 1/day. The forest regrows ~1/day.","perDay":1,"seasons":["spring","summer","autumn","winter"]},{"inputs":[],"item":"item_fish","location":"loc_river_alder","note":"Jory's catch against a stock of ~60 regrowing 3/day.","perDay":3,"seasons":["spring","summer","autumn","winter"]},{"inputs":[],"item":"item_herb_bundle","location":"loc_forest_edge","note":"Sella and Brynn gather; patches dormant in winter.","perDay":2,"seasons":["spring","summer","autumn"]}],"shops":[{"location":"loc_apple_stall","note":"Stock never resets. Restocked only by Corvin's deliveries. Below 10 triggers an early order.","owner":"npc_mira_holt","sells":[{"basePrice":3,"deliveryMinutes":2,"deliverySchedule":["Secondday 08:00","Fifthday 08:00"],"item":"item_apple","restockBelow":10,"restockFrom":"loc_farm","restockQty":45,"startStock":20,"stockRule":"carries_over_no_reset","wholesalePrice":1}]},{"location":"loc_general_store","note":"Imports restocked by traveling merchants every ~3 weeks in warm months.","owner":"npc_tilda_bray","sells":[{"basePrice":6,"deliveryMinutes":0,"item":"item_salt","restockFrom":"merchant"},{"basePrice":40,"deliveryMinutes":0,"item":"item_cloth_imported","restockFrom":"merchant"},{"basePrice":25,"deliveryMinutes":2,"item":"item_cloth_local","restockFrom":"npc_brynn_oakes"},{"basePrice":12,"deliveryMinutes":0,"item":"item_lamp_oil","restockFrom":"merchant"},{"basePrice":1,"deliveryMinutes":1,"item":"item_nails","restockFrom":"npc_doran_kettle"},{"basePrice":5,"deliveryMinutes":0,"item":"item_rope","restockFrom":"merchant"}]},{"location":"loc_bakery","note":"~40 loaves each morning; sells out by early afternoon. Constraint is the oven, not supply.","owner":"npc_oda_fenn","sells":[{"basePrice":3,"deliveryMinutes":0,"item":"item_bread_rye","restockFrom":"loc_bakery"},{"basePrice":2,"deliveryMinutes":0,"item":"item_bread_barley","restockFrom":"loc_bakery"},{"basePrice":1,"deliveryMinutes":0,"item":"item_roll","restockFrom":"loc_bakery"}]},{"location":"loc_tavern","note":"Ale brewed on site. Travelers are the margin: bed + supper + ale ~18 copper.","owner":"npc_bessa_marlowe","sells":[{"basePrice":2,"item":"item_ale"},{"basePrice":1,"item":"item_small_beer"},{"basePrice":4,"item":"item_stew"},{"basePrice":10,"item":"item_bed_night"}]},{"location":"loc_blacksmith","note":"Iron imported; ~20 kg stock. Repairs 8 (simple) / 25 (major).","owner":"npc_doran_kettle","sells":[{"basePrice":1,"deliveryMinutes":0,"item":"item_nails","restockFrom":"merchant_iron"},{"basePrice":30,"item":"item_knife"},{"basePrice":60,"item":"item_axe"},{"basePrice":35,"item":"item_hoe"},{"basePrice":40,"item":"item_hammer"},{"basePrice":12,"item":"item_horseshoes"}]}],"sinks":[{"copperPerMonth":400,"id":"sink_taxes","name":"Reeve's tax collection","note":"Twice yearly (spring, autumn); the 20 pay ~1200 per collection. Assessment scales with visible prosperity — the stabilizer."},{"copperPerMonth":600,"id":"sink_imports","name":"Import purchases from merchants","note":"Iron (~150), salt, cloth, lamp oil, dyes. Tilda orders more when the village has coin.","seasons":["spring","summer","autumn"]},{"copperPerMonth":150,"id":"sink_community_fund","name":"Community fund (wheel, palisade, granary)","note":"The council's savings toward the 8000-copper wheel and repairs."},{"copperPerMonth":150,"id":"sink_spoilage","name":"Spoilage, breakage, loss","note":"Food spoils, tools break, coins go missing. Value destroyed, not transferred."},{"copperPerMonth":200,"id":"sink_feast","name":"Harvest Feast reserve","note":"The feast's tables and symbolic debt forgiveness are funded through the year.","seasons":["autumn"]}],"sources":[{"copperPerMonth":800,"id":"source_merchants","name":"Traveling merchants buying village goods","note":"Apples, timber, honey, smoked meat, pelts. Every ~3 weeks in warm months.","seasons":["spring","summer","autumn"]},{"copperPerMonth":750,"id":"source_travelers","name":"Traveler spending at tavern and stores","note":"Beds, ale, meals, horseshoes. ~200/month in winter.","seasons":["spring","summer","autumn"]},{"copperPerMonth":150,"id":"source_bounties","name":"Wolf bounties from the crown","note":"50 copper per pelt, 2-4 incidents per winter.","seasons":["winter"]}],"version":1,"wages":[{"employee":"npc_bram_stone","employer":"village_fund","note":"Guard's wage, from the household levy.","perDay":20},{"employee":"npc_elswith_alder","employer":"village_fund","note":"Elder's council stipend.","perDay":8},{"employee":"npc_ralf_hale","employer":"village_fund","note":"Hunter's winter retainer for the watch and wolf work.","perDay":0,"perWeek":60,"seasons":["winter"]},{"employee":"player","employer":"npc_corvin_alder","note":"Farm day labor, especially harvest.","perDay":8},{"employee":"player","employer":"npc_tam_oakes","note":"Woodcutting help.","perDay":6},{"employee":"player","employer":"npc_garrick_alder","note":"Mill help.","perDay":5},{"employee":"player","employer":"npc_bessa_marlowe","note":"Tavern pot-wash, plus a meal.","perDay":6}]}
+{
+  "appleTest": {
+    "basePrice": 3,
+    "buyers": [
+      {
+        "npc": "npc_bessa_marlowe",
+        "perDay": 3
+      },
+      {
+        "npc": "npc_sima_fenn",
+        "perDay": 2
+      },
+      {
+        "npc": "npc_tilda_bray",
+        "perDay": 1
+      },
+      {
+        "npc": "npc_elswith_alder",
+        "perDay": 1
+      },
+      {
+        "npc": "npc_oda_fenn",
+        "perDay": 1
+      },
+      {
+        "npc": "npc_garrick_alder",
+        "perDay": 1
+      },
+      {
+        "npc": "npc_maren_alder",
+        "perDay": 1
+      },
+      {
+        "npc": "npc_sella_wren",
+        "perDay": 1
+      },
+      {
+        "npc": "npc_doran_kettle",
+        "perDay": 1
+      },
+      {
+        "npc": "misc",
+        "perDay": 1
+      }
+    ],
+    "deliveries": [
+      {
+        "at": "08:00",
+        "day": "Secondday",
+        "from": "loc_farm",
+        "qty": 45,
+        "wholesalePrice": 1
+      },
+      {
+        "at": "08:00",
+        "day": "Fifthday",
+        "from": "loc_farm",
+        "qty": 45,
+        "wholesalePrice": 1
+      }
+    ],
+    "demandPerDay": 13,
+    "expectedOutcome": "Day 1: 20 - 5 (morning sales) - 6 (theft) - 5 (afternoon) = 4 at dusk count; Mira believes 6 are missing. Day 2: 4 - 8 (morning) = sold out ~11:00; failed purchases. Day 3 (Fifthday) 08:00: 45 arrive; scarcity pricing lifts retail to 4 for a few days. Bram logs the complaint; no evidence, no action.",
+    "startDay": "Thirdday, early autumn",
+    "startStock": 20,
+    "stockRule": "carries_over_no_reset",
+    "theft": {
+      "at": "14:00",
+      "count": 6
+    },
+    "wholesaleNote": "Starts at 1 copper; Corvin may raise it when apples are scarce or demand is high (normal negotiation, bounded by price rules)."
+  },
+  "costOfLiving": {
+    "adultPerDay": 10,
+    "childPerDay": 6,
+    "note": "Adult: ~7 food, ~2 household, ~1 amortized clothes/tools."
+  },
+  "currency": [
+    {
+      "id": "coin_copper",
+      "name": "Copper penny",
+      "valueCopper": 1
+    },
+    {
+      "id": "coin_silver",
+      "name": "Silver mark",
+      "valueCopper": 100
+    },
+    {
+      "id": "coin_gold",
+      "name": "Gold crown",
+      "valueCopper": 10000
+    }
+  ],
+  "debtRules": {
+    "consequence": "After ~60 days overdue, Tilda tells Elswith; the council witnesses the debt; the debtor's standing drops \u2014 no credit extended, tabs refused, tavern hears. Enforced by reputation, not force.",
+    "feastForgivenessBelow": 20,
+    "interest": 0,
+    "overdueDays": 60
+  },
+  "debts": [
+    {
+      "amount": 120,
+      "creditor": "npc_tilda_bray",
+      "debtor": "npc_doran_kettle",
+      "for": "Iron stock bought on credit before the autumn merchant visit",
+      "id": "debt_doran_iron",
+      "interest": 0,
+      "repaymentPerWeek": 10
+    },
+    {
+      "amount": 80,
+      "creditor": "npc_tilda_bray",
+      "debtor": "npc_bessa_marlowe",
+      "for": "Salt and lamp oil over the summer",
+      "id": "debt_bessa_staples",
+      "interest": 0,
+      "repaymentPerWeek": 5
+    },
+    {
+      "amount": 60,
+      "creditor": "npc_tilda_bray",
+      "debtor": "npc_garrick_alder",
+      "for": "Nails and pitch for wheel patching",
+      "id": "debt_garrick_nails",
+      "interest": 0,
+      "note": "Behind; Tilda is patient for Tansy's sake.",
+      "repaymentPerWeek": 0
+    },
+    {
+      "amount": 45,
+      "creditor": "npc_tilda_bray",
+      "debtor": "npc_jory_reed",
+      "for": "Rope and tar",
+      "id": "debt_jory_rope",
+      "interest": 0,
+      "repaymentInKind": "smoked fish",
+      "repaymentPerWeek": 8
+    },
+    {
+      "amount": 35,
+      "creditor": "npc_tilda_bray",
+      "debtor": "npc_tam_oakes",
+      "for": "Salt pork last winter",
+      "id": "debt_tam_pork",
+      "interest": 0,
+      "repaymentPerWeek": 3
+    }
+  ],
+  "playerStart": {
+    "money": 15,
+    "note": "Strange clothes, empty stomach. Day labor 5-8/day; knife 30 is the first real goal."
+  },
+  "priceRules": {
+    "maxDailyChangePercent": 10,
+    "minDailyChangeCopper": 1,
+    "qualityModifiers": {
+      "bruised": -1,
+      "fine": 1
+    },
+    "scarcityMaxIncreasePercent": 50,
+    "scarcityThreshold": 0.3,
+    "seasonalModifiers": {
+      "item_apple": {
+        "autumn": -20,
+        "spring": 60,
+        "summer": 30,
+        "winter": 50
+      },
+      "item_firewood": {
+        "winter": 100
+      },
+      "item_fish": {
+        "summer": -20
+      },
+      "item_remedy": {
+        "winter": 50
+      }
+    },
+    "surplusMaxDecreasePercent": 30,
+    "surplusThreshold": 1.5
+  },
+  "prices": {
+    "item_ale": 2,
+    "item_apple": 3,
+    "item_axe": 60,
+    "item_berries": 4,
+    "item_bow": 80,
+    "item_bread_barley": 2,
+    "item_bread_rye": 3,
+    "item_cheese": 6,
+    "item_cloth_imported": 40,
+    "item_cloth_local": 25,
+    "item_dye": 20,
+    "item_egg": 1,
+    "item_firewood": 2,
+    "item_fish": 3,
+    "item_fish_smoked": 4,
+    "item_flour": 10,
+    "item_hammer": 40,
+    "item_herb_bundle": 3,
+    "item_hoe": 35,
+    "item_honey": 8,
+    "item_horseshoes": 12,
+    "item_iron_stock": 15,
+    "item_knife": 30,
+    "item_lamp_oil": 12,
+    "item_log": 8,
+    "item_nails": 1,
+    "item_pear": 4,
+    "item_pork": 12,
+    "item_remedy": 8,
+    "item_roll": 1,
+    "item_rope": 5,
+    "item_salt": 6,
+    "item_small_beer": 1,
+    "item_stew": 4
+  },
+  "producers": [
+    {
+      "inputs": [],
+      "item": "item_apple",
+      "location": "loc_farm",
+      "note": "Orchard yield in autumn. Winter: 20 twice weekly from the root cellar (~1000 stored).",
+      "perDay": 40,
+      "seasons": [
+        "autumn"
+      ]
+    },
+    {
+      "inputs": [],
+      "item": "item_grain",
+      "location": "loc_farm",
+      "note": "Autumn harvest only: ~60 sacks wheat + 40 sacks barley for the year.",
+      "perDay": 0,
+      "seasons": [
+        "autumn"
+      ]
+    },
+    {
+      "inputs": [],
+      "item": "item_egg",
+      "location": "loc_farm",
+      "note": "Maren's hens; ~5 sold at the farmgate daily.",
+      "perDay": 8,
+      "seasons": [
+        "spring",
+        "summer",
+        "autumn",
+        "winter"
+      ]
+    },
+    {
+      "inputs": [],
+      "item": "item_pork",
+      "location": "loc_farm",
+      "note": "Autumn slaughter: ~200 cuts at 12 copper.",
+      "perDay": 0,
+      "seasons": [
+        "autumn"
+      ]
+    },
+    {
+      "inputs": [],
+      "item": "item_honey",
+      "location": "loc_farm",
+      "note": "~10 jars per autumn at 8 copper.",
+      "perDay": 0,
+      "seasons": [
+        "autumn"
+      ]
+    },
+    {
+      "inputs": [
+        "item_grain"
+      ],
+      "item": "item_flour",
+      "location": "loc_mill",
+      "note": "Miller's toll is 1/12 of grain in kind. Oda buys ~2.5 sacks/day at 10 copper.",
+      "perDay": 3,
+      "seasons": [
+        "spring",
+        "summer",
+        "autumn",
+        "winter"
+      ]
+    },
+    {
+      "inputs": [
+        "item_grain",
+        "well_water"
+      ],
+      "item": "item_ale",
+      "location": "loc_tavern",
+      "note": "Bessa brews 2 batches/week, 20 mugs per batch. Grain 8 copper/sack from Corvin.",
+      "perDay": 0,
+      "seasons": [
+        "spring",
+        "summer",
+        "autumn",
+        "winter"
+      ]
+    },
+    {
+      "inputs": [],
+      "item": "item_log",
+      "location": "loc_forest_edge",
+      "note": "Tam's sustainable cut: 1/day. The forest regrows ~1/day.",
+      "perDay": 1,
+      "seasons": [
+        "spring",
+        "summer",
+        "autumn",
+        "winter"
+      ]
+    },
+    {
+      "inputs": [],
+      "item": "item_fish",
+      "location": "loc_river_alder",
+      "note": "Jory's catch against a stock of ~60 regrowing 3/day.",
+      "perDay": 3,
+      "seasons": [
+        "spring",
+        "summer",
+        "autumn",
+        "winter"
+      ]
+    },
+    {
+      "inputs": [],
+      "item": "item_herb_bundle",
+      "location": "loc_forest_edge",
+      "note": "Sella and Brynn gather; patches dormant in winter.",
+      "perDay": 2,
+      "seasons": [
+        "spring",
+        "summer",
+        "autumn"
+      ]
+    }
+  ],
+  "services": {
+    "service_grinding": {
+      "basePrice": 0,
+      "name": "Miller's grinding",
+      "note": "Paid as the miller's toll: 1/12 of grain in kind, not coin."
+    },
+    "service_lodging": {
+      "basePrice": 10,
+      "name": "Tavern bed for the night",
+      "note": "Lodging is a service, not inventory."
+    },
+    "service_repair": {
+      "basePrice": 8,
+      "name": "Smith repairs",
+      "note": "Simple repair 8 copper, major repair 25."
+    }
+  },
+  "shops": [
+    {
+      "location": "loc_apple_stall",
+      "note": "Stock never resets. Restocked only by Corvin's deliveries. Below 10 triggers an early order.",
+      "owner": "npc_mira_holt",
+      "sells": [
+        {
+          "basePrice": 3,
+          "deliveryMinutes": 2,
+          "deliverySchedule": [
+            "Secondday 08:00",
+            "Fifthday 08:00"
+          ],
+          "item": "item_apple",
+          "restockBelow": 10,
+          "restockFrom": "loc_farm",
+          "restockQty": 45,
+          "startStock": 20,
+          "stockRule": "carries_over_no_reset",
+          "wholesaleNote": "Starts at 1 copper; Corvin may raise it when apples are scarce or demand is high (normal negotiation, bounded by price rules).",
+          "wholesalePrice": 1
+        }
+      ]
+    },
+    {
+      "location": "loc_general_store",
+      "note": "Imports restocked by traveling merchants every ~3 weeks in warm months.",
+      "owner": "npc_tilda_bray",
+      "sells": [
+        {
+          "basePrice": 6,
+          "deliveryMinutes": 0,
+          "item": "item_salt",
+          "restockFrom": "merchant"
+        },
+        {
+          "basePrice": 40,
+          "deliveryMinutes": 0,
+          "item": "item_cloth_imported",
+          "restockFrom": "merchant"
+        },
+        {
+          "basePrice": 25,
+          "deliveryMinutes": 2,
+          "item": "item_cloth_local",
+          "restockFrom": "npc_brynn_oakes"
+        },
+        {
+          "basePrice": 12,
+          "deliveryMinutes": 0,
+          "item": "item_lamp_oil",
+          "restockFrom": "merchant"
+        },
+        {
+          "basePrice": 1,
+          "deliveryMinutes": 1,
+          "item": "item_nails",
+          "restockFrom": "npc_doran_kettle"
+        },
+        {
+          "basePrice": 5,
+          "deliveryMinutes": 0,
+          "item": "item_rope",
+          "restockFrom": "merchant"
+        }
+      ]
+    },
+    {
+      "location": "loc_bakery",
+      "note": "~40 loaves each morning; sells out by early afternoon. Constraint is the oven, not supply.",
+      "owner": "npc_oda_fenn",
+      "sells": [
+        {
+          "basePrice": 3,
+          "deliveryMinutes": 0,
+          "item": "item_bread_rye",
+          "restockFrom": "loc_bakery"
+        },
+        {
+          "basePrice": 2,
+          "deliveryMinutes": 0,
+          "item": "item_bread_barley",
+          "restockFrom": "loc_bakery"
+        },
+        {
+          "basePrice": 1,
+          "deliveryMinutes": 0,
+          "item": "item_roll",
+          "restockFrom": "loc_bakery"
+        }
+      ]
+    },
+    {
+      "location": "loc_tavern",
+      "note": "Ale brewed on site. Travelers are the margin: bed + supper + ale ~18 copper.",
+      "owner": "npc_bessa_marlowe",
+      "sells": [
+        {
+          "basePrice": 2,
+          "item": "item_ale"
+        },
+        {
+          "basePrice": 1,
+          "item": "item_small_beer"
+        },
+        {
+          "basePrice": 4,
+          "item": "item_stew"
+        },
+        {
+          "basePrice": 10,
+          "item": "service_lodging"
+        }
+      ]
+    },
+    {
+      "location": "loc_blacksmith",
+      "note": "Iron imported; ~20 kg stock. Repairs 8 (simple) / 25 (major).",
+      "owner": "npc_doran_kettle",
+      "sells": [
+        {
+          "basePrice": 1,
+          "deliveryMinutes": 0,
+          "item": "item_nails",
+          "restockFrom": "merchant_iron"
+        },
+        {
+          "basePrice": 30,
+          "item": "item_knife"
+        },
+        {
+          "basePrice": 60,
+          "item": "item_axe"
+        },
+        {
+          "basePrice": 35,
+          "item": "item_hoe"
+        },
+        {
+          "basePrice": 40,
+          "item": "item_hammer"
+        },
+        {
+          "basePrice": 12,
+          "item": "item_horseshoes"
+        }
+      ]
+    }
+  ],
+  "sinks": [
+    {
+      "copperPerMonth": 400,
+      "id": "sink_taxes",
+      "name": "Reeve's tax collection",
+      "note": "Twice yearly (spring, autumn); the 20 pay ~1200 per collection. Assessment scales with visible prosperity \u2014 the stabilizer."
+    },
+    {
+      "copperPerMonth": 600,
+      "id": "sink_imports",
+      "name": "Import purchases from merchants",
+      "note": "Iron (~150), salt, cloth, lamp oil, dyes. Tilda orders more when the village has coin.",
+      "seasons": [
+        "spring",
+        "summer",
+        "autumn"
+      ]
+    },
+    {
+      "copperPerMonth": 150,
+      "id": "sink_community_fund",
+      "name": "Community fund (wheel, palisade, granary)",
+      "note": "The council's savings toward the 8000-copper wheel and repairs."
+    },
+    {
+      "copperPerMonth": 150,
+      "id": "sink_spoilage",
+      "name": "Spoilage, breakage, loss",
+      "note": "Food spoils, tools break, coins go missing. Value destroyed, not transferred."
+    },
+    {
+      "copperPerMonth": 200,
+      "id": "sink_feast",
+      "name": "Harvest Feast reserve",
+      "note": "The feast's tables and symbolic debt forgiveness are funded through the year.",
+      "seasons": [
+        "autumn"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "copperPerMonth": 800,
+      "id": "source_merchants",
+      "name": "Traveling merchants buying village goods",
+      "note": "Apples, timber, honey, smoked meat, pelts. Every ~3 weeks in warm months.",
+      "seasons": [
+        "spring",
+        "summer",
+        "autumn"
+      ]
+    },
+    {
+      "copperPerMonth": 750,
+      "id": "source_travelers",
+      "name": "Traveler spending at tavern and stores",
+      "note": "Seasonal: ~900/month in summer and harvest, ~500 in spring/autumn, almost none in winter. Strangers are more noticeable in quiet seasons.",
+      "seasons": [
+        "spring",
+        "summer",
+        "autumn"
+      ]
+    },
+    {
+      "copperPerMonth": 150,
+      "id": "source_bounties",
+      "name": "Wolf bounties from the crown",
+      "note": "50 copper per pelt, 2-4 incidents per winter.",
+      "seasons": [
+        "winter"
+      ]
+    }
+  ],
+  "version": 1,
+  "wages": [
+    {
+      "employee": "npc_bram_stone",
+      "employer": "village_fund",
+      "note": "Guard's wage, from the household levy.",
+      "perDay": 20
+    },
+    {
+      "employee": "npc_elswith_alder",
+      "employer": "village_fund",
+      "note": "Elder's council stipend.",
+      "perDay": 8
+    },
+    {
+      "employee": "npc_ralf_hale",
+      "employer": "village_fund",
+      "note": "Hunter's winter retainer for the watch and wolf work.",
+      "perDay": 0,
+      "perWeek": 60,
+      "seasons": [
+        "winter"
+      ]
+    },
+    {
+      "employee": "player",
+      "employer": "npc_corvin_alder",
+      "note": "Farm day labor, especially harvest.",
+      "perDay": 8
+    },
+    {
+      "employee": "player",
+      "employer": "npc_tam_oakes",
+      "note": "Woodcutting help.",
+      "perDay": 6
+    },
+    {
+      "employee": "player",
+      "employer": "npc_garrick_alder",
+      "note": "Mill help.",
+      "perDay": 5
+    },
+    {
+      "employee": "player",
+      "employer": "npc_bessa_marlowe",
+      "note": "Tavern pot-wash, plus a meal.",
+      "perDay": 6
+    }
+  ]
+}

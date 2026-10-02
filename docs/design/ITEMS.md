@@ -200,13 +200,13 @@ Effects use the same 0–100 scales as CHARACTERS.md. Hunger rises 6/hr for an a
 
 Health effects are small on purpose (reason: food keeps you alive; only Sella's craft heals you — an apple gives +1, a stew +2, a remedy +15, fever-tea +10). Social effects on ale (+5) and small beer (+2) exist because the tavern is the village's social engine (D-09 will use them). Raw pork (−15) vs cooked (−25) is deliberate: cooking matters (WORLD.md), and it's the first hook for the Cooking skill in D-06.
 
-Spoiled food never becomes poison that kills — it becomes sad: halved hunger, or a small health penalty (reason: the tone is cozy with real stakes, not survival-horror; spoilage is an economic loss, which is exactly what ECONOMY.md's ~150 copper/month spoilage sink needs).
+Spoiled food never becomes poison that kills — it goes through two stages. First **stale** (reduced effects, sells at half price — the village is frugal, and a stale loaf still fills a belly); then **spoiled** (not edible by people at all — it becomes animal feed or compost, which is how it feeds back into the farm). The tone stays cozy with real stakes, not survival-horror; spoilage is an economic loss, which is exactly what ECONOMY.md's ~150 copper/month spoilage sink needs. (Reason: two stages give the simulation something to do with old food besides deleting it — selling stale bread cheap, feeding pigs, and composting are all small systems that produce stories.)
 
 ---
 
 ## 4. Spoilage and the economy's sinks
 
-ECONOMY.md assumes ~150 copper/month of value destroyed by spoilage, breakage, and loss. The shelf lives above make that plausible without any tuning: the bakery alone moves ~40 loaves/day (~120 copper/day in bread), the tavern serves ~40 mugs/day, and the stall moves ~13 apples/day. If ~5% of the village's ~3,000 copper/month food flow spoils — a stale loaf here, a turned stew there, fish that didn't sell by evening — that's ~150. The simulation doesn't need a spoilage *system* beyond the shelf-life rule: each dawn, perishables age one day; past their life, they become their spoiled form (or vanish, for the 1-day stew).
+ECONOMY.md assumes ~150 copper/month of value destroyed by spoilage, breakage, and loss. The two-stage shelf lives above make that plausible without any tuning: the bakery alone moves ~40 loaves/day (~120 copper/day in bread), the tavern serves ~40 mugs/day, and the stall moves ~13 apples/day. If ~5% of the village's ~3,000 copper/month food flow spoils — a stale loaf sold cheap here, a turned stew there, fish that didn't sell by evening, grain gone weevilly — that's ~150. The simulation doesn't need a spoilage *system* beyond the two-stage rule: each dawn, perishables age one day; past `freshDays` they become their stale form (reduced effects, half price); past `freshDays + staleDays` they become spoiled (animal feed or compost, never eaten by people).
 
 Tools and weapons don't spoil (reason: iron doesn't rot; Doran repairs what breaks — breakage is his business, another small sink). Unique items never spoil and are never sold.
 
@@ -256,7 +256,19 @@ Three examples of items pulling their weight in the systems:
 
 ---
 
-## 7. Later (kept out of the prototype)
+## 7. Phases (what the simulation needs when)
+
+Every item carries a `phase` field in `items.json`: 1 = needed for Phase 1 (the Apple Test and daily village life), 2 = Phase 2 (economy expansion), 3 = Phase 3+ (skills, crafting, and later). The simulation loads only the phases it has implemented.
+
+**Phase 1 (14 items)** — the Apple Test and daily life: `item_apple`, `item_bread_rye`, `item_bread_barley`, `item_egg`, `item_ale`, `item_fish`, `item_stew`, `item_grain`, `item_flour`, `item_firewood`, `item_herb_bundle`, `item_remedy`, `item_knife`, `item_axe`.
+
+**Phase 2 (21 items)** — economy expansion: `item_pear`, `item_berries`, `item_roll`, `item_cheese`, `item_pork`, `item_honey`, `item_fish_smoked`, `item_small_beer`, `item_fever_tea`, `item_log`, `item_nails`, `item_rope`, `item_salt`, `item_lamp_oil`, `item_dye`, `item_cloth_local`, `item_cloth_imported`, `item_ribbon`, `item_horseshoes`, `item_ledger`, `item_granary_key`.
+
+**Phase 3 (14 items)** — skills, crafting, and later: `item_iron_stock`, `item_stone`, `item_hoe`, `item_hammer`, `item_fishing_rod`, `item_tool_basic`, `item_bow`, `item_sword`, `item_spear`, `item_sling`, `item_pelt`, `item_wooden_toy`, `item_shawl`, `item_recipe_book`.
+
+---
+
+## 8. Later (kept out of the prototype)
 
 - Distinct workshop fixtures (looms, brew kettles, ovens as items with condition) — folded into `item_tool_basic` for now.
 - Regional goods from King's Rest and the neighboring villages (spices, paper, glass) — trade-route content for later phases.
@@ -267,10 +279,10 @@ Three examples of items pulling their weight in the systems:
 
 ---
 
-## 8. Open questions for the human
+## 9. Decisions made (2026-10-02, with the human)
 
-1. **New-item prices:** stone 2, fishing rod 25, sword 120, pelt 10, spear 45, sling 5 — all flagged `*` above. Approve, or adjust?
-2. **List size:** 49 items vs. the 25–35 target. Every item is either priced in the approved economy or explicitly required (stone, fishing rod, sword, story items). Cut deeper (which ones?), or accept the 49?
-3. **Fixtures folded into `item_tool_basic`:** the loom, brew kettle, logbook, nets, and traps become "basic tools." Acceptable for the prototype, or should any be distinct items now?
-4. **`item_bed_night` dropped as an item** (it's a service — the tavern bed for 10 copper stays priced in the economy). Confirm the simulation should treat lodging as a service, not inventory.
-5. **Spoiled food:** reduced effects (sad but edible) as designed, or should spoiled food become a distinct inedible state the simulation must clear?
+1. **New-item prices approved:** stone 2, fishing rod 25, sword 120, pelt 10, spear 45, sling 5.
+2. **All 49 items kept**, with a `phase` field: 14 in Phase 1 (Apple Test + daily life), 21 in Phase 2, 14 in Phase 3+.
+3. **Fixtures stay folded into `item_tool_basic`** for now; split later if crafting needs it.
+4. **Lodging stays a service**, not an item (`service_lodging`, 10 copper). Two more pre-existing services are now defined in `economy.json`: `service_grinding` (miller's toll, paid in kind) and `service_repair` (8/25 copper).
+5. **Spoilage has two stages:** stale (reduced effects, half price) then spoiled (not edible by people; animal feed or compost).
