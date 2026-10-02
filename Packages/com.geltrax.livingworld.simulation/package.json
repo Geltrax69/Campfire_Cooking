@@ -1,0 +1,7 @@
+{
+  "name": "com.geltrax.livingworld.simulation",
+  "version": "0.1.0",
+  "displayName": "Living World Simulation",
+  "description": "Engine-independent simulation core for Living World. Pure C#, no UnityEngine references.",
+  "unity": "6000.0"
+}

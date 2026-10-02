@@ -1,1 +1,46 @@
+# macOS
 .DS_Store
+
+# Unity generated
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+/Assets/Plugins/Editor/JetBrains*
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+sysinfo.txt
+crashlytics-build.properties
+/Assets/StreamingAssets/aa*
+
+# Unity-generated IDE project files (Unity recreates these)
+/*.csproj
+/*.sln
+*.unityproj
+*.suo
+*.user
+*.userprefs
+*.booproj
+.vs/
+.idea/
+.vscode/
+.consulo/
+*.tmp
+
+# Build outputs
+*.apk
+*.aab
+*.ipa
+*.app
+*.unitypackage
+
+# .NET simulation test project outputs
+SimulationTests/**/bin/
+SimulationTests/**/obj/
+TestResults/
