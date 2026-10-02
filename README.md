@@ -2,7 +2,7 @@
 
 A third-person, anime-inspired fantasy life RPG for iPad first, then iPhone and Mac. Built in Unity by AI coding agents, play-tested by a human.
 
-> **Status:** Setup done, Phase 1 (the Apple Test simulation) not started. This document is the game design. For how the game is built, see [AGENTS.md](AGENTS.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/ROADMAP.md](docs/ROADMAP.md).
+> **Status:** Design Phase (world, characters, money and more) about to start. Simulation comes next; Unity last. This document is the game design. For how the game is built, see [AGENTS.md](AGENTS.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ---
 
@@ -357,14 +357,14 @@ The central experience is the player shifting from *"What quest does the game wa
 | Engine | Unity 6 with URP |
 | Platforms | iPad (primary), iPhone, Mac |
 | Development | AI coding agents (Muse agent "Geltrax" with sub-agents) following [AGENTS.md](AGENTS.md); the human tests on device |
-| Prototype visuals | Text-only simulation first (Phase 1), then a 3D village (Phase 2) |
+| Order of work | Design (world, characters, money...) → text-only simulation → Unity visuals last |
 | Art style | Kenney low-poly as the main look |
 | Simulation | Pure C#, deterministic, 1 tick = 1 game minute, integer money |
 
 ## Open decisions
 
 - **Time scale:** how many real minutes equal one in-game day (default: 24 real minutes)
-- **Dialogue AI:** on-device or cloud (Phase 9)
+- **Dialogue AI:** on-device or cloud (Phase 8)
 - **Off-screen simulation detail** (Phase 7)
 
 ---
@@ -379,12 +379,15 @@ The central experience is the player shifting from *"What quest does the game wa
 ├── docs/
 │   ├── ARCHITECTURE.md  ← how the simulation and Unity fit together
 │   ├── ROADMAP.md       ← phases and task list with status
-│   ├── KICKOFF_PROMPT.md← prompt to start the main agent
+│   ├── KICKOFF_PROMPT.md← prompts to start/continue the main agent
+│   ├── DESIGN_PROMPTS.md← prompts for designing world, characters, money...
+│   ├── design/          ← approved design documents
 │   └── tasks/           ← task briefs (created as work starts)
 ├── Packages/com.geltrax.livingworld.simulation/  ← pure C# simulation (no Unity)
+├── Content/         ← game data (JSON) from the Design Phase
 ├── SimulationTests/ ← automated tests, run with `dotnet test SimulationTests`
 └── Assets/          ← Unity project assets (see Assets/README.md)
-    ├── _Game/       ← our Unity code, scenes, prefabs, data
+    ├── _Game/       ← our Unity code, scenes, prefabs (Unity Phase)
     ├── Models/  Packs/  Audio/  UI/  Sky/   ← art and audio
     └── _OffTheme/   ← modern/sci-fi assets kept aside
 ```

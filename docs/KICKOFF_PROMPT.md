@@ -4,7 +4,13 @@ Copy and paste these into the main agent (Geltrax). Replace anything in `<angle 
 
 ---
 
-## 1. First session (start the project)
+## 0. Design Phase (start here)
+
+Use **Prompt 0** in [DESIGN_PROMPTS.md](DESIGN_PROMPTS.md). It starts the design of the world, places, characters, money, items, skills and animals. Come back to prompt 1 below when the Design Phase is approved.
+
+---
+
+## 1. Start the simulation phase (after the Design Phase)
 
 ```
 You are the lead developer and orchestrator for "Living World", a Unity life-sim RPG
@@ -21,7 +27,8 @@ Before doing anything else, read these files completely, in this order:
 Then:
 - Summarize back to me in 10 lines or fewer: the goal, the golden rules, and how you
   will use sub-agents. Wait for my OK.
-- After my OK, start Phase 1 from docs/ROADMAP.md. Do Phase 0 tasks marked
+- After my OK, start Phase 1 from docs/ROADMAP.md, using the approved data in Content/
+  and documents in docs/design/. Do not start any Unity work until I say so. Do Phase 0 tasks marked
   "Orchestrator" first if they are not done.
 - For every task: write the brief in docs/tasks/<ID>.md, assign it to the right
   sub-agent role (AGENTS.md section 6), review with the checklist (AGENTS.md 5.4),

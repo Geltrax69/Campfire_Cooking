@@ -200,7 +200,7 @@ The whole `WorldState` (including RNG state and the event log) serializes to JSO
 
 ---
 
-## 12. Dialogue AI (Phase 9)
+## 12. Dialogue AI (Phase 8)
 
 When the player talks to an NPC, the game builds a **fact sheet** from simulation data: who the NPC is, their mood, what they believe and remember about the player, recent local news they know. An AI model may turn that into natural speech. It may not add facts, change state, or reveal anything the NPC doesn't believe. Until then, dialogue uses templates filled from the same fact sheet.
 
@@ -216,4 +216,6 @@ Add new entries at the bottom: date, decision, reason.
 | 2026-10-02 | Simulation as pure C# local package, tested with `dotnet test` | Fast, engine-independent tests agents can run without Unity |
 | 2026-10-02 | 1 tick = 1 game minute; integer money; single seeded RNG | Determinism and reproducible tests |
 | 2026-10-02 | Kenney low-poly as the main art style | Most complete free (CC0) coverage, including animated villagers |
+| 2026-10-02 | Order: Design Phase → simulation → Unity last | Human wants to design the world, characters and money first; Unity only at the end |
+| 2026-10-02 | Game data as JSON in `Content/` at the repository root | Designed before Unity exists; the simulation and later Unity both read it |
 | 2026-10-02 | Built by AI agents (Muse "Geltrax" + sub-agents), human tests on device | Workflow defined in `AGENTS.md` |

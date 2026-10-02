@@ -22,6 +22,12 @@ The first milestone is the **Apple Test**: the player steals 6 of 20 apples from
 
 > We are proving the simulation before building the big world. Do not build content for later phases early.
 
+**Order of work** (details in `docs/ROADMAP.md`):
+
+1. **Design Phase:** design the world, places, characters, money, items, skills and animals as documents (`docs/design/`) and JSON data (`Content/`), using `docs/DESIGN_PROMPTS.md`. The human approves each area.
+2. **Simulation phases:** pure C# code that loads `Content/` and runs the living village, proven by tests and text logs.
+3. **Unity Phase, last:** visuals, controls and device builds. **Do not start any Unity work until the human says so.**
+
 ---
 
 ## 2. The ten golden rules
@@ -69,7 +75,10 @@ The first milestone is the **Apple Test**: the player steals 6 of 20 apples from
 ├── docs/
 │   ├── ARCHITECTURE.md      ← technical design (orchestrator owns)
 │   ├── ROADMAP.md           ← phases and task list (orchestrator owns)
+│   ├── DESIGN_PROMPTS.md    ← prompts for the Design Phase
+│   ├── design/              ← approved design documents (WORLD.md, CHARACTERS.md, ECONOMY.md, ...)
 │   └── tasks/               ← one file per active task brief (orchestrator writes)
+├── Content/                 ← GAME DATA as JSON (places, NPCs, economy, items, skills, animals...)
 ├── Packages/
 │   └── com.geltrax.livingworld.simulation/   ← PURE C# SIMULATION (no Unity)
 │       └── Runtime/
@@ -87,7 +96,6 @@ The first milestone is the **Apple Test**: the player steals 6 of 20 apples from
     │   ├── World/           ← scenes, village layout, terrain, day/night, weather visuals
     │   ├── Player/          ← player controller, camera, interaction
     │   ├── UI/              ← HUD, radial menu, dialogue panels, inventory screens
-    │   └── Content/         ← data files: NPC definitions, items, recipes, shops (JSON)
     ├── Models/  Packs/  Audio/  UI/  Sky/   ← third-party art (see Assets/README.md)
     └── _OffTheme/           ← unused modern/sci-fi assets. Do not use in the game
 ```
@@ -198,6 +206,19 @@ Keep reports short and in plain language. The human is not necessarily a program
 
 ## 6. Sub-agent roles
 
+### 6.0 Design agents (Design Phase)
+
+One design agent per area (world, locations, characters, economy, items, skills, recipes, animals, knowledge, town, player start). The orchestrator briefs each with the matching prompt from `docs/DESIGN_PROMPTS.md`, including its "Shared conventions".
+
+- **Mission:** turn the vision in `README.md` and the human's ideas into a clear design document (`docs/design/<AREA>.md`) and matching JSON data (`Content/<area>/`).
+- **Owns:** its own design document and its own `Content/<area>/` folder only.
+- **Watch out for:** stay original (no copied names, characters or stories). Keep to prototype size. Every number needs a reason. Everything must be possible through the simulation's rules (needs, money, items, places, time), never through scripted story triggers. Don't contradict approved areas; if you must, list it as an open question. Nothing is final until the human approves it.
+- **Review (orchestrator):** conventions followed, IDs unique and listed in `docs/design/GLOSSARY.md`, numbers add up, matches earlier approved areas, open questions listed.
+
+### Simulation agents (6.1–6.6) and Unity agents (6.7–6.9)
+
+Simulation agents start after the Design Phase is approved. **Unity agents (6.7–6.9) start only in the final Unity Phase, when the human says so.**
+
 Each role card says what the role is for, which folders it may edit, and what to watch out for. A sub-agent must refuse to edit outside its folders and report what it needs instead.
 
 ### 6.1 Core Simulation agent
@@ -217,7 +238,7 @@ Each role card says what the role is for, which folders it may edit, and what to
 
 ### 6.4 Economy agent
 - **Mission:** items and item types, stock in shops and homes (counted in bulk; individual records only for important items), buying and selling, production (farm grows apples), consumption (NPCs eat), restocking orders, and prices responding to supply and demand.
-- **Owns:** `Packages/.../Runtime/Economy/`, `SimulationTests/Economy/`, item/shop data in `Assets/_Game/Content/` (JSON only)
+- **Owns:** `Packages/.../Runtime/Economy/`, `SimulationTests/Economy/`, reads economy/item data from `Content/` (changes to approved data need the human's OK)
 - **Watch out for:** money must be conserved. Coins only enter or leave through named sources and sinks, and every transfer is logged. A test should check that total money is unchanged after normal trading.
 
 ### 6.5 Persistence agent
@@ -245,9 +266,9 @@ Each role card says what the role is for, which folders it may edit, and what to
 - **Owns:** `Assets/_Game/Player/`, `Assets/_Game/UI/`
 - **Watch out for:** iPad first. Large touch targets (at least 44×44 points), landscape layout, safe areas, nothing important in the corners where hands rest. Only show menu options that make sense in context.
 
-### 6.10 Dialogue agent (later, Phase 9)
+### 6.10 Dialogue agent (later, Phase 8)
 - **Mission:** turn structured facts ("NPC believes X, feels Y about player, needs Z") into natural dialogue text, possibly with an AI model.
-- **Owns:** `Assets/_Game/Dialogue/` (create when Phase 9 starts)
+- **Owns:** `Assets/_Game/Dialogue/` (create when Phase 8 starts)
 - **Watch out for:** the dialogue system receives a **summary of what the NPC knows** and may only phrase it. It must never change game state or reveal facts the NPC doesn't know.
 
 ---
