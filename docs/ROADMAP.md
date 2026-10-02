@@ -24,7 +24,7 @@ The human approves every area before it's marked `done`.
 | ID | Area | Prompt | Depends on | Produces | Status |
 |---|---|---|---|---|---|
 | D-01 | World, setting and tone | 1 | none | `docs/design/WORLD.md` | done |
-| D-02 | Village map and locations | 2 | D-01 | `LOCATIONS.md`, `Content/world/locations.json` | todo |
+| D-02 | Village map and locations | 2 | D-01 | `LOCATIONS.md`, `Content/world/locations.json` | done |
 | D-03 | Characters (~20 villagers) | 3 | D-01, D-02 | `CHARACTERS.md`, `Content/npcs/npcs.json` | todo |
 | D-04 | Money and economy | 4 | D-01–D-03 | `ECONOMY.md`, `Content/economy/economy.json` | todo |
 | D-05 | Items and resources | 5 | D-02, D-04 | `ITEMS.md`, `Content/items/items.json` | todo |

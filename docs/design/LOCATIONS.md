@@ -2,7 +2,7 @@
 
 ## Summary
 
-Millbrook's prototype needs 23 places: 3 shops (apple stall, general store, bakery), Alder Farm with its orchard, the Hearthside tavern, a smithy, the watermill, the market square, the old well, a communal granary, the guard post, the river shrine, the healer's hut, the forest edge, the River Alder with its ford, and 8 household homes. Everything the 20 simulated villagers need fits inside ~130 metres of the square, with the farm and forest 2 minutes out — walking never dominates a day. Each place lists what it produces, who owns it, who goes there, and what can be bought or stolen there. The apple stall starts each morning with 20 apples, and the orchard and farm delivery chain behind it are what the Apple Test leans on.
+Millbrook's prototype needs 23 places: 3 shops (apple stall, general store, bakery), Alder Farm with its orchard, the Hearthside tavern, a smithy, the watermill, the market square, the old well, a communal granary, the guard post, the river shrine, the healer's hut, the forest edge, the River Alder with its ford, and 8 household homes. Everything the 20 simulated villagers need fits inside ~130 metres of the square, with the farm and forest 2 minutes out — walking never dominates a day. Each place lists what it produces, who owns it, who goes there, and what can be bought or stolen there. The apple stall starts the game with 20 apples; stock carries over day to day and never resets — it only grows through real farm deliveries from Alder Farm, limited by what the orchard produces. That chain is what the Apple Test leans on.
 
 ---
 
@@ -45,7 +45,7 @@ IDs are `loc_` prefixed snake_case. Owners are `npc_` ids that D-03 will define 
 - Purpose: sells apples and orchard fruit. The Apple Test's stage.
 - Owner: npc_mira_holt (apple-shop owner). Position (14, -10). Open 07:00–19:00. Capacity 6.
 - Who goes: everyone buying fruit; children sent with a coin; Mira's regulars gossip here mornings.
-- Buy: apples (opens the day with 20), pears and berries in season (summer–autumn). Stealable: apples from the display, the small coin box (usually < 200 copper — reason: Mira banks takings at home each evening).
+- Buy: apples (the stall starts the game with 20 and **stock carries over day to day — it never resets**; apples only arrive through real deliveries from Alder Farm), pears and berries in season (summer–autumn). Stealable: apples from the display, the small coin box (usually < 200 copper — reason: Mira banks takings at home each evening).
 - Art: `Assets/Packs/Kenney/FantasyTownKit/stall-green.glb` + `Assets/Packs/Kenney/MiniMarket/display-fruit.glb` (display counter).
 
 **loc_general_store — Bray's General Store** (shop)
@@ -88,7 +88,7 @@ IDs are `loc_` prefixed snake_case. Owners are `npc_` ids that D-03 will define 
 ### Food, drink, gathering
 
 **loc_tavern — The Hearthside** (tavern)
-- Purpose: ale, hot meals, rooms upstairs for travelers; the village's evening room and rumor engine. The keeper lives here.
+- Purpose: ale, hot meals, rooms upstairs for travelers; the village's evening room and rumor engine. The keeper lives here. **Bessa brews the ale herself** from grain (bought from the mill) and well water — no separate brewer NPC needed.
 - Owner: npc_bessa_marlowe (tavern keeper). Position (-2, -22). Open 10:00–23:00. Capacity 30.
 - Who goes: everyone, evenings especially; travelers; hunters telling Grey stories (WORLD.md decision 4); the council meeting in the back room.
 - Buy: ale, small beer, stew, bread, a bed for the night. Stealable: unattended mugs and purses (petty), the strongbox (kept in the keeper's room — serious).
@@ -102,7 +102,7 @@ IDs are `loc_` prefixed snake_case. Owners are `npc_` ids that D-03 will define 
 - Art: `Assets/Packs/Kenney/FantasyTownKit/` road pieces + `Assets/Packs/Kenney/FantasyTownKit/fountain-round.glb` (used as a decorative centrepiece, NOT the well).
 
 **loc_well — The Old Well** (well)
-- Purpose: the village's main water source (reason: the river is 80 m downhill and floods dirty in spring).
+- Purpose: the village's main water source (reason: the river is 80 m downhill and floods dirty in spring). A few homes keep rain barrels as backup, but the well is what everyone relies on.
 - Owner: village. Position (0, 4), at the square's edge. Open: always. Capacity 4 (around the rim).
 - Who goes: everyone fetching water, mornings and evenings — which is why it is also a gossip spot (reason: D-09's rumor system needs natural meeting points).
 - Buy: nothing. Stealable: nothing — but the well is where children dare each other, buckets go missing, and news travels.
@@ -175,7 +175,7 @@ Households, not houses-per-person — families share (reason: 120 villagers in 3
 - **loc_home_elder — Elder's Cottage** (8, 32). npc_elswith_alder (village elder); holds the granary key. Capacity 4. Art: `Assets/Models/Buildings/Village/mudbrick-house.glb` (second use).
 - **loc_home_woodcutter — Oakes' Cottage** (62, 58). npc_tam_oakes (woodcutter) + family, at the forest edge (reason: the woodcutter lives where the work is). Capacity 8. Art: `Assets/Models/Buildings/Farm/log-pile.glb` beside a reused `bungalow-house.glb`.
 
-Homes are not shops: nothing to buy; stealable are household goods and coin — and burglary is the crime the guard investigates hardest after granary theft (reason: homes are where people feel safest, so violation matters most).
+Homes are not shops: nothing to buy; stealable are household goods and coin — and **home burglary is much harder and riskier than daytime petty theft**: doors are locked at night, owners are usually inside (often with dogs), and being caught means far bigger consequences (the stocks, a heavy fine, or banishment). It is the crime the guard investigates hardest after granary theft (reason: homes are where people feel safest, so violation matters most).
 
 ## 4. Travel times (walking, minutes)
 
@@ -252,9 +252,15 @@ Some art is reused across homes (reason: a real village repeats its builders' pa
 - The Alder Road east beyond the palisade — where travelers, merchants, and trouble come from.
 - King's Rest and the two neighboring villages on the road.
 
-## 7. Open questions for the human
+## 7. Decisions made (2026-10-02, with the human)
 
-1. **Who brews the ale?** The tavern needs a brewer: does Bessa brew her own (adding a brewhouse behind the tavern), or does someone else supply it? This decides one of the 20 NPC slots' jobs.
-2. **One farm or two?** Alder Farm is the prototype's only farm. A second smallholding would add economic texture (competition, a poorer family) but costs locations and NPC slots. Keep it to one for now?
-3. **Well water only?** Is the square's well the only water source, or do homes have rain barrels? It changes morning chores, fire-fighting, and how much the well matters as a meeting point.
-4. **Burglary vs. theft:** should breaking into a home at night be meaningfully harder (locked doors, dogs, sleeping light) than pocketing an apple by day — or is all theft one system with different stakes?
+1. **Apple stock never resets.** The stall starts the game with 20 apples; stock carries over day to day and only grows through real farm deliveries (limited by orchard production and delivery timing). **D-04 (economy) must be designed with this rule** — the Apple Test only works if the theft persists overnight.
+2. **Bessa brews the ale herself** from grain and well water — no extra brewer NPC.
+3. **One farm only.** Alder Farm is the single supplier; single supply makes shortages visible.
+4. **The well is the main water source;** a few homes have rain barrels as backup.
+5. **Home burglary is much harder and riskier than daytime petty theft** (locked doors at night, owners home, dogs, severe consequences if caught).
+
+## 8. MISSING ART list (for D-12)
+
+- `loc_well` — stone well with a small timber roof and windlass.
+- `loc_shrine` — small weathered stone shrine with an offering shelf, river-worn and old.
