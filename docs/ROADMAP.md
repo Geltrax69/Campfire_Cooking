@@ -34,7 +34,7 @@ The human approves every area before it's marked `done`.
 | D-09 | Knowledge, rumors, reputation | 9 | D-03 | `KNOWLEDGE.md`, `Content/social/social.json` | done |
 | D-10 | Town state and emergent events | 10 | D-02–D-04 | `TOWN.md`, `Content/world/town.json` | done |
 | D-11 | Player start | 11 | D-01–D-06 | `PLAYER_START.md`, `Content/player/start.json` | done |
-| D-12 | Consistency check and glossary | 12 | all above | fixes + `GLOSSARY.md` | todo |
+| D-12 | Consistency check and glossary | 12 | all above | fixes + `GLOSSARY.md` | done |
 
 Parallel-safe once dependencies are approved: {D-05, D-09}, {D-06, D-08, D-10}.
 

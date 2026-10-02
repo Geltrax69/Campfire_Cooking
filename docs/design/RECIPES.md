@@ -86,7 +86,7 @@ No skill gates in Phase 1 — place access, NPC permission, and time are the gat
 
 ---
 
-## 4. New output items (for the orchestrator to add to `items.json`)
+## 4. New output items (added to `items.json` by the orchestrator, 2026-10-02)
 
 Full specs, all phase 3 (cooking is a Phase 3 skill system), all bulk, quality range 0–100, two-stage spoilage per the human's D-05 decision:
 

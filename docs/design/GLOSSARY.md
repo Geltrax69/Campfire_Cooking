@@ -185,3 +185,47 @@ Services (not items): `service_lodging` (tavern bed, 10 copper), `service_grindi
 | item_roast_pork | Roast Pork |
 | item_seed_cake | Festival Seed-Cake |
 | item_meat_pie | Meat Pie |
+
+## Locations, coins, debts, sources, sinks (D-02, D-04)
+
+| ID | Name |
+|---|---|
+| loc_apple_stall | Holt's Apple Stall |
+| loc_general_store | Bray's General Store |
+| loc_bakery | Crust & Crumb Bakery |
+| loc_farm | Alder Farm |
+| loc_tavern | The Hearthside |
+| loc_blacksmith | Ember & Iron Smithy |
+| loc_mill | Alder Watermill |
+| loc_square | Market Square |
+| loc_well | The Old Well |
+| loc_granary | Village Granary |
+| loc_guard_post | Guard Post |
+| loc_healer_hut | Healer's Hut |
+| loc_shrine | Old River Shrine |
+| loc_forest_edge | Alder Forest Edge |
+| loc_river_alder | River Alder & Ford |
+| loc_home_miller | Miller's House |
+| loc_home_mira | Mira's Cottage |
+| loc_home_bray | Bray's House |
+| loc_home_fenn | Fenn's House |
+| loc_home_smith | Kettle's House |
+| loc_home_guard | Stone's Cottage |
+| loc_home_elder | Elder's Cottage |
+| loc_home_woodcutter | Oakes' Cottage |
+| coin_copper | Copper penny |
+| coin_silver | Silver mark |
+| coin_gold | Gold crown |
+| debt_doran_iron | debt: npc_doran_kettle owes 120 |
+| debt_bessa_staples | debt: npc_bessa_marlowe owes 80 |
+| debt_garrick_nails | debt: npc_garrick_alder owes 60 |
+| debt_jory_rope | debt: npc_jory_reed owes 45 |
+| debt_tam_pork | debt: npc_tam_oakes owes 35 |
+| source_merchants | source: Traveling merchants buying village goods |
+| source_travelers | source: Traveler spending at tavern and stores |
+| source_bounties | source: Wolf bounties from the crown |
+| sink_taxes | sink: Reeve's tax collection |
+| sink_imports | sink: Import purchases from merchants |
+| sink_community_fund | sink: Community fund (wheel, palisade, granary) |
+| sink_spoilage | sink: Spoilage, breakage, loss |
+| sink_feast | sink: Harvest Feast reserve |

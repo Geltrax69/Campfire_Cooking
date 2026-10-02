@@ -33,6 +33,8 @@ Millbrook's prototype simulates 20 people in 11 households: the Alder farming fa
 
 Scales used below: traits, needs, trust/affection are 0–100 integers (50 = average). Money is integer copper. Times are HH:MM; 1 tick = 1 game minute. Need rates carry a reason the first time each pattern appears.
 
+**Schedule convention (for the simulation):** schedule entries abut with no explicit travel time. When two consecutive entries are at different locations, the NPC departs early enough to arrive on time — travel comes out of the *prior* activity, using the travel-time table in `Content/world/locations.json` (e.g. a 2-minute farm→square trip means the farm activity effectively ends 2 minutes early). The simulation inserts this automatically; schedules never need hand-written travel blocks.
+
 Note: `item_` ids used in possessions (e.g. `item_knife`, `item_axe`) are provisional — the canonical item list is defined in D-05 (ITEMS.md). The 12 MiniCharacters models serve 20 NPCs, so some models are reused (children reuse adult models at smaller scale) — see open question 5.
 
 ---
