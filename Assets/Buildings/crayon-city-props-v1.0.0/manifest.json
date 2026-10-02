@@ -1,0 +1,857 @@
+{
+  "id": "crayon-city-props",
+  "name": "Crayon City Props",
+  "version": "1.0.0",
+  "generatedAt": "2026-07-30T00:00:00.000Z",
+  "primaryFormat": "GLB",
+  "assetCount": 44,
+  "modelFileCount": 88,
+  "textureVariants": [
+    "textured",
+    "flat"
+  ],
+  "collision": {
+    "schema": "crayon.collider.v2",
+    "type": "compound boxes",
+    "bakedGeometry": true,
+    "includedOnEveryModel": true
+  },
+  "assets": [
+    {
+      "id": "street-lamp-classic",
+      "name": "Classic Street Lamp",
+      "family": "Props",
+      "file": "models/textured/classic-street-lamp.glb",
+      "flatFile": "models/flat/classic-street-lamp.glb",
+      "texturesEnabled": true,
+      "triangles": 368,
+      "dimensions": [
+        1.095,
+        4.895,
+        0.675
+      ],
+      "colliderCount": 9,
+      "collisionTriangles": 108,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "street-traffic-light",
+      "name": "Traffic Light",
+      "family": "Props",
+      "file": "models/textured/traffic-light.glb",
+      "flatFile": "models/flat/traffic-light.glb",
+      "texturesEnabled": true,
+      "triangles": 322,
+      "dimensions": [
+        0.52,
+        5.035,
+        0.53
+      ],
+      "colliderCount": 8,
+      "collisionTriangles": 96,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "street-park-bench",
+      "name": "Park Bench",
+      "family": "Props",
+      "file": "models/textured/park-bench.glb",
+      "flatFile": "models/flat/park-bench.glb",
+      "texturesEnabled": true,
+      "triangles": 356,
+      "dimensions": [
+        3.57,
+        1.23,
+        0.9
+      ],
+      "colliderCount": 22,
+      "collisionTriangles": 264,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "street-hydrant",
+      "name": "Fire Hydrant",
+      "family": "Props",
+      "file": "models/textured/fire-hydrant.glb",
+      "flatFile": "models/flat/fire-hydrant.glb",
+      "texturesEnabled": true,
+      "triangles": 398,
+      "dimensions": [
+        1.1,
+        1.673,
+        0.88
+      ],
+      "colliderCount": 9,
+      "collisionTriangles": 108,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "street-electric-pole",
+      "name": "Electric Utility Pole",
+      "family": "Props",
+      "file": "models/textured/electric-utility-pole.glb",
+      "flatFile": "models/flat/electric-utility-pole.glb",
+      "texturesEnabled": true,
+      "triangles": 388,
+      "dimensions": [
+        3.1,
+        6.809,
+        5.403
+      ],
+      "colliderCount": 14,
+      "collisionTriangles": 168,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "street-park-slide",
+      "name": "Park Slide",
+      "family": "Props",
+      "file": "models/textured/park-slide.glb",
+      "flatFile": "models/flat/park-slide.glb",
+      "texturesEnabled": true,
+      "triangles": 384,
+      "dimensions": [
+        3.378,
+        2.036,
+        1.06
+      ],
+      "colliderCount": 14,
+      "collisionTriangles": 168,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "street-city-welcome-gate",
+      "name": "City Welcome Gate",
+      "family": "Props",
+      "file": "models/textured/city-welcome-gate.glb",
+      "flatFile": "models/flat/city-welcome-gate.glb",
+      "texturesEnabled": true,
+      "triangles": 334,
+      "dimensions": [
+        4.816,
+        3.6,
+        0.86
+      ],
+      "colliderCount": 12,
+      "collisionTriangles": 144,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "prop-bridge",
+      "name": "Rope Bridge",
+      "family": "Props",
+      "file": "models/textured/rope-bridge.glb",
+      "flatFile": "models/flat/rope-bridge.glb",
+      "texturesEnabled": true,
+      "triangles": 388,
+      "dimensions": [
+        6.3,
+        1.865,
+        2.46
+      ],
+      "colliderCount": 27,
+      "collisionTriangles": 324,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "prop-campfire",
+      "name": "Campfire Kit",
+      "family": "Props",
+      "file": "models/textured/campfire-kit.glb",
+      "flatFile": "models/flat/campfire-kit.glb",
+      "texturesEnabled": true,
+      "triangles": 400,
+      "dimensions": [
+        2.287,
+        2.511,
+        2.386
+      ],
+      "colliderCount": 18,
+      "collisionTriangles": 216,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "prop-crate",
+      "name": "Adventure Crate",
+      "family": "Props",
+      "file": "models/textured/adventure-crate.glb",
+      "flatFile": "models/flat/adventure-crate.glb",
+      "texturesEnabled": true,
+      "triangles": 340,
+      "dimensions": [
+        2.2,
+        2.14,
+        2.2
+      ],
+      "colliderCount": 5,
+      "collisionTriangles": 60,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "prop-barrel",
+      "name": "Dockside Barrel",
+      "family": "Props",
+      "file": "models/textured/dockside-barrel.glb",
+      "flatFile": "models/flat/dockside-barrel.glb",
+      "texturesEnabled": true,
+      "triangles": 356,
+      "dimensions": [
+        1.66,
+        2.005,
+        1.66
+      ],
+      "colliderCount": 1,
+      "collisionTriangles": 12,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "prop-checkpoint-flag",
+      "name": "Checkpoint Flag",
+      "family": "Props",
+      "file": "models/textured/checkpoint-flag.glb",
+      "flatFile": "models/flat/checkpoint-flag.glb",
+      "texturesEnabled": true,
+      "triangles": 220,
+      "dimensions": [
+        1.86,
+        3.675,
+        1.16
+      ],
+      "colliderCount": 6,
+      "collisionTriangles": 72,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "prop-direction-sign",
+      "name": "Direction Signpost",
+      "family": "Props",
+      "file": "models/textured/direction-signpost.glb",
+      "flatFile": "models/flat/direction-signpost.glb",
+      "texturesEnabled": true,
+      "triangles": 286,
+      "dimensions": [
+        2.988,
+        2.96,
+        0.662
+      ],
+      "colliderCount": 7,
+      "collisionTriangles": 84,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "reward-gold-coin",
+      "name": "Gold Coin",
+      "family": "Props",
+      "file": "models/textured/gold-coin.glb",
+      "flatFile": "models/flat/gold-coin.glb",
+      "texturesEnabled": true,
+      "triangles": 216,
+      "dimensions": [
+        1.47,
+        1.47,
+        0.23
+      ],
+      "colliderCount": 1,
+      "collisionTriangles": 12,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "reward-victory-star",
+      "name": "Victory Star",
+      "family": "Props",
+      "file": "models/textured/victory-star.glb",
+      "flatFile": "models/flat/victory-star.glb",
+      "texturesEnabled": true,
+      "triangles": 216,
+      "dimensions": [
+        1.859,
+        1.771,
+        0.465
+      ],
+      "colliderCount": 1,
+      "collisionTriangles": 12,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "reward-health-heart",
+      "name": "Health Heart",
+      "family": "Props",
+      "file": "models/textured/health-heart.glb",
+      "flatFile": "models/flat/health-heart.glb",
+      "texturesEnabled": true,
+      "triangles": 222,
+      "dimensions": [
+        1.226,
+        1.216,
+        0.443
+      ],
+      "colliderCount": 1,
+      "collisionTriangles": 12,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "street-litter-bin",
+      "name": "City Litter Bin",
+      "family": "Props",
+      "file": "models/textured/city-litter-bin.glb",
+      "flatFile": "models/flat/city-litter-bin.glb",
+      "texturesEnabled": true,
+      "triangles": 218,
+      "dimensions": [
+        0.62,
+        1.064,
+        0.577
+      ],
+      "colliderCount": 3,
+      "collisionTriangles": 36,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "street-recycling-bins",
+      "name": "Recycling Trio",
+      "family": "Props",
+      "file": "models/textured/recycling-trio.glb",
+      "flatFile": "models/flat/recycling-trio.glb",
+      "texturesEnabled": true,
+      "triangles": 308,
+      "dimensions": [
+        1.82,
+        1.029,
+        0.58
+      ],
+      "colliderCount": 7,
+      "collisionTriangles": 84,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "street-bollard",
+      "name": "Traffic Bollard",
+      "family": "Props",
+      "file": "models/textured/traffic-bollard.glb",
+      "flatFile": "models/flat/traffic-bollard.glb",
+      "texturesEnabled": true,
+      "triangles": 256,
+      "dimensions": [
+        0.54,
+        0.998,
+        0.54
+      ],
+      "colliderCount": 5,
+      "collisionTriangles": 60,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "street-bike-rack",
+      "name": "Bike Rack",
+      "family": "Props",
+      "file": "models/textured/bike-rack.glb",
+      "flatFile": "models/flat/bike-rack.glb",
+      "texturesEnabled": true,
+      "triangles": 396,
+      "dimensions": [
+        1.64,
+        0.9,
+        0.865
+      ],
+      "colliderCount": 3,
+      "collisionTriangles": 36,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "street-planter",
+      "name": "Street Planter",
+      "family": "Props",
+      "file": "models/textured/street-planter.glb",
+      "flatFile": "models/flat/street-planter.glb",
+      "texturesEnabled": true,
+      "triangles": 400,
+      "dimensions": [
+        1.502,
+        1.246,
+        0.876
+      ],
+      "colliderCount": 10,
+      "collisionTriangles": 120,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "street-post-box",
+      "name": "Pillar Post Box",
+      "family": "Props",
+      "file": "models/textured/pillar-post-box.glb",
+      "flatFile": "models/flat/pillar-post-box.glb",
+      "texturesEnabled": true,
+      "triangles": 400,
+      "dimensions": [
+        0.72,
+        1.624,
+        0.72
+      ],
+      "colliderCount": 5,
+      "collisionTriangles": 60,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "street-parking-meter",
+      "name": "Parking Meter",
+      "family": "Props",
+      "file": "models/textured/parking-meter.glb",
+      "flatFile": "models/flat/parking-meter.glb",
+      "texturesEnabled": true,
+      "triangles": 278,
+      "dimensions": [
+        0.5,
+        1.462,
+        0.411
+      ],
+      "colliderCount": 3,
+      "collisionTriangles": 36,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "street-drinking-fountain",
+      "name": "Drinking Fountain",
+      "family": "Props",
+      "file": "models/textured/drinking-fountain.glb",
+      "flatFile": "models/flat/drinking-fountain.glb",
+      "texturesEnabled": true,
+      "triangles": 364,
+      "dimensions": [
+        0.56,
+        1.426,
+        0.65
+      ],
+      "colliderCount": 7,
+      "collisionTriangles": 84,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "street-name-sign",
+      "name": "Street Name Sign",
+      "family": "Props",
+      "file": "models/textured/street-name-sign.glb",
+      "flatFile": "models/flat/street-name-sign.glb",
+      "texturesEnabled": true,
+      "triangles": 308,
+      "dimensions": [
+        1.25,
+        3.28,
+        1.25
+      ],
+      "colliderCount": 5,
+      "collisionTriangles": 60,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "street-road-sign",
+      "name": "Road Sign",
+      "family": "Props",
+      "file": "models/textured/road-sign.glb",
+      "flatFile": "models/flat/road-sign.glb",
+      "texturesEnabled": true,
+      "triangles": 214,
+      "dimensions": [
+        1.04,
+        2.82,
+        0.36
+      ],
+      "colliderCount": 6,
+      "collisionTriangles": 72,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "street-bus-stop-sign",
+      "name": "Bus Stop Sign",
+      "family": "Props",
+      "file": "models/textured/bus-stop-sign.glb",
+      "flatFile": "models/flat/bus-stop-sign.glb",
+      "texturesEnabled": true,
+      "triangles": 286,
+      "dimensions": [
+        0.77,
+        2.78,
+        0.38
+      ],
+      "colliderCount": 5,
+      "collisionTriangles": 60,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "street-ad-column",
+      "name": "Advertising Column",
+      "family": "Props",
+      "file": "models/textured/advertising-column.glb",
+      "flatFile": "models/flat/advertising-column.glb",
+      "texturesEnabled": true,
+      "triangles": 324,
+      "dimensions": [
+        1.36,
+        3.304,
+        1.36
+      ],
+      "colliderCount": 6,
+      "collisionTriangles": 72,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "street-bus-shelter",
+      "name": "Bus Shelter",
+      "family": "Props",
+      "file": "models/textured/bus-shelter.glb",
+      "flatFile": "models/flat/bus-shelter.glb",
+      "texturesEnabled": true,
+      "triangles": 160,
+      "dimensions": [
+        3.46,
+        2.677,
+        1.763
+      ],
+      "colliderCount": 12,
+      "collisionTriangles": 144,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "street-newsstand-kiosk",
+      "name": "Newsstand Kiosk",
+      "family": "Props",
+      "file": "models/textured/newsstand-kiosk.glb",
+      "flatFile": "models/flat/newsstand-kiosk.glb",
+      "texturesEnabled": true,
+      "triangles": 360,
+      "dimensions": [
+        2.58,
+        2.555,
+        2.071
+      ],
+      "colliderCount": 12,
+      "collisionTriangles": 144,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "street-phone-booth",
+      "name": "Phone Booth",
+      "family": "Props",
+      "file": "models/textured/phone-booth.glb",
+      "flatFile": "models/flat/phone-booth.glb",
+      "texturesEnabled": true,
+      "triangles": 276,
+      "dimensions": [
+        1.12,
+        2.84,
+        1.12
+      ],
+      "colliderCount": 14,
+      "collisionTriangles": 168,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "street-utility-cabinet",
+      "name": "Utility Cabinet",
+      "family": "Props",
+      "file": "models/textured/utility-cabinet.glb",
+      "flatFile": "models/flat/utility-cabinet.glb",
+      "texturesEnabled": true,
+      "triangles": 394,
+      "dimensions": [
+        1.16,
+        1.485,
+        0.728
+      ],
+      "colliderCount": 3,
+      "collisionTriangles": 36,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "street-market-stall",
+      "name": "Market Stall",
+      "family": "Props",
+      "file": "models/textured/market-stall.glb",
+      "flatFile": "models/flat/market-stall.glb",
+      "texturesEnabled": true,
+      "triangles": 382,
+      "dimensions": [
+        2.84,
+        2.45,
+        1.62
+      ],
+      "colliderCount": 20,
+      "collisionTriangles": 240,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "street-traffic-cone",
+      "name": "Traffic Cone",
+      "family": "Props",
+      "file": "models/textured/traffic-cone.glb",
+      "flatFile": "models/flat/traffic-cone.glb",
+      "texturesEnabled": true,
+      "triangles": 224,
+      "dimensions": [
+        0.46,
+        0.74,
+        0.46
+      ],
+      "colliderCount": 5,
+      "collisionTriangles": 60,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "street-guard-rail",
+      "name": "Guard Rail Section",
+      "family": "Props",
+      "file": "models/textured/guard-rail-section.glb",
+      "flatFile": "models/flat/guard-rail-section.glb",
+      "texturesEnabled": true,
+      "triangles": 380,
+      "dimensions": [
+        4.58,
+        0.81,
+        0.7
+      ],
+      "colliderCount": 6,
+      "collisionTriangles": 72,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "street-ev-charger",
+      "name": "EV Charging Point",
+      "family": "Props",
+      "file": "models/textured/ev-charging-point.glb",
+      "flatFile": "models/flat/ev-charging-point.glb",
+      "texturesEnabled": true,
+      "triangles": 320,
+      "dimensions": [
+        0.683,
+        1.917,
+        1.13
+      ],
+      "colliderCount": 9,
+      "collisionTriangles": 108,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "park-picnic-table",
+      "name": "Picnic Table",
+      "family": "Props",
+      "file": "models/textured/picnic-table.glb",
+      "flatFile": "models/flat/picnic-table.glb",
+      "texturesEnabled": true,
+      "triangles": 380,
+      "dimensions": [
+        1.9,
+        0.77,
+        1.78
+      ],
+      "colliderCount": 25,
+      "collisionTriangles": 300,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "park-swing-set",
+      "name": "Swing Set",
+      "family": "Props",
+      "file": "models/textured/swing-set.glb",
+      "flatFile": "models/flat/swing-set.glb",
+      "texturesEnabled": true,
+      "triangles": 328,
+      "dimensions": [
+        2.8,
+        2.361,
+        1.62
+      ],
+      "colliderCount": 19,
+      "collisionTriangles": 228,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "park-fountain",
+      "name": "Plaza Fountain",
+      "family": "Props",
+      "file": "models/textured/plaza-fountain.glb",
+      "flatFile": "models/flat/plaza-fountain.glb",
+      "texturesEnabled": true,
+      "triangles": 388,
+      "dimensions": [
+        2.31,
+        1.824,
+        2.31
+      ],
+      "colliderCount": 9,
+      "collisionTriangles": 108,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "park-railing",
+      "name": "Park Railing Section",
+      "family": "Props",
+      "file": "models/textured/park-railing-section.glb",
+      "flatFile": "models/flat/park-railing-section.glb",
+      "texturesEnabled": true,
+      "triangles": 228,
+      "dimensions": [
+        2.939,
+        1.28,
+        0.339
+      ],
+      "colliderCount": 17,
+      "collisionTriangles": 204,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "park-flagpole",
+      "name": "Flagpole",
+      "family": "Props",
+      "file": "models/textured/flagpole.glb",
+      "flatFile": "models/flat/flagpole.glb",
+      "texturesEnabled": true,
+      "triangles": 268,
+      "dimensions": [
+        1.626,
+        5.54,
+        0.72
+      ],
+      "colliderCount": 8,
+      "collisionTriangles": 96,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "cafe-table-chairs",
+      "name": "Café Table & Chairs",
+      "family": "Props",
+      "file": "models/textured/cafe-table-chairs.glb",
+      "flatFile": "models/flat/cafe-table-chairs.glb",
+      "texturesEnabled": true,
+      "triangles": 362,
+      "dimensions": [
+        1.964,
+        0.882,
+        1.701
+      ],
+      "colliderCount": 21,
+      "collisionTriangles": 252,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "cafe-parasol-table",
+      "name": "Parasol Table",
+      "family": "Props",
+      "file": "models/textured/parasol-table.glb",
+      "flatFile": "models/flat/parasol-table.glb",
+      "texturesEnabled": true,
+      "triangles": 376,
+      "dimensions": [
+        1.94,
+        2.677,
+        1.94
+      ],
+      "colliderCount": 29,
+      "collisionTriangles": 348,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    },
+    {
+      "id": "street-festoon-lights",
+      "name": "Festoon Lights",
+      "family": "Props",
+      "file": "models/textured/festoon-lights.glb",
+      "flatFile": "models/flat/festoon-lights.glb",
+      "texturesEnabled": true,
+      "triangles": 352,
+      "dimensions": [
+        4.92,
+        3.32,
+        0.42
+      ],
+      "colliderCount": 10,
+      "collisionTriangles": 120,
+      "collisionSchema": "crayon.collider.v2",
+      "units": "meters",
+      "upAxis": "Y"
+    }
+  ]
+}
