@@ -93,7 +93,7 @@ Run tasks in order unless marked parallel-safe. `Role` refers to `AGENTS.md` sec
 | P1-01 | Core types: strongly typed IDs, `GameTime` (minutes → day/hour), seeded `SimRng` with saveable state | Core | P0-01 | Unit tests for time math and RNG reproducibility pass | done (2026-10-03) |
 | P1-02 | `WorldState` container + `World.Tick()` running registered systems in a fixed order | Core | P1-01 | Test: empty world ticks 1440 times; order of systems is fixed | done (2026-10-03) |
 | P1-03 | `WorldEvent` + `EventLog` (append, query by time/location/type, prune) | Core | P1-02 | Tests for append/query/prune | done (2026-10-03) |
-| P1-04 | Command queue for player/NPC actions processed at tick start | Core | P1-02 | Test: commands apply in order at the next tick | todo |
+| P1-04 | Command queue for player/NPC actions processed at tick start | Core | P1-02 | Test: commands apply in order at the next tick | done (2026-10-03) |
 | P1-05 | Locations (shop, farm, tavern, homes, square) with simple travel time between them | Core | P1-02 | Test: travel time lookup, NPC location changes after travel | todo |
 | P1-06 | Item types (apple, bread, ale, coin) + inventories with aggregate counts | Economy | P1-02 | Tests: add/remove, can't go negative | todo |
 | P1-07 | Shops: price list, buy (full/partial/fail) creating `Purchase` / `FailedPurchase` events; money transfer | Economy | P1-03, P1-06 | Tests incl. "wants 7, has 2"; money conserved | todo |
