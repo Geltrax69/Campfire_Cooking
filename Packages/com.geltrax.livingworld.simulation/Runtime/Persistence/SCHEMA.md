@@ -1,7 +1,11 @@
-# P1-21e save format schema (formatVersion 1)
+# Save format schema (formatVersion 2)
 
 Written by `WorldSaver.Save(WorldState)` → indented JSON string.
-Read by the P1-21f loader. Top-level properties always appear in this order.
+Read by the loader. Top-level properties always appear in this order.
+
+Version 2 (P2-12) adds every Phase 2 state section: relationships,
+attributed memories, the eleven economy progress states, and per-lot
+inventory ages. Version 1 documents still load (see Compatibility below).
 
 ## Conventions
 
@@ -27,7 +31,7 @@ Read by the P1-21f loader. Top-level properties always appear in this order.
 
 ```jsonc
 {
-  "formatVersion": 1,
+  "formatVersion": 2,
   "clock": 1400,
   "rngState": 12345678901234567890,
   "eventLog": {
@@ -86,6 +90,12 @@ Read by the P1-21f loader. Top-level properties always appear in this order.
       "location": "loc_apple_stall",
       "owner": "npc_mira_holt",
       "stock": { "item_apple": 9, "item_bread": 4 },  // item ID → count, ordinal order
+      "lots": [                                      // per-lot ages, FIFO order; always present in v2
+        { "item": "item_apple", "quantity": 5, "ageDays": 2 },
+        { "item": "item_apple", "quantity": 4, "ageDays": 0 }
+      ],
+      // "lots" is absent in v1 documents: the loader builds age-0 lots from "stock".
+      // Lot quantities must sum to the "stock" counts (contradiction → LoadException).
       "ownerCopper": 31,
       "prices": { "item_apple": 3 }                   // item ID → unit price, ordinal order
     }
@@ -94,6 +104,9 @@ Read by the P1-21f loader. Top-level properties always appear in this order.
     {
       "owner": "player",                 // actor string
       "inventory": { "item_apple": 6 },  // item ID → count, ordinal order
+      "lots": [                          // same per-lot contract as shops
+        { "item": "item_apple", "quantity": 6, "ageDays": 1 }
+      ],
       "copper": 17
     }
   ],
@@ -129,6 +142,76 @@ Read by the P1-21f loader. Top-level properties always appear in this order.
   //     }
   //   ]
   // }
+  "relationships": {
+    "pairs": [                           // from → to, ordinal by (from, to)
+      {
+        "from": "npc_mira_holt",
+        "to": "npc_ralf_hale",
+        "trust": 73,                     // 0–100
+        "affection": 61,                 // 0–100
+        "reason": "Steady trade"
+      }
+    ],
+    "baselines": [                       // drift targets; same shape as pairs
+      { "from": "npc_mira_holt", "to": "npc_ralf_hale", "trust": 50, "affection": 50, "reason": "Strangers" }
+    ],
+    "dynamicsCursor": 42,                // event ID the dynamics system has processed to
+    "dynamicsDay": 3,                    // day the decay pass last ran
+    "recallCursor": 41                   // event ID the recall pass has processed to
+  },
+  "attributedMemories": [                // claim order
+    {
+      "owner": "npc_mira_holt",
+      "claim": { "kind": "WrongedBy", "location": "loc_apple_stall", "itemType": null,
+                 "subject": "npc:npc_ralf_hale", "quantity": null },
+      "originalTrustDelta": -4,
+      "originalAffectionDelta": 0,
+      "recalledTrustDelta": -2,          // |recalled| ≤ |original| enforced at load
+      "recalledAffectionDelta": 0
+    }
+  ],
+  "smithy": { "ironExhaustionOrdered": true },
+  "merchantSchedule": { "initialized": true, "nextVisitDay": 25 },
+  "travelerSpend": {
+    "initialized": true, "lastPayoutDay": 10, "monthIndex": 2,
+    "paidThisMonth": [100, 200]
+  },
+  "wolfBounty": { "initialized": true, "winterYear": 1, "bountyDays": [5, 10] },
+  "villageFund": {
+    "initialized": true, "fundsCopper": 600,
+    "lastLevyDay": 7, "lastWageDay": 7, "lastRetainerDay": 1
+  },
+  "harvest": { "initialized": true, "lastWageDay": 8 },
+  "tax": { "initialized": true, "lastCollectionDay": 15 },
+  "communityFund": {
+    "initialized": true, "communityCopper": 150, "feastCopper": 200,
+    "lastMonthlyDay": 30, "lastFeastYear": 2
+  },
+  "economyBaseline": { "initialized": true, "baselineCopper": 9000 },
+  "spoilage": { "initialized": true, "lastAgedDay": 7 },
+  "debtLedger": {                        // null when the ledger was never initialized
+    "initialized": true,
+    "lastFeastYear": 1,
+    "debts": [                           // open + closed, ordinal by (debtor, creditor)
+      {
+        "debtor": "npc_doran_kettle",
+        "creditor": "npc_tilda_bray",
+        "owedCopper": 100,
+        "openedDay": 1,
+        "lastPaymentDay": 8,
+        "lastWeeklyDay": 8,
+        "overdueDeclared": false,
+        "terms": {
+          "copperPerWeek": 10,
+          "itemPerWeek": null,           // item ID string when an in-kind schedule
+          "itemsPerWeek": 0,
+          "itemCreditCopper": 0,
+          "payChancePercent": 100,
+          "overdueAfterDays": 60
+        }
+      }
+    ]
+  }
 }
 ```
 
@@ -184,14 +267,16 @@ shop stock or an actor's belongings, makes saving fail with `SaveException`
 
 ## Loader notes
 
-1. Validate `formatVersion` first; reject anything but `1`.
+1. Validate `formatVersion` first; reject anything but `1` or `2`.
 2. Build order suggestion: fresh `WorldState(savedRngState, new GameTime(savedClock))`
    (per the P1-21f brief, `SimRng(ulong)` resumes the stream exactly), load
    approved definitions by ID, restore event log (retained events + both
    high-water marks), command queue, NPCs (`NpcState.Restore` checks the
    sleeping/intention agreement), beliefs, memories, perception cursor, shops,
    belongings, production/restock/price states, reputation (skip when null),
-   travel (re-register NPCs and re-apply journeys when non-null).
+   travel (re-register NPCs and re-apply journeys when non-null),
+   relationships + baselines + cursors, attributed memories, and the eleven
+   economy progress states via their `Restore*` methods (skip when null for v1).
 3. `AppleScenarioState` is harness-owned and intentionally not persisted.
 4. Wallet aliasing: a shop owner's wallet IS their personal wallet (one shared
    object — `Shop.Purchase` has a `ReferenceEquals` fast path for self-purchase).
@@ -199,3 +284,21 @@ shop stock or an actor's belongings, makes saving fail with `SaveException`
    the loader must validate they agree (contradiction → `LoadException`) and
    restore a single shared `Wallet`. If a future phase ever wants them separate,
    the schema needs an explicit aliasing marker.
+
+## Compatibility (v1 → v2)
+
+Version 2 adds sections; it removes nothing. The loader accepts both:
+
+- **v2 → v2**: every section restores via its `Capture`/`Restore` pair.
+- **v1 → v2**: the eleven economy states, relationships, and attributed memories
+  keep their fresh-world defaults (uninitialized, empty, cursors at zero); shop
+  and belongings lots are rebuilt as single age-0 lots from the saved counts.
+  Rationale: every Phase 2 state has a safe uninitialized default — a v1 save
+  predates the systems that mutate it, so "never started" is the truthful
+  restore.
+- **v3+**: rejected with `LoadException`. Versions below 1 are rejected too.
+
+Corruption checks new in v2: lot quantities must sum to the saved counts;
+attributed-memory recall deltas must satisfy |recalled| ≤ |original| per axis
+(the runtime invariant, enforced at load). Either violation is a `LoadException`
+and the world is discarded — the loader never returns a half-built world.

@@ -145,12 +145,12 @@ namespace LivingWorld.Simulation.Tests.Persistence
         }
 
         [Test]
-        public void FormatVersionIsOne()
+        public void FormatVersionIsTwo()
         {
             using (JsonDocument document = JsonDocument.Parse(WorldSaver.Save(RichWorld())))
             {
-                Assert.That(document.RootElement.GetProperty("formatVersion").GetInt32(), Is.EqualTo(1));
-                Assert.That(WorldSaver.FormatVersion, Is.EqualTo(1));
+                Assert.That(document.RootElement.GetProperty("formatVersion").GetInt32(), Is.EqualTo(2));
+                Assert.That(WorldSaver.FormatVersion, Is.EqualTo(2));
             }
         }
 
