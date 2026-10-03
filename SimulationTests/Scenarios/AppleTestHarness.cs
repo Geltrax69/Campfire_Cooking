@@ -44,12 +44,14 @@ namespace LivingWorld.Simulation.Tests.Scenarios
             PriceState = prices;
             ScenarioState = scenarioState;
             GuardSuspicion = suspicion;
+            Beliefs = CaptureBeliefs(state);
             WitnessObservedTheft = state.Knowledge.Get(ScenarioVillage.Witness).Query()
                 .Any(belief => belief.Claim.Kind == BeliefClaimKind.TheftObserved);
             MiraMissingAppleQuantity = state.Knowledge.Get(ScenarioVillage.Mira)
                 .Query(BeliefClaimKind.StockMissing, ScenarioVillage.Stall, ScenarioVillage.Apple)
                 .Select(belief => belief.Claim.Quantity ?? 0).SingleOrDefault();
             Report = report;
+            StoryReport = AppleStoryReportWriter.Write(this);
             Snapshot = BuildSnapshot();
         }
 
@@ -70,7 +72,9 @@ namespace LivingWorld.Simulation.Tests.Scenarios
         public RestockState RestockState { get; }
         public PriceAdjustmentState PriceState { get; }
         public AppleScenarioState ScenarioState { get; }
+        public IReadOnlyList<AppleBeliefView> Beliefs { get; }
         public string Report { get; }
+        public string StoryReport { get; }
         public string Snapshot { get; }
 
         private string BuildSnapshot() => string.Join("|", new[] {
@@ -86,7 +90,41 @@ namespace LivingWorld.Simulation.Tests.Scenarios
             string.Join(",", ScenarioState.CompletedBuyerIds), string.Join(",", ScenarioState.CompletedMeetingIds),
             ScenarioState.ExpectedShopStock.ToString(CultureInfo.InvariantCulture),
             ScenarioState.StockCounted ? "1" : "0", ScenarioState.TheftQueued ? "1" : "0",
-            Report });
+            Report, StoryReport });
+
+        private static IReadOnlyList<AppleBeliefView> CaptureBeliefs(WorldState state)
+        {
+            var result = new List<AppleBeliefView>();
+            foreach (NpcId npc in new[] { ScenarioVillage.Mira, ScenarioVillage.Witness,
+                ScenarioVillage.Contact, ScenarioVillage.Guard })
+                foreach (Belief belief in state.Knowledge.Get(npc).Query())
+                    result.Add(new AppleBeliefView(npc, belief));
+            return result.AsReadOnly();
+        }
+    }
+
+    /// <summary>Immutable acceptance/reporting view of one NPC belief and its provenance.</summary>
+    public sealed class AppleBeliefView
+    {
+        internal AppleBeliefView(NpcId knower, Belief belief)
+        {
+            Knower = knower;
+            Kind = belief.Claim.Kind;
+            Subject = belief.Claim.Subject;
+            Quantity = belief.Claim.Quantity;
+            SourceKind = belief.Source.Kind;
+            Speaker = belief.Source.Speaker;
+            SourceChain = belief.Source.SourceChain.ToList().AsReadOnly();
+            Confidence = belief.Confidence;
+        }
+        public NpcId Knower { get; }
+        public BeliefClaimKind Kind { get; }
+        public ActorId? Subject { get; }
+        public int? Quantity { get; }
+        public BeliefSourceKind SourceKind { get; }
+        public NpcId? Speaker { get; }
+        public IReadOnlyList<NpcId> SourceChain { get; }
+        public int Confidence { get; }
     }
 
     /// <summary>Builds and runs the deterministic three-day scenario entirely through general systems.</summary>
