@@ -15,12 +15,11 @@ The orchestrator keeps this file current. Status values: `todo`, `doing`, `revie
 
 **Unity work does not start until the human says so.**
 
-**Verified checkpoint — 2026-10-03:** Design Phase complete; Phase 0 **4/4**;
-Phase 1 **15/21** (P1-01–P1-13, P1-17 and P1-19). The
-integrated foundation has **232 passing tests** in both Debug and Release. This
-is not yet the Apple Test or a playable game. Next unblocked work: P1-14
-(stock-count inference) and P1-16 (restocking/production/prices), followed by
-P1-15 (rumors). See `docs/tasks/completed/` for task evidence and
+**Verified checkpoint — 2026-10-04:** Design Phase complete; Phase 0 **4/4**;
+Phase 1 **19/21** (P1-01–P1-19). The integrated foundation has **278 passing
+tests** in both Debug and Release. This is not yet a playable game. Remaining:
+P1-20 (complete witness/no-witness Apple Test scenarios) and P1-21 (full save/load
+determinism). See `docs/tasks/completed/` for task evidence and
 [DEVELOPMENT.md](DEVELOPMENT.md) for local commands.
 
 ---
@@ -111,11 +110,11 @@ Run tasks in order unless marked parallel-safe. `Role` refers to `AGENTS.md` sec
 | P1-11 | Beliefs store (claim, source, confidence, time) per NPC | Knowledge | P1-03 | Tests: add/update/query beliefs | done (2026-10-03) |
 | P1-12 | Perception system: events → observations → beliefs with notice chance | Knowledge | P1-10, P1-11 | Tests: nearby awake NPC can notice; asleep/far NPC can't; seeded | done (2026-10-03) |
 | P1-13 | Decisions use beliefs (e.g. NPC avoids a shop it believes is out of apples) | Agents | P1-10, P1-11 | Test: failed purchase changes next choice | done (2026-10-03) |
-| P1-14 | Stock counting + inference: shopkeeper detects missing items | Knowledge | P1-07, P1-12 | Test: belief "6 apples missing", no thief identified | doing |
-| P1-15 | Conversations + rumor spreading with trust filter and distortion, source chain | Knowledge | P1-12 | Tests: rumor spreads in tavern; confidence drops with distrust | doing |
-| P1-16 | Restocking from farm + farm production + simple price adjustment | Economy | P1-07, P1-10 | Tests: low stock triggers order; missed sales raise price within bounds | doing (events/production merged; restocking CI; P1-16d prices) |
+| P1-14 | Stock counting + inference: shopkeeper detects missing items | Knowledge | P1-07, P1-12 | Test: belief "6 apples missing", no thief identified | done (2026-10-03) |
+| P1-15 | Conversations + rumor spreading with trust filter and distortion, source chain | Knowledge | P1-12 | Tests: rumor spreads in tavern; confidence drops with distrust | done (2026-10-03) |
+| P1-16 | Restocking from farm + farm production + simple price adjustment | Economy | P1-07, P1-10 | Tests: low stock triggers order; missed sales raise price within bounds | done (2026-10-04; split event/production/restock/price PRs) |
 | P1-17 | Memory with importance and decay | Knowledge | P1-11 | Tests: minor memory fades in days, major stays | done (2026-10-03) |
-| P1-18 | Guard suspicion threshold + reputation by group | Knowledge | P1-15 | Test: guard acts only above threshold | doing (P1-18a merged; P1-18b behavior) |
+| P1-18 | Guard suspicion threshold + reputation by group | Knowledge | P1-15 | Test: guard acts only above threshold | done (2026-10-04; truth contracts and behavior PRs) |
 | P1-19 | Readable simulation log / daily report tool | Test & Scenario | P1-03 | Log reads like a story; CLI or test output | done (2026-10-03; foundation truth report) |
 | P1-20 | **Apple Test scenario tests** (witness and no-witness seeds, determinism) | Test & Scenario | P1-08 … P1-19 | All pass conditions above are automated | todo |
 | P1-21 | Save/load full world state to JSON; determinism across save/load | Persistence | P1-20 | Test: run(1000) == save→load→run(1000) | todo |

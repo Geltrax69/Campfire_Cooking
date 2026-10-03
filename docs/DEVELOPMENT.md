@@ -39,11 +39,11 @@ owner requests a rename.
 
 ## Current foundation checkpoint (2026-10-03)
 
-P1-01–P1-13, P1-17 and P1-19 are
-implemented: the deterministic core now also has theft truth, seeded perception,
-owned-belief decision inputs, per-NPC memory decay, and a readable world-truth
-report. Full Debug and Release suites each contain 232 passing tests. No Unity
-editor or device build was run.
+P1-01–P1-19 are implemented: the deterministic core now also has stock inference,
+traceable rumors, restorable production/restocking/prices, generic evidence-based
+suspicion, bounded group reputation, and a readable world-truth report. Full Debug
+and Release suites each contain 278 passing tests. No Unity editor or device build
+was run.
 
 Try the readable command → departure → travel → arrival foundation report:
 
@@ -54,8 +54,7 @@ dotnet test SimulationTests --filter FullyQualifiedName=LivingWorld.Simulation.T
 For world setup, explicitly register `CommandSystem` and `TravelSystem` before
 the first tick. Initialise travel with `state.InitializeTravel(map)`, register
 NPC locations through `state.Travel.RegisterNpc`, and submit immutable
-`IWorldCommand` instances with `state.EnqueueCommand`. Stock-count inference,
-rumors, restocking and price response are still upcoming; no playable village
-or Apple Test is claimed yet. Production utility weights, initial need values,
-notice chances, belief thresholds and penalties remain human balancing decisions
-and are intentionally caller-supplied for now.
+`IWorldCommand` instances with `state.EnqueueCommand`. End-to-end Apple Test scenarios
+and full save/load remain; no playable village is claimed yet. Production utility
+weights, initial need values, notice chances, belief thresholds and penalties remain
+caller-configured so scenario/content loading can use approved values explicitly.
