@@ -156,9 +156,11 @@ namespace LivingWorld.Simulation.Tests.Tools
             world.RegisterSystem(new CommandSystem());
             // Needs.
             world.RegisterSystem(new NeedsSystem());
-            // Actions: eat before shop (a full pantry shops less).
+            // Actions: eat before shop (a full pantry shops less); farm meals after
+            // shopping so the farm household's home-grown lunch tops up the day.
             world.RegisterSystem(new EatSystem(catalog));
             world.RegisterSystem(new ShoppingSystem(catalog));
+            world.RegisterSystem(new FarmMealSystem());
             // Social: the World sorts by ID within the phase, so these run as
             // meetings, recall, dynamics. Recall only recalls earlier ticks'
             // memories, so the order is safe; dynamics sees tonight's tavern talk.
