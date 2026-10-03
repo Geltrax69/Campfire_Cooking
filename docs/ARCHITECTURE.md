@@ -219,3 +219,6 @@ Add new entries at the bottom: date, decision, reason.
 | 2026-10-02 | Order: Design Phase → simulation → Unity last | Human wants to design the world, characters and money first; Unity only at the end |
 | 2026-10-02 | Game data as JSON in `Content/` at the repository root | Designed before Unity exists; the simulation and later Unity both read it |
 | 2026-10-02 | Built by AI agents (Muse "Geltrax" + sub-agents), human tests on device | Workflow defined in `AGENTS.md` |
+| 2026-10-03 | P1-01: content IDs are readonly typed string values with ordinal comparison; default IDs are invalid | Preserve approved JSON keys, prevent mixed ID types, and keep ordering independent of locale |
+| 2026-10-03 | P1-01: SplitMix64 with one unsigned 64-bit saved state and rejection-sampled bounded draws | Stable reference vectors, reproducible save/resume and unbiased choices without engine dependencies; not a security RNG |
+| 2026-10-03 | P1-01: GameTime uses checked nonnegative long minutes, with day 1 beginning at minute 0 | Avoid silent overflow and make human-readable day/hour/minute reporting unambiguous |

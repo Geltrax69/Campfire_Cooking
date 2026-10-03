@@ -48,10 +48,16 @@ Parallel-safe once dependencies are approved: {D-05, D-09}, {D-06, D-08, D-10}.
 
 | ID | Task | Who | Status |
 |---|---|---|---|
-| P0-01 | Install the .NET 8 SDK so `dotnet test SimulationTests` works | Human | todo |
+| P0-01 | Install the .NET 8 SDK so `dotnet test SimulationTests` works | Human | done (2026-10-03: .NET 8.0.425 on the development Mac) |
 | P0-02 | Confirm the agent can read/write the repo and run `dotnet test` | Human | done (2026-10-02, with caveat — see note) |
 
 **P0-02 note (agent environment, 2026-10-02):** the agent's sandbox runs .NET 8 SDK 8.0.131 from `~/.dotnet` (persistent across VM restarts). `dotnet build` works via a local NuGet feed (`~/nuget-local`, 48 packages incl. NUnit 5 / NUnitLite / Microsoft.NET.Test.Sdk — the sandbox proxy does TLS interception that .NET's TLS stack can't complete, so nuget.org is unreachable from `dotnet` directly; `curl` works and was used to populate the feed). NUnit tests compile and pass (verified with the NUnitLite self-executing runner). Plain `dotnet test` can **not** run in the sandbox: `vstest.console` ↔ `testhost` communicate over TCP on `127.0.0.1`, and the sandbox transparently redirects all IPv4 TCP (including localhost) to the egress proxy, so the testhost never connects. GitHub Actions (P0-03) is therefore the authoritative `dotnet test SimulationTests` runner; the agent verifies locally with `dotnet build` + NUnitLite.
+
+**Current environment (2026-10-03):** the development Mac runs .NET SDK 8.0.425.
+Normal NuGet restore and `dotnet test SimulationTests` work without the old
+sandbox workaround. P1-01 verifies discovery and execution: 31/31 tests pass in
+both Debug and Release. See [DEVELOPMENT.md](DEVELOPMENT.md) for commands.
+
 | P0-03 | GitHub Actions workflow that runs `dotnet test SimulationTests` on every push | Orchestrator | done (2026-10-02) |
 | P0-04 | Decide the time scale: **1 real second = 1 game minute** (one game day = 24 real minutes) | Human | done (2026-10-02) |
 
@@ -84,7 +90,7 @@ Run tasks in order unless marked parallel-safe. `Role` refers to `AGENTS.md` sec
 
 | ID | Task | Role | Depends on | Done when | Status |
 |---|---|---|---|---|---|
-| P1-01 | Core types: strongly typed IDs, `GameTime` (minutes → day/hour), seeded `SimRng` with saveable state | Core | P0-01 | Unit tests for time math and RNG reproducibility pass | todo |
+| P1-01 | Core types: strongly typed IDs, `GameTime` (minutes → day/hour), seeded `SimRng` with saveable state | Core | P0-01 | Unit tests for time math and RNG reproducibility pass | done (2026-10-03) |
 | P1-02 | `WorldState` container + `World.Tick()` running registered systems in a fixed order | Core | P1-01 | Test: empty world ticks 1440 times; order of systems is fixed | todo |
 | P1-03 | `WorldEvent` + `EventLog` (append, query by time/location/type, prune) | Core | P1-02 | Tests for append/query/prune | todo |
 | P1-04 | Command queue for player/NPC actions processed at tick start | Core | P1-02 | Test: commands apply in order at the next tick | todo |
@@ -151,4 +157,3 @@ Parallel-safe groups once their dependencies are done: {P1-06, P1-09, P1-11}, {P
 | U-10 | iPad/iPhone/Mac optimization, polish, App Store release | All |
 
 **Unity exit:** the human plays the Apple Test on an iPad and can discover the consequences in-game.
-
