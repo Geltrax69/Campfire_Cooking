@@ -39,20 +39,21 @@ owner requests a rename.
 
 ## Current foundation checkpoint (2026-10-03)
 
-P1-01–P1-05 are implemented: typed IDs/time/RNG, deterministic world ticks,
-immutable event truth, next-minute FIFO commands, location maps and timed travel.
-Full Debug and Release suites each contain 100 passing tests. The pure runtime
-also compiled independently for .NET Standard 2.1 with C# 9 and zero warnings.
-No Unity editor or device build was run.
+P1-01–P1-06, P1-09, P1-11 and P1-19 are implemented: the deterministic core now
+also has item catalogs and aggregate inventory, validated NPC definitions and
+exact need state, isolated structured beliefs, and a readable world-truth report.
+Full Debug and Release suites each contain 175 passing tests. No Unity editor or
+device build was run.
 
-Try the integrated command → departure → travel → arrival behaviour:
+Try the readable command → departure → travel → arrival foundation report:
 
 ```sh
-dotnet test SimulationTests --filter FullyQualifiedName~QueuedTravelLogsNextTickDepartureAndTimedArrivalDespiteReversedRegistration
+dotnet test SimulationTests --filter FullyQualifiedName=LivingWorld.Simulation.Tests.Tools.SimulationLogWriterTests.FoundationTravelDemoPrintsWorldTruthReport --logger "console;verbosity=detailed"
 ```
 
 For world setup, explicitly register `CommandSystem` and `TravelSystem` before
 the first tick. Initialise travel with `state.InitializeTravel(map)`, register
 NPC locations through `state.Travel.RegisterNpc`, and submit immutable
-`IWorldCommand` instances with `state.EnqueueCommand`. NPC game logic, inventory
-and beliefs are the next work; no playable village or Apple Test is claimed yet.
+`IWorldCommand` instances with `state.EnqueueCommand`. Shop transactions, NPC
+decisions, perception and rumors are still upcoming; no playable village or
+Apple Test is claimed yet.

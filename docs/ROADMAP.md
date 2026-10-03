@@ -16,10 +16,10 @@ The orchestrator keeps this file current. Status values: `todo`, `doing`, `revie
 **Unity work does not start until the human says so.**
 
 **Verified checkpoint — 2026-10-03:** Design Phase complete; Phase 0 **4/4**;
-Phase 1 **5/21** (P1-01–P1-05). The integrated foundation has **100 passing tests**
-in both Debug and Release. This is not yet the Apple Test or a playable game.
-Next parallel-safe work: P1-06 (items/inventories), P1-09 (NPC data/needs),
-P1-11 (belief storage). See `docs/tasks/completed/` for task evidence and
+Phase 1 **9/21** (P1-01–P1-06, P1-09, P1-11, P1-19). The integrated foundation
+has **175 passing tests** in both Debug and Release. This is not yet the Apple
+Test or a playable game. Next parallel-safe work: P1-07 (shops/trading), P1-10
+(schedules/decisions), P1-17 (memory/decay). See `docs/tasks/completed/` for task evidence and
 [DEVELOPMENT.md](DEVELOPMENT.md) for local commands.
 
 ---
@@ -102,12 +102,12 @@ Run tasks in order unless marked parallel-safe. `Role` refers to `AGENTS.md` sec
 | P1-03 | `WorldEvent` + `EventLog` (append, query by time/location/type, prune) | Core | P1-02 | Tests for append/query/prune | done (2026-10-03) |
 | P1-04 | Command queue for player/NPC actions processed at tick start | Core | P1-02 | Test: commands apply in order at the next tick | done (2026-10-03) |
 | P1-05 | Locations (shop, farm, tavern, homes, square) with simple travel time between them | Core | P1-02, P1-03/P1-04 for integration | Test: travel time lookup, NPC location changes after travel | done (2026-10-03; map and movement PRs) |
-| P1-06 | Item types (apple, bread, ale, coin) + inventories with aggregate counts | Economy | P1-02 | Tests: add/remove, can't go negative | todo |
+| P1-06 | Item types (apple, bread, ale, coin) + inventories with aggregate counts | Economy | P1-02 | Tests: add/remove, can't go negative | done (2026-10-03) |
 | P1-07 | Shops: price list, buy (full/partial/fail) creating `Purchase` / `FailedPurchase` events; money transfer | Economy | P1-03, P1-06 | Tests incl. "wants 7, has 2"; money conserved | todo |
 | P1-08 | Theft command: moves items, creates `Theft` event with visibility | Economy | P1-04, P1-07 | Test: stock drops, event logged, no money moves | todo |
-| P1-09 | NPC data: identity, traits, needs, money, home, workplace; load from `Content/npcs/npcs.json` (Design Phase output) | Agents | P1-05 | Test: loads sample village file; needs change over time | todo |
+| P1-09 | NPC data: identity, traits, needs, money, home, workplace; load from `Content/npcs/npcs.json` (Design Phase output) | Agents | P1-05 | Test: loads sample village file; needs change over time | done (2026-10-03; definitions and state PRs) |
 | P1-10 | Schedules + utility decision-making (eat, sleep, work, shop, socialize) | Agents | P1-09 | Tests: hungry NPC with money goes shopping; night → sleep | todo |
-| P1-11 | Beliefs store (claim, source, confidence, time) per NPC | Knowledge | P1-03 | Tests: add/update/query beliefs | todo |
+| P1-11 | Beliefs store (claim, source, confidence, time) per NPC | Knowledge | P1-03 | Tests: add/update/query beliefs | done (2026-10-03) |
 | P1-12 | Perception system: events → observations → beliefs with notice chance | Knowledge | P1-10, P1-11 | Tests: nearby awake NPC can notice; asleep/far NPC can't; seeded | todo |
 | P1-13 | Decisions use beliefs (e.g. NPC avoids a shop it believes is out of apples) | Agents | P1-10, P1-11 | Test: failed purchase changes next choice | todo |
 | P1-14 | Stock counting + inference: shopkeeper detects missing items | Knowledge | P1-07, P1-12 | Test: belief "6 apples missing", no thief identified | todo |
@@ -115,7 +115,7 @@ Run tasks in order unless marked parallel-safe. `Role` refers to `AGENTS.md` sec
 | P1-16 | Restocking from farm + farm production + simple price adjustment | Economy | P1-07, P1-10 | Tests: low stock triggers order; missed sales raise price within bounds | todo |
 | P1-17 | Memory with importance and decay | Knowledge | P1-11 | Tests: minor memory fades in days, major stays | todo |
 | P1-18 | Guard suspicion threshold + reputation by group | Knowledge | P1-15 | Test: guard acts only above threshold | todo |
-| P1-19 | Readable simulation log / daily report tool | Test & Scenario | P1-03 | Log reads like a story; CLI or test output | todo |
+| P1-19 | Readable simulation log / daily report tool | Test & Scenario | P1-03 | Log reads like a story; CLI or test output | done (2026-10-03; foundation truth report) |
 | P1-20 | **Apple Test scenario tests** (witness and no-witness seeds, determinism) | Test & Scenario | P1-08 … P1-19 | All pass conditions above are automated | todo |
 | P1-21 | Save/load full world state to JSON; determinism across save/load | Persistence | P1-20 | Test: run(1000) == save→load→run(1000) | todo |
 
