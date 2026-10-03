@@ -10,7 +10,31 @@ namespace LivingWorld.Simulation.Knowledge
         private readonly SortedDictionary<NpcId, BeliefStore> _stores = new SortedDictionary<NpcId, BeliefStore>();
         private readonly SortedDictionary<NpcId, MemoryStore> _memoryStores = new SortedDictionary<NpcId, MemoryStore>();
 
-        internal long PerceptionCursor { get; set; }
+        private long _perceptionCursor;
+
+        /// <summary>Last world event ID perception has processed; zero before any event.</summary>
+        internal long PerceptionCursor
+        {
+            get => _perceptionCursor;
+            set
+            {
+                if (value < 0) throw new ArgumentOutOfRangeException(nameof(value));
+                _perceptionCursor = value;
+            }
+        }
+
+        /// <summary>Captures the perception event cursor for Persistence.</summary>
+        internal long CapturePerceptionCursor() => PerceptionCursor;
+
+        /// <summary>
+        /// Restores the perception event cursor. A negative value is rejected and the
+        /// current cursor is left unchanged.
+        /// </summary>
+        internal void RestorePerceptionCursor(long cursor)
+        {
+            if (cursor < 0) throw new ArgumentOutOfRangeException(nameof(cursor));
+            PerceptionCursor = cursor;
+        }
 
         public IReadOnlyList<BeliefStore> Stores => new List<BeliefStore>(_stores.Values).AsReadOnly();
         public IReadOnlyList<MemoryStore> MemoryStores => new List<MemoryStore>(_memoryStores.Values).AsReadOnly();
