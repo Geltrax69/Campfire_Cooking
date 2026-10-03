@@ -72,10 +72,28 @@ namespace LivingWorld.Simulation.Persistence
                 if (!seen.Add(id)) throw new LoadException("Duplicate item ID '" + id.Value + "' in " + path + ".");
                 definitions.Add(new ItemDefinition(id, RequiredText(row, "name", path),
                     RequiredText(row, "category", path), row.GetProperty("baseValue").GetInt32(),
-                    row.GetProperty("phase").GetInt32(), perishable: LoadPerishable(row, path)));
+                    row.GetProperty("phase").GetInt32(),
+                    hungerEffect: LoadEffect(row, "hunger"),
+                    healthEffect: LoadEffect(row, "health"),
+                    socialEffect: LoadEffect(row, "social"),
+                    perishable: LoadPerishable(row, path)));
             }
             try { return new ItemCatalog(definitions); }
             catch (Exception failure) { throw new LoadException("Invalid item catalog in " + path + ".", failure); }
+        }
+
+        private static int? LoadEffect(JsonElement row, string name)
+        {
+            // Reason: the approved `effects` block in items.json tunes food to the need
+            // rates (ITEMS.md: a rye loaf restores 30 hunger). Values load as-is; the
+            // known sign inconsistency on some cooked foods is a Content question.
+            if (!row.TryGetProperty("effects", out JsonElement effects)
+                || effects.ValueKind == JsonValueKind.Null)
+                return null;
+            if (!effects.TryGetProperty(name, out JsonElement value)
+                || value.ValueKind == JsonValueKind.Null)
+                return null;
+            return value.GetInt32();
         }
 
         private static PerishableInfo LoadPerishable(JsonElement row, string path)
