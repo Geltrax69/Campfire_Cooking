@@ -111,18 +111,19 @@ namespace LivingWorld.Simulation.Tests.Knowledge
         public void ReputationAdjustsPerGroupClampsAndLogsActualAppliedDeltas()
         {
             var state = new WorldState(4, new GameTime(20));
-            var reputation = new ReputationState(new[]
+            state.Knowledge.InitializeReputation(new[]
             {
                 new ReputationStanding(Guards, 45),
                 new ReputationStanding(Merchants, 95)
             });
 
-            WorldEvent suspicion = ReputationAdjuster.Apply(state, reputation, Shop, Guards, -15);
-            WorldEvent praise = ReputationAdjuster.Apply(state, reputation, Shop, Merchants, 10);
-            WorldEvent noChange = ReputationAdjuster.Apply(state, reputation, Shop, Merchants, 10);
-            WorldEvent floor = ReputationAdjuster.Apply(state, reputation, Shop, Guards, -100);
+            WorldEvent suspicion = ReputationAdjuster.Apply(state, Shop, Guards, -15);
+            WorldEvent praise = ReputationAdjuster.Apply(state, Shop, Merchants, 10);
+            WorldEvent noChange = ReputationAdjuster.Apply(state, Shop, Merchants, 10);
+            WorldEvent floor = ReputationAdjuster.Apply(state, Shop, Guards, -100);
 
-            Assert.That((reputation.Get(Guards), reputation.Get(Merchants)), Is.EqualTo((0, 100)));
+            Assert.That((state.Knowledge.Reputation.Get(Guards), state.Knowledge.Reputation.Get(Merchants)),
+                Is.EqualTo((0, 100)));
             Assert.That(noChange, Is.Null);
             Assert.That(state.Events.Query(type: WorldEventType.ReputationChanged)
                 .Select(worldEvent => (worldEvent.ReputationGroup, worldEvent.ReputationDelta)),
@@ -134,6 +135,20 @@ namespace LivingWorld.Simulation.Tests.Knowledge
                 }));
             Assert.That((suspicion.Actor, praise.Actor, floor.Actor),
                 Is.EqualTo(((ActorId?)ActorId.Player, (ActorId?)ActorId.Player, (ActorId?)ActorId.Player)));
+        }
+
+        [Test]
+        public void ReputationRequiresExplicitSingleInitialization()
+        {
+            var state = new WorldState(4, new GameTime(20));
+            Assert.That(state.Knowledge.Reputation, Is.Null);
+            Assert.Throws<InvalidOperationException>(() => ReputationAdjuster.Apply(state, Shop, Guards, -15));
+
+            state.Knowledge.InitializeReputation(new[] { new ReputationStanding(Guards, 45) });
+            Assert.That(state.Knowledge.Reputation.Get(Guards), Is.EqualTo(45));
+            Assert.Throws<InvalidOperationException>(() => state.Knowledge.InitializeReputation(
+                new[] { new ReputationStanding(Guards, 45) }));
+            Assert.Throws<ArgumentNullException>(() => new WorldState(1).Knowledge.InitializeReputation(null));
         }
 
         [Test]

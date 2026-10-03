@@ -98,6 +98,7 @@ namespace LivingWorld.Simulation.Tests.Economy
         {
             Scenario scenario = Create(stock: 10, start: new GameTime(20));
             var secondThief = new Inventory(TinyCatalog());
+            scenario.State.Belongings.Register(ActorId.ForNpc(Tom), secondThief, new Wallet());
             var world = new World(scenario.State);
             world.RegisterSystem(new CommandSystem());
             scenario.State.EnqueueCommand(new TheftCommand(Stall, ActorId.Player, ActorId.ForNpc(Mira),
@@ -123,10 +124,15 @@ namespace LivingWorld.Simulation.Tests.Economy
             ItemCatalog thiefCatalog = null, GameTime start = default)
         {
             ItemCatalog catalog = TinyCatalog();
+            var state = new WorldState(42, start);
             var source = new Inventory(catalog);
             source.Add(Apple, stock);
-            return new Scenario(source, new Inventory(thiefCatalog ?? catalog),
-                new Wallet(thiefCopper), new Wallet(ownerCopper), new WorldState(42, start));
+            var thief = new Inventory(thiefCatalog ?? catalog);
+            var thiefWallet = new Wallet(thiefCopper);
+            var ownerWallet = new Wallet(ownerCopper);
+            state.Belongings.Register(ActorId.Player, thief, thiefWallet);
+            state.Belongings.Register(ActorId.ForNpc(Mira), source, ownerWallet);
+            return new Scenario(source, thief, thiefWallet, ownerWallet, state);
         }
 
         private static void AssertUnchanged(Scenario scenario, int source, int? thief)

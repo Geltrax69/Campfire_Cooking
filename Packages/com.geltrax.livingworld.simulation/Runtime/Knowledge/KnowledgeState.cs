@@ -39,6 +39,28 @@ namespace LivingWorld.Simulation.Knowledge
         public IReadOnlyList<BeliefStore> Stores => new List<BeliefStore>(_stores.Values).AsReadOnly();
         public IReadOnlyList<MemoryStore> MemoryStores => new List<MemoryStore>(_memoryStores.Values).AsReadOnly();
 
+        /// <summary>
+        /// The player's standing with each group, or null until <see cref="InitializeReputation"/>
+        /// installs it. Reputation lives here because it is knowledge-adjacent: the groups'
+        /// opinion of the player, kept with the rest of what the world knows.
+        /// </summary>
+        public ReputationState Reputation { get; private set; }
+
+        /// <summary>
+        /// Installs player reputation standings exactly once; a second call is rejected.
+        /// </summary>
+        public void InitializeReputation(IEnumerable<ReputationStanding> standings)
+        {
+            if (Reputation != null) throw new InvalidOperationException("Reputation is already initialized.");
+            Reputation = new ReputationState(standings);
+        }
+
+        /// <summary>Replaces reputation standings with a validated snapshot for Persistence.</summary>
+        internal void RestoreReputation(ReputationState state)
+        {
+            Reputation = state ?? throw new ArgumentNullException(nameof(state));
+        }
+
         public BeliefStore Register(NpcId npc)
         {
             if (!npc.IsValid) throw new ArgumentException("Knowledge requires a valid NPC ID.", nameof(npc));
