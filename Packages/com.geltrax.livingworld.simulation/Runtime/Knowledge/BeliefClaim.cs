@@ -4,7 +4,19 @@ using LivingWorld.Simulation.Core;
 namespace LivingWorld.Simulation.Knowledge
 {
     /// <summary>Classifies the small set of structured claims supported by the Apple Test.</summary>
-    public enum BeliefClaimKind { StockAvailable, StockMissing, TheftObserved, Presence }
+    public enum BeliefClaimKind
+    {
+        StockAvailable,
+        StockMissing,
+        TheftObserved,
+        Presence,
+        /// <summary>Attributed interaction memory: the subject wronged the holder (witnessed theft, missed debt).</summary>
+        WrongedBy,
+        /// <summary>Attributed interaction memory: the subject gave the holder a gift.</summary>
+        GiftFrom,
+        /// <summary>Attributed interaction memory: the subject traded fairly with the holder.</summary>
+        FairTradeWith
+    }
 
     /// <summary>Immutable statement an NPC may believe, independent of whether it is world truth.</summary>
     public sealed class BeliefClaim : IEquatable<BeliefClaim>, IComparable<BeliefClaim>
@@ -12,7 +24,7 @@ namespace LivingWorld.Simulation.Knowledge
         public BeliefClaim(BeliefClaimKind kind, LocationId location, ItemTypeId? itemType = null,
             ActorId? subject = null, int? quantity = null)
         {
-            if (kind < BeliefClaimKind.StockAvailable || kind > BeliefClaimKind.Presence)
+            if (kind < BeliefClaimKind.StockAvailable || kind > BeliefClaimKind.FairTradeWith)
                 throw new ArgumentOutOfRangeException(nameof(kind));
             if (!location.IsValid) throw new ArgumentException("A claim needs a valid location.", nameof(location));
             if (itemType.HasValue && !itemType.Value.IsValid) throw new ArgumentException("Invalid item type.", nameof(itemType));
@@ -28,6 +40,15 @@ namespace LivingWorld.Simulation.Knowledge
                 throw new ArgumentException("Presence claims require a subject.", nameof(subject));
             if (kind == BeliefClaimKind.Presence && (itemType.HasValue || quantity.HasValue))
                 throw new ArgumentException("Presence claims cannot contain item details.");
+
+            // Attributed interaction memories name an actor and a kind of interaction
+            // ("Ralf cheated me", "Bessa gave me bread"); they never carry item details.
+            bool isAttributed = kind == BeliefClaimKind.WrongedBy || kind == BeliefClaimKind.GiftFrom ||
+                kind == BeliefClaimKind.FairTradeWith;
+            if (isAttributed && !subject.HasValue)
+                throw new ArgumentException("Attributed interaction claims require a subject.", nameof(subject));
+            if (isAttributed && (itemType.HasValue || quantity.HasValue))
+                throw new ArgumentException("Attributed interaction claims cannot contain item details.");
 
             Kind = kind;
             Location = location;

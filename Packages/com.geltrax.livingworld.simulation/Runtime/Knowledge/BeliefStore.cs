@@ -40,7 +40,7 @@ namespace LivingWorld.Simulation.Knowledge
         public IReadOnlyList<Belief> Query(BeliefClaimKind? kind = null, LocationId? location = null,
             ItemTypeId? itemType = null, ActorId? subject = null, int? quantity = null)
         {
-            if (kind.HasValue && (kind < BeliefClaimKind.StockAvailable || kind > BeliefClaimKind.Presence))
+            if (kind.HasValue && (kind < BeliefClaimKind.StockAvailable || kind > BeliefClaimKind.FairTradeWith))
                 throw new ArgumentOutOfRangeException(nameof(kind));
             if (location.HasValue && !location.Value.IsValid) throw new ArgumentException("Invalid location.", nameof(location));
             if (itemType.HasValue && !itemType.Value.IsValid) throw new ArgumentException("Invalid item type.", nameof(itemType));

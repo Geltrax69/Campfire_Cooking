@@ -13,9 +13,12 @@ namespace LivingWorld.Simulation.Knowledge
         private long _perceptionCursor;
         private bool _relationshipsInitialized;
         private long _dynamicsCursor;
+        private long _recallCursor;
         private long _lastDynamicsDay;
         private readonly SortedDictionary<RelationshipPairKey, RelationshipBaseline> _relationshipBaselines =
             new SortedDictionary<RelationshipPairKey, RelationshipBaseline>();
+        private readonly SortedDictionary<AttributedMemoryKey, AttributedMemory> _attributedMemories =
+            new SortedDictionary<AttributedMemoryKey, AttributedMemory>();
 
         /// <summary>Last world event ID perception has processed; zero before any event.</summary>
         internal long PerceptionCursor
@@ -127,6 +130,87 @@ namespace LivingWorld.Simulation.Knowledge
         {
             if (cursor < 0) throw new ArgumentOutOfRangeException(nameof(cursor));
             DynamicsCursor = cursor;
+        }
+
+        /// <summary>Last world event ID memory recall has processed; zero before any event.</summary>
+        internal long RecallCursor
+        {
+            get => _recallCursor;
+            set
+            {
+                if (value < 0) throw new ArgumentOutOfRangeException(nameof(value));
+                _recallCursor = value;
+            }
+        }
+
+        /// <summary>Captures the memory-recall event cursor for Persistence.</summary>
+        internal long CaptureRecallCursor() => RecallCursor;
+
+        /// <summary>
+        /// Restores the memory-recall event cursor. A negative value is rejected and the
+        /// current cursor is left unchanged.
+        /// </summary>
+        internal void RestoreRecallCursor(long cursor)
+        {
+            if (cursor < 0) throw new ArgumentOutOfRangeException(nameof(cursor));
+            RecallCursor = cursor;
+        }
+
+        /// <summary>
+        /// Records the recall accounting for an attributed interaction memory. First capture
+        /// wins: reinforcing the same memory later refreshes its decay clock but never moves
+        /// its own bound, mirroring how relationship baselines work.
+        /// </summary>
+        internal void RecordAttributedMemory(NpcId owner, BeliefClaim claim, int trustDelta,
+            int affectionDelta)
+        {
+            var key = new AttributedMemoryKey(owner, claim);
+            if (_attributedMemories.ContainsKey(key)) return;
+            _attributedMemories.Add(key, new AttributedMemory(owner, claim, trustDelta, affectionDelta));
+        }
+
+        /// <summary>Reads the recall accounting for one attributed memory, if recorded.</summary>
+        internal bool TryGetAttributedMemory(NpcId owner, BeliefClaim claim,
+            out AttributedMemory record) =>
+            _attributedMemories.TryGetValue(new AttributedMemoryKey(owner, claim), out record);
+
+        /// <summary>
+        /// Adds actual recall-driven movement to a memory's accounting. Only the recall
+        /// system calls this, after checking the per-axis bound; unknown memories are ignored.
+        /// </summary>
+        internal void AddRecallMovement(NpcId owner, BeliefClaim claim, int trustMoved,
+            int affectionMoved)
+        {
+            if (_attributedMemories.TryGetValue(new AttributedMemoryKey(owner, claim),
+                out AttributedMemory record))
+                record.AddRecall(trustMoved, affectionMoved);
+        }
+
+        /// <summary>Captures every attributed memory record for Persistence, in deterministic order.</summary>
+        internal IReadOnlyList<AttributedMemory> CaptureAttributedMemories() =>
+            new List<AttributedMemory>(_attributedMemories.Values).AsReadOnly();
+
+        /// <summary>
+        /// Atomically replaces all attributed memory records with a validated snapshot for
+        /// Persistence. A rejected snapshot (null, null record, duplicate memory) leaves the
+        /// current records unchanged.
+        /// </summary>
+        internal void RestoreAttributedMemories(IEnumerable<AttributedMemory> snapshot)
+        {
+            if (snapshot == null) throw new ArgumentNullException(nameof(snapshot));
+            var staged = new SortedDictionary<AttributedMemoryKey, AttributedMemory>();
+            foreach (AttributedMemory record in snapshot)
+            {
+                if (record == null)
+                    throw new ArgumentException("Attributed memories cannot contain null.", nameof(snapshot));
+                var key = new AttributedMemoryKey(record.Owner, record.Claim);
+                if (staged.ContainsKey(key))
+                    throw new ArgumentException("Duplicate attributed memory in snapshot.", nameof(snapshot));
+                staged.Add(key, record);
+            }
+            _attributedMemories.Clear();
+            foreach (KeyValuePair<AttributedMemoryKey, AttributedMemory> pair in staged)
+                _attributedMemories.Add(pair.Key, pair.Value);
         }
 
         /// <summary>
@@ -262,6 +346,25 @@ namespace LivingWorld.Simulation.Knowledge
             {
                 int byFrom = From.CompareTo(other.From);
                 return byFrom != 0 ? byFrom : To.CompareTo(other.To);
+            }
+        }
+
+        private readonly struct AttributedMemoryKey : IComparable<AttributedMemoryKey>
+        {
+            public readonly NpcId Owner;
+            public readonly BeliefClaim Claim;
+
+            public AttributedMemoryKey(NpcId owner, BeliefClaim claim)
+            {
+                // AttributedMemory's constructor already validated these.
+                Owner = owner;
+                Claim = claim;
+            }
+
+            public int CompareTo(AttributedMemoryKey other)
+            {
+                int byOwner = Owner.CompareTo(other.Owner);
+                return byOwner != 0 ? byOwner : Claim.CompareTo(other.Claim);
             }
         }
     }
