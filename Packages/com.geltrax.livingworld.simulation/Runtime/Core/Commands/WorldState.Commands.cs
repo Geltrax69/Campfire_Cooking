@@ -27,6 +27,25 @@ namespace LivingWorld.Simulation.Core
             return true;
         }
 
+        /// <summary>Captures pending commands in FIFO order with exact eligible minutes.</summary>
+        internal PendingCommandsState CapturePendingCommands()
+        {
+            var entries = new List<PendingCommandEntry>(_pendingCommands.Count);
+            foreach (var pending in _pendingCommands)
+                entries.Add(new PendingCommandEntry(pending.Command, pending.EligibleMinute));
+            return new PendingCommandsState(entries);
+        }
+
+        /// <summary>Replaces the queue with a validated snapshot; FIFO order and eligibility are unchanged.</summary>
+        internal void RestorePendingCommands(PendingCommandsState snapshot)
+        {
+            if (snapshot == null) throw new ArgumentNullException(nameof(snapshot));
+            // The snapshot was validated at construction, so installation cannot fail partway.
+            _pendingCommands.Clear();
+            foreach (var entry in snapshot.Entries)
+                _pendingCommands.Enqueue(new PendingCommand(entry.Command, entry.EligibleMinute));
+        }
+
         private readonly struct PendingCommand
         {
             public IWorldCommand Command { get; }
