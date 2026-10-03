@@ -23,7 +23,7 @@ namespace LivingWorld.Simulation.Persistence
     public static class WorldSaver
     {
         /// <summary>The save format version written at the head of every document.</summary>
-        public const int FormatVersion = 1;
+        public const int FormatVersion = 2;
 
         /// <summary>Serializes the whole world state. Throws <see cref="SaveException"/> on failure.</summary>
         public static string Save(WorldState state)
@@ -71,6 +71,19 @@ namespace LivingWorld.Simulation.Persistence
             WritePrices(writer, state);
             WriteReputation(writer, state);
             WriteTravel(writer, state);
+            WriteRelationships(writer, state);
+            WriteAttributedMemories(writer, state);
+            WriteSmithy(writer, state);
+            WriteMerchantSchedule(writer, state);
+            WriteTravelerSpend(writer, state);
+            WriteWolfBounty(writer, state);
+            WriteVillageFund(writer, state);
+            WriteHarvest(writer, state);
+            WriteTax(writer, state);
+            WriteCommunityFund(writer, state);
+            WriteEconomyBaseline(writer, state);
+            WriteSpoilage(writer, state);
+            WriteDebtLedger(writer, state);
             writer.WriteEndObject();
         }
 
@@ -287,6 +300,7 @@ namespace LivingWorld.Simulation.Persistence
                 foreach (var pair in shop.Stock.Contents)
                     writer.WriteNumber(pair.Key.Value, pair.Value);
                 writer.WriteEndObject();
+                WriteLots(writer, shop.Stock);
                 writer.WriteNumber("ownerCopper", shop.OwnerWallet.Balance);
                 writer.WriteStartObject("prices");
                 foreach (var pair in shop.Prices)
@@ -308,7 +322,27 @@ namespace LivingWorld.Simulation.Persistence
                 foreach (var pair in entry.Inventory.Contents)
                     writer.WriteNumber(pair.Key.Value, pair.Value);
                 writer.WriteEndObject();
+                WriteLots(writer, entry.Inventory);
                 writer.WriteNumber("copper", entry.Wallet.Balance);
+                writer.WriteEndObject();
+            }
+            writer.WriteEndArray();
+        }
+
+        /// <summary>
+        /// Per-lot ages for spoilage (P2-09): each lot's item, quantity and age in days,
+        /// in the inventory's deterministic lot order. Always written (possibly empty) so
+        /// saves stay byte-identical for equal states.
+        /// </summary>
+        private static void WriteLots(Utf8JsonWriter writer, Inventory inventory)
+        {
+            writer.WriteStartArray("lots");
+            foreach (StockLotRecord lot in inventory.CaptureLots())
+            {
+                writer.WriteStartObject();
+                writer.WriteString("item", lot.Item.Value);
+                writer.WriteNumber("quantity", lot.Quantity);
+                writer.WriteNumber("ageDays", lot.AgeDays);
                 writer.WriteEndObject();
             }
             writer.WriteEndArray();
@@ -413,6 +447,196 @@ namespace LivingWorld.Simulation.Persistence
                 writer.WriteEndObject();
             }
             writer.WriteEndArray();
+            writer.WriteEndObject();
+        }
+
+        private static void WriteRelationships(Utf8JsonWriter writer, WorldState state)
+        {
+            writer.WriteStartObject("relationships");
+            writer.WriteStartArray("pairs");
+            foreach (Relationship pair in state.Knowledge.CaptureRelationships())
+            {
+                writer.WriteStartObject();
+                writer.WriteString("from", pair.From.Value);
+                writer.WriteString("to", pair.To.Value);
+                writer.WriteNumber("trust", pair.Trust);
+                writer.WriteNumber("affection", pair.Affection);
+                writer.WriteString("reason", pair.Reason);
+                writer.WriteEndObject();
+            }
+            writer.WriteEndArray();
+            writer.WriteStartArray("baselines");
+            foreach (RelationshipBaseline baseline in state.Knowledge.CaptureRelationshipBaselines())
+            {
+                writer.WriteStartObject();
+                writer.WriteString("from", baseline.From.Value);
+                writer.WriteString("to", baseline.To.Value);
+                writer.WriteNumber("trust", baseline.Trust);
+                writer.WriteNumber("affection", baseline.Affection);
+                writer.WriteString("reason", baseline.Reason);
+                writer.WriteEndObject();
+            }
+            writer.WriteEndArray();
+            writer.WriteNumber("dynamicsCursor", state.Knowledge.CaptureDynamicsCursor());
+            writer.WriteNumber("dynamicsDay", state.Knowledge.CaptureDynamicsDay());
+            writer.WriteNumber("recallCursor", state.Knowledge.CaptureRecallCursor());
+            writer.WriteEndObject();
+        }
+
+        private static void WriteAttributedMemories(Utf8JsonWriter writer, WorldState state)
+        {
+            writer.WriteStartArray("attributedMemories");
+            foreach (AttributedMemory record in state.Knowledge.CaptureAttributedMemories())
+            {
+                writer.WriteStartObject();
+                writer.WriteString("owner", record.Owner.Value);
+                WriteClaim(writer, record.Claim);
+                writer.WriteNumber("originalTrustDelta", record.OriginalTrustDelta);
+                writer.WriteNumber("originalAffectionDelta", record.OriginalAffectionDelta);
+                writer.WriteNumber("recalledTrustDelta", record.RecalledTrustDelta);
+                writer.WriteNumber("recalledAffectionDelta", record.RecalledAffectionDelta);
+                writer.WriteEndObject();
+            }
+            writer.WriteEndArray();
+        }
+
+        private static void WriteSmithy(Utf8JsonWriter writer, WorldState state)
+        {
+            writer.WriteStartObject("smithy");
+            writer.WriteBoolean("ironExhaustionOrdered", state.Smithy.IronExhaustionOrdered);
+            writer.WriteEndObject();
+        }
+
+        private static void WriteMerchantSchedule(Utf8JsonWriter writer, WorldState state)
+        {
+            MerchantScheduleState schedule = state.MerchantSchedule;
+            writer.WriteStartObject("merchantSchedule");
+            writer.WriteBoolean("initialized", schedule.IsInitialized);
+            writer.WriteNumber("nextVisitDay", schedule.NextVisitDay);
+            writer.WriteEndObject();
+        }
+
+        private static void WriteTravelerSpend(Utf8JsonWriter writer, WorldState state)
+        {
+            TravelerSpendState spend = state.TravelerSpend;
+            writer.WriteStartObject("travelerSpend");
+            writer.WriteBoolean("initialized", spend.IsInitialized);
+            writer.WriteNumber("lastPayoutDay", spend.LastPayoutDay);
+            writer.WriteNumber("monthIndex", spend.MonthIndex);
+            writer.WriteStartArray("paidThisMonth");
+            foreach (int paid in spend.PaidThisMonth) writer.WriteNumberValue(paid);
+            writer.WriteEndArray();
+            writer.WriteEndObject();
+        }
+
+        private static void WriteWolfBounty(Utf8JsonWriter writer, WorldState state)
+        {
+            WolfBountyState bounty = state.WolfBounty;
+            writer.WriteStartObject("wolfBounty");
+            writer.WriteBoolean("initialized", bounty.IsInitialized);
+            writer.WriteNumber("winterYear", bounty.WinterYear);
+            writer.WriteStartArray("bountyDays");
+            foreach (long day in bounty.BountyDays) writer.WriteNumberValue(day);
+            writer.WriteEndArray();
+            writer.WriteEndObject();
+        }
+
+        private static void WriteVillageFund(Utf8JsonWriter writer, WorldState state)
+        {
+            VillageFundState fund = state.VillageFund;
+            writer.WriteStartObject("villageFund");
+            writer.WriteBoolean("initialized", fund.IsInitialized);
+            writer.WriteNumber("fundsCopper", fund.Funds.Balance);
+            writer.WriteNumber("lastLevyDay", fund.LastLevyDay);
+            writer.WriteNumber("lastWageDay", fund.LastWageDay);
+            writer.WriteNumber("lastRetainerDay", fund.LastRetainerDay);
+            writer.WriteEndObject();
+        }
+
+        private static void WriteHarvest(Utf8JsonWriter writer, WorldState state)
+        {
+            HarvestState harvest = state.Harvest;
+            writer.WriteStartObject("harvest");
+            writer.WriteBoolean("initialized", harvest.IsInitialized);
+            writer.WriteNumber("lastWageDay", harvest.LastWageDay);
+            writer.WriteEndObject();
+        }
+
+        private static void WriteTax(Utf8JsonWriter writer, WorldState state)
+        {
+            TaxState tax = state.Tax;
+            writer.WriteStartObject("tax");
+            writer.WriteBoolean("initialized", tax.IsInitialized);
+            writer.WriteNumber("lastCollectionDay", tax.LastCollectionDay);
+            writer.WriteEndObject();
+        }
+
+        private static void WriteCommunityFund(Utf8JsonWriter writer, WorldState state)
+        {
+            CommunityFundState fund = state.CommunityFund;
+            writer.WriteStartObject("communityFund");
+            writer.WriteBoolean("initialized", fund.IsInitialized);
+            writer.WriteNumber("communityCopper", fund.CommunityPot.Balance);
+            writer.WriteNumber("feastCopper", fund.FeastPot.Balance);
+            writer.WriteNumber("lastMonthlyDay", fund.LastMonthlyDay);
+            writer.WriteNumber("lastFeastYear", fund.LastFeastYear);
+            writer.WriteEndObject();
+        }
+
+        private static void WriteEconomyBaseline(Utf8JsonWriter writer, WorldState state)
+        {
+            EconomyBaselineState baseline = state.EconomyBaseline;
+            writer.WriteStartObject("economyBaseline");
+            writer.WriteBoolean("initialized", baseline.IsInitialized);
+            writer.WriteNumber("baselineCopper", baseline.BaselineCopper);
+            writer.WriteEndObject();
+        }
+
+        private static void WriteSpoilage(Utf8JsonWriter writer, WorldState state)
+        {
+            SpoilageState spoilage = state.Spoilage;
+            writer.WriteStartObject("spoilage");
+            writer.WriteBoolean("initialized", spoilage.IsInitialized);
+            writer.WriteNumber("lastAgedDay", spoilage.LastAgedDay);
+            writer.WriteEndObject();
+        }
+
+        private static void WriteDebtLedger(Utf8JsonWriter writer, WorldState state)
+        {
+            DebtLedgerState ledger = state.DebtLedger;
+            writer.WriteStartObject("debtLedger");
+            writer.WriteBoolean("initialized", ledger.IsInitialized);
+            writer.WriteNumber("lastFeastYear", ledger.LastFeastYear);
+            writer.WriteStartArray("debts");
+            foreach (DebtRecord debt in ledger.Debts)
+            {
+                writer.WriteStartObject();
+                writer.WriteString("debtor", debt.Debtor.Value);
+                writer.WriteString("creditor", debt.Creditor.Value);
+                writer.WriteNumber("owedCopper", debt.OwedCopper);
+                writer.WriteNumber("openedDay", debt.OpenedDay);
+                writer.WriteNumber("lastPaymentDay", debt.LastPaymentDay);
+                writer.WriteNumber("lastWeeklyDay", debt.LastWeeklyDay);
+                writer.WriteBoolean("overdueDeclared", debt.OverdueDeclared);
+                WriteDebtTerms(writer, debt.Terms);
+                writer.WriteEndObject();
+            }
+            writer.WriteEndArray();
+            writer.WriteEndObject();
+        }
+
+        private static void WriteDebtTerms(Utf8JsonWriter writer, DebtTerms terms)
+        {
+            writer.WriteStartObject("terms");
+            writer.WriteNumber("copperPerWeek", terms.CopperPerWeek);
+            if (terms.ItemPerWeek.HasValue)
+                writer.WriteString("itemPerWeek", terms.ItemPerWeek.Value.Value);
+            else
+                writer.WriteNull("itemPerWeek");
+            writer.WriteNumber("itemsPerWeek", terms.ItemsPerWeek);
+            writer.WriteNumber("itemCreditCopper", terms.ItemCreditCopper);
+            writer.WriteNumber("payChancePercent", terms.PayChancePercent);
+            writer.WriteNumber("overdueAfterDays", terms.OverdueAfterDays);
             writer.WriteEndObject();
         }
 

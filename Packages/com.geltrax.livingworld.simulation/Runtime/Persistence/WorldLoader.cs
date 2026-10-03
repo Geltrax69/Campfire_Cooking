@@ -69,6 +69,24 @@ namespace LivingWorld.Simulation.Persistence
             private ReputationState Reputation { get; set; }
             private bool TravelInitialized { get; set; }
             private List<TravelPlan> Travel { get; } = new List<TravelPlan>();
+            // Phase 2 (formatVersion 2) sections; null when loading a version 1 document.
+            private List<Relationship> Relationships { get; } = new List<Relationship>();
+            private List<RelationshipBaseline> RelationshipBaselines { get; } = new List<RelationshipBaseline>();
+            private long DynamicsCursor { get; set; }
+            private long DynamicsDay { get; set; }
+            private long RecallCursor { get; set; }
+            private List<AttributedMemory> AttributedMemories { get; } = new List<AttributedMemory>();
+            private bool SmithyIronExhaustionOrdered { get; set; }
+            private MerchantScheduleState MerchantSchedule { get; set; }
+            private TravelerSpendState TravelerSpend { get; set; }
+            private WolfBountyState WolfBounty { get; set; }
+            private VillageFundState VillageFund { get; set; }
+            private HarvestState Harvest { get; set; }
+            private TaxState Tax { get; set; }
+            private CommunityFundState CommunityFund { get; set; }
+            private EconomyBaselineState EconomyBaseline { get; set; }
+            private SpoilageState Spoilage { get; set; }
+            private DebtLedgerState DebtLedger { get; set; }
 
             public static SavePlan Parse(string json, ContentBundle bundle)
             {
@@ -81,9 +99,9 @@ namespace LivingWorld.Simulation.Persistence
                         throw new LoadException("The save document must be a JSON object.");
                     var root = new Reader(document.RootElement, "save root");
                     int version = root.Property("formatVersion").Int32(0, int.MaxValue);
-                    if (version != WorldSaver.FormatVersion)
+                    if (version < 1 || version > WorldSaver.FormatVersion)
                         throw new LoadException("Unsupported save format version " + version +
-                            "; this loader reads version " + WorldSaver.FormatVersion + ".");
+                            "; this loader reads versions 1 through " + WorldSaver.FormatVersion + ".");
                     var plan = new SavePlan(root.Property("rngState").UInt64(),
                         new GameTime(root.Property("clock").Int64()));
                     plan.ParseEventLog(root, bundle);
@@ -99,8 +117,25 @@ namespace LivingWorld.Simulation.Persistence
                     plan.ParsePrices(root);
                     plan.ParseReputation(root, bundle);
                     plan.ParseTravel(root, bundle);
+                    if (version >= 2)
+                    {
+                        plan.ParseRelationships(root, bundle);
+                        plan.ParseAttributedMemories(root, bundle);
+                        plan.ParseSmithy(root);
+                        plan.ParseMerchantSchedule(root);
+                        plan.ParseTravelerSpend(root);
+                        plan.ParseWolfBounty(root);
+                        plan.ParseVillageFund(root);
+                        plan.ParseHarvest(root);
+                        plan.ParseTax(root);
+                        plan.ParseCommunityFund(root);
+                        plan.ParseEconomyBaseline(root);
+                        plan.ParseSpoilage(root);
+                        plan.ParseDebtLedger(root, bundle);
+                    }
                     plan.CrossCheckCommands();
                     plan.CrossCheckWallets();
+                    plan.CrossCheckLots();
                     return plan;
                 }
             }
@@ -278,6 +313,7 @@ namespace LivingWorld.Simulation.Persistence
                         throw new LoadException("Duplicate shop '" + location.Value + "' in " + path + ".");
                     NpcId owner = ParseKnownNpc(entry.Property("owner").Text(), bundle, path);
                     var stock = ParseItemCounts(entry.Property("stock"), bundle, path);
+                    var lots = ParseLots(entry, bundle, path);
                     int ownerCopper = entry.Property("ownerCopper").Int32();
                     var prices = new List<KeyValuePair<ItemTypeId, int>>();
                     foreach (KeyValuePair<string, Reader> price in entry.Property("prices").Properties())
@@ -286,7 +322,7 @@ namespace LivingWorld.Simulation.Persistence
                         bundle.RequireItem(item, price.Value.Path);
                         prices.Add(new KeyValuePair<ItemTypeId, int>(item, price.Value.Int32(1, int.MaxValue)));
                     }
-                    Shops.Add(new ShopPlan(location, owner, stock, ownerCopper, prices));
+                    Shops.Add(new ShopPlan(location, owner, stock, lots, ownerCopper, prices));
                 }
             }
 
@@ -300,9 +336,33 @@ namespace LivingWorld.Simulation.Persistence
                     if (!seen.Add(owner))
                         throw new LoadException("Duplicate belongings owner in " + path + ".");
                     var inventory = ParseItemCounts(entry.Property("inventory"), bundle, path);
+                    var lots = ParseLots(entry, bundle, path);
                     int copper = entry.Property("copper").Int32();
-                    Belongings.Add(new BelongingsPlan(owner, inventory, copper));
+                    Belongings.Add(new BelongingsPlan(owner, inventory, lots, copper));
                 }
+            }
+
+            /// <summary>
+            /// Parses the optional per-lot ages (formatVersion 2). Returns null when the
+            /// "lots" property is absent (version 1 documents): the caller then builds
+            /// age-0 lots from the counts, preserving the old behavior exactly.
+            /// </summary>
+            private static List<StockLotRecord> ParseLots(Reader entry, ContentBundle bundle, string path)
+            {
+                Reader lotsReader;
+                if (!entry.TryProperty("lots", out lotsReader)) return null;
+                var lots = new List<StockLotRecord>();
+                foreach (Reader lot in lotsReader.Items())
+                {
+                    string lotPath = lot.Path;
+                    var item = new ItemTypeId(lot.Property("item").Text());
+                    bundle.RequireItem(item, lotPath);
+                    int quantity = lot.Property("quantity").Int32(1);
+                    int ageDays = lot.Property("ageDays").Int32(0);
+                    try { lots.Add(new StockLotRecord(item, quantity, ageDays)); }
+                    catch (Exception failure) { throw new LoadException("Invalid stock lot in " + lotPath + ".", failure); }
+                }
+                return lots;
             }
 
             private void ParseProduction(Reader root)
@@ -419,6 +479,230 @@ namespace LivingWorld.Simulation.Persistence
                 }
             }
 
+            private void ParseRelationships(Reader root, ContentBundle bundle)
+            {
+                Reader section = root.Property("relationships");
+                var seenPairs = new HashSet<string>(StringComparer.Ordinal);
+                foreach (Reader entry in section.Items("pairs"))
+                {
+                    string path = entry.Path;
+                    NpcId from = ParseKnownNpc(entry.Property("from").Text(), bundle, path);
+                    NpcId to = ParseKnownNpc(entry.Property("to").Text(), bundle, path);
+                    string key = from.Value + "→" + to.Value;
+                    if (!seenPairs.Add(key))
+                        throw new LoadException("Duplicate relationship pair '" + key + "' in " + path + ".");
+                    int trust = entry.Property("trust").Int32(0, 100);
+                    int affection = entry.Property("affection").Int32(0, 100);
+                    string reason = entry.Property("reason").Text();
+                    try { Relationships.Add(new Relationship(from, to, trust, affection, reason)); }
+                    catch (Exception failure) { throw new LoadException("Invalid relationship in " + path + ".", failure); }
+                }
+                var seenBaselines = new HashSet<string>(StringComparer.Ordinal);
+                foreach (Reader entry in section.Items("baselines"))
+                {
+                    string path = entry.Path;
+                    NpcId from = ParseKnownNpc(entry.Property("from").Text(), bundle, path);
+                    NpcId to = ParseKnownNpc(entry.Property("to").Text(), bundle, path);
+                    string key = from.Value + "→" + to.Value;
+                    if (!seenBaselines.Add(key))
+                        throw new LoadException("Duplicate relationship baseline '" + key + "' in " + path + ".");
+                    int trust = entry.Property("trust").Int32(0, 100);
+                    int affection = entry.Property("affection").Int32(0, 100);
+                    string reason = entry.Property("reason").Text();
+                    try { RelationshipBaselines.Add(new RelationshipBaseline(from, to, trust, affection, reason)); }
+                    catch (Exception failure) { throw new LoadException("Invalid relationship baseline in " + path + ".", failure); }
+                }
+                DynamicsCursor = section.Property("dynamicsCursor").Int64();
+                DynamicsDay = section.Property("dynamicsDay").Int64();
+                RecallCursor = section.Property("recallCursor").Int64();
+            }
+
+            private void ParseAttributedMemories(Reader root, ContentBundle bundle)
+            {
+                foreach (Reader entry in root.Items("attributedMemories"))
+                {
+                    string path = entry.Path;
+                    NpcId owner = ParseKnownNpc(entry.Property("owner").Text(), bundle, path);
+                    BeliefClaim claim = ParseClaim(entry.Property("claim"), bundle, path);
+                    int originalTrust = entry.Property("originalTrustDelta").Int32(int.MinValue, int.MaxValue);
+                    int originalAffection = entry.Property("originalAffectionDelta").Int32(int.MinValue, int.MaxValue);
+                    int recalledTrust = entry.Property("recalledTrustDelta").Int32(int.MinValue, int.MaxValue);
+                    int recalledAffection = entry.Property("recalledAffectionDelta").Int32(int.MinValue, int.MaxValue);
+                    AttributedMemory record;
+                    try { record = new AttributedMemory(owner, claim, originalTrust, originalAffection); }
+                    catch (Exception failure) { throw new LoadException("Invalid attributed memory in " + path + ".", failure); }
+                    // The recall bound (|recalled| <= |original| per axis) is a runtime
+                    // invariant, not a constructor rule; still, a save that violates it is
+                    // corrupt, so reject it here rather than installing a lie.
+                    if (Math.Abs((long)recalledTrust) > Math.Abs((long)originalTrust) ||
+                        Math.Abs((long)recalledAffection) > Math.Abs((long)originalAffection))
+                        throw new LoadException("Attributed memory recall exceeds its bound in " + path + ".");
+                    record.AddRecall(recalledTrust, recalledAffection);
+                    AttributedMemories.Add(record);
+                }
+            }
+
+            private void ParseSmithy(Reader root)
+            {
+                Reader section = root.Property("smithy");
+                SmithyIronExhaustionOrdered = section.Property("ironExhaustionOrdered").Flag();
+            }
+
+            private void ParseMerchantSchedule(Reader root)
+            {
+                Reader section = root.Property("merchantSchedule");
+                bool initialized = section.Property("initialized").Flag();
+                long nextVisitDay = section.Property("nextVisitDay").Int64(-1);
+                try { MerchantSchedule = new MerchantScheduleState(initialized, nextVisitDay); }
+                catch (Exception failure) { throw new LoadException("Invalid merchant schedule.", failure); }
+            }
+
+            private void ParseTravelerSpend(Reader root)
+            {
+                Reader section = root.Property("travelerSpend");
+                bool initialized = section.Property("initialized").Flag();
+                long lastPayoutDay = section.Property("lastPayoutDay").Int64();
+                int monthIndex = section.Property("monthIndex").Int32(0);
+                var paid = new List<int>();
+                foreach (Reader amount in section.Items("paidThisMonth"))
+                    paid.Add(amount.Int32(0));
+                try { TravelerSpend = new TravelerSpendState(initialized, lastPayoutDay, monthIndex, paid); }
+                catch (Exception failure) { throw new LoadException("Invalid traveler spend.", failure); }
+            }
+
+            private void ParseWolfBounty(Reader root)
+            {
+                Reader section = root.Property("wolfBounty");
+                bool initialized = section.Property("initialized").Flag();
+                long winterYear = section.Property("winterYear").Int64(-1);
+                var days = new List<long>();
+                foreach (Reader day in section.Items("bountyDays"))
+                    days.Add(day.Int64(1));
+                try { WolfBounty = new WolfBountyState(initialized, winterYear, days); }
+                catch (Exception failure) { throw new LoadException("Invalid wolf bounty.", failure); }
+            }
+
+            private void ParseVillageFund(Reader root)
+            {
+                Reader section = root.Property("villageFund");
+                bool initialized = section.Property("initialized").Flag();
+                int fundsCopper = section.Property("fundsCopper").Int32(0);
+                long lastLevyDay = section.Property("lastLevyDay").Int64();
+                long lastWageDay = section.Property("lastWageDay").Int64();
+                long lastRetainerDay = section.Property("lastRetainerDay").Int64();
+                var state = new VillageFundState(initialized, fundsCopper);
+                state.LastLevyDay = lastLevyDay;
+                state.LastWageDay = lastWageDay;
+                state.LastRetainerDay = lastRetainerDay;
+                VillageFund = state;
+            }
+
+            private void ParseHarvest(Reader root)
+            {
+                Reader section = root.Property("harvest");
+                bool initialized = section.Property("initialized").Flag();
+                long lastWageDay = section.Property("lastWageDay").Int64();
+                try { Harvest = new HarvestState(initialized, lastWageDay); }
+                catch (Exception failure) { throw new LoadException("Invalid harvest.", failure); }
+            }
+
+            private void ParseTax(Reader root)
+            {
+                Reader section = root.Property("tax");
+                bool initialized = section.Property("initialized").Flag();
+                long lastCollectionDay = section.Property("lastCollectionDay").Int64();
+                try { Tax = new TaxState(initialized, lastCollectionDay); }
+                catch (Exception failure) { throw new LoadException("Invalid tax.", failure); }
+            }
+
+            private void ParseCommunityFund(Reader root)
+            {
+                Reader section = root.Property("communityFund");
+                bool initialized = section.Property("initialized").Flag();
+                int communityCopper = section.Property("communityCopper").Int32(0);
+                int feastCopper = section.Property("feastCopper").Int32(0);
+                long lastMonthlyDay = section.Property("lastMonthlyDay").Int64();
+                long lastFeastYear = section.Property("lastFeastYear").Int64();
+                var state = new CommunityFundState(initialized, lastMonthlyDay, lastFeastYear);
+                if (communityCopper > 0) state.CommunityPot.Credit(communityCopper);
+                if (feastCopper > 0) state.FeastPot.Credit(feastCopper);
+                CommunityFund = state;
+            }
+
+            private void ParseEconomyBaseline(Reader root)
+            {
+                Reader section = root.Property("economyBaseline");
+                bool initialized = section.Property("initialized").Flag();
+                long baselineCopper = section.Property("baselineCopper").Int64();
+                try { EconomyBaseline = new EconomyBaselineState(initialized, baselineCopper); }
+                catch (Exception failure) { throw new LoadException("Invalid economy baseline.", failure); }
+            }
+
+            private void ParseSpoilage(Reader root)
+            {
+                Reader section = root.Property("spoilage");
+                bool initialized = section.Property("initialized").Flag();
+                long lastAgedDay = section.Property("lastAgedDay").Int64();
+                try { Spoilage = new SpoilageState(initialized, lastAgedDay); }
+                catch (Exception failure) { throw new LoadException("Invalid spoilage.", failure); }
+            }
+
+            private void ParseDebtLedger(Reader root, ContentBundle bundle)
+            {
+                Reader section = root.Property("debtLedger");
+                bool initialized = section.Property("initialized").Flag();
+                long lastFeastYear = section.Property("lastFeastYear").Int64();
+                var debts = new List<DebtRecord>();
+                var seenPairs = new HashSet<string>(StringComparer.Ordinal);
+                foreach (Reader entry in section.Items("debts"))
+                {
+                    string path = entry.Path;
+                    NpcId debtor = ParseKnownNpc(entry.Property("debtor").Text(), bundle, path);
+                    NpcId creditor = ParseKnownNpc(entry.Property("creditor").Text(), bundle, path);
+                    string key = debtor.Value + "→" + creditor.Value;
+                    if (!seenPairs.Add(key))
+                        throw new LoadException("Duplicate debt '" + key + "' in " + path + ".");
+                    int owedCopper = entry.Property("owedCopper").Int32(1);
+                    long openedDay = entry.Property("openedDay").Int64(1);
+                    DebtTerms terms = ParseDebtTerms(entry.Property("terms"), bundle, path);
+                    DebtRecord debt;
+                    try { debt = new DebtRecord(debtor, creditor, owedCopper, terms, openedDay); }
+                    catch (Exception failure) { throw new LoadException("Invalid debt in " + path + ".", failure); }
+                    debt.LastPaymentDay = entry.Property("lastPaymentDay").Int64();
+                    debt.LastWeeklyDay = entry.Property("lastWeeklyDay").Int64();
+                    debt.OverdueDeclared = entry.Property("overdueDeclared").Flag();
+                    debts.Add(debt);
+                }
+                var ledger = new DebtLedgerState(initialized);
+                ledger.LastFeastYear = lastFeastYear;
+                try { ledger.ReplaceAll(debts); }
+                catch (Exception failure) { throw new LoadException("Invalid debt ledger.", failure); }
+                DebtLedger = ledger;
+            }
+
+            private static DebtTerms ParseDebtTerms(Reader terms, ContentBundle bundle, string path)
+            {
+                int copperPerWeek = terms.Property("copperPerWeek").Int32(0);
+                ItemTypeId? itemPerWeek = null;
+                Reader itemReader = terms.Property("itemPerWeek");
+                if (!itemReader.IsNull)
+                {
+                    var item = new ItemTypeId(itemReader.Text());
+                    bundle.RequireItem(item, path);
+                    itemPerWeek = item;
+                }
+                int itemsPerWeek = terms.Property("itemsPerWeek").Int32(0);
+                int itemCreditCopper = terms.Property("itemCreditCopper").Int32(0);
+                int payChancePercent = terms.Property("payChancePercent").Int32(0, 100);
+                int overdueAfterDays = terms.Property("overdueAfterDays").Int32(1);
+                try
+                {
+                    return new DebtTerms(copperPerWeek, itemPerWeek, itemsPerWeek,
+                        itemCreditCopper, payChancePercent, overdueAfterDays);
+                }
+                catch (Exception failure) { throw new LoadException("Invalid debt terms in " + path + ".", failure); }
+            }
+
             private void CrossCheckCommands()
             {
                 var shopLocations = new HashSet<LocationId>();
@@ -467,6 +751,45 @@ namespace LivingWorld.Simulation.Persistence
                 }
             }
 
+            /// <summary>
+            /// Lot quantities must sum to the saved counts: a document that claims 9 apples
+            /// in "stock" but lots totaling 7 is corrupt. Version 1 documents have no lots
+            /// and skip this check.
+            /// </summary>
+            private void CrossCheckLots()
+            {
+                foreach (ShopPlan shop in Shops) CheckLots(shop.Stock, shop.Lots, "shop '" + shop.Location.Value + "'");
+                foreach (BelongingsPlan belongings in Belongings)
+                    CheckLots(belongings.Inventory, belongings.Lots, "belongings of '" + belongings.Owner + "'");
+            }
+
+            private static void CheckLots(List<KeyValuePair<ItemTypeId, int>> counts,
+                List<StockLotRecord> lots, string where)
+            {
+                if (lots == null) return;
+                var totals = new Dictionary<ItemTypeId, int>();
+                foreach (StockLotRecord lot in lots)
+                {
+                    int total;
+                    totals.TryGetValue(lot.Item, out total);
+                    totals[lot.Item] = checked(total + lot.Quantity);
+                }
+                foreach (KeyValuePair<ItemTypeId, int> pair in counts)
+                {
+                    int total;
+                    if (!totals.TryGetValue(pair.Key, out total) || total != pair.Value)
+                        throw new LoadException("Lot quantities do not sum to the saved counts for " + where + ".");
+                }
+                foreach (KeyValuePair<ItemTypeId, int> total in totals)
+                {
+                    bool found = false;
+                    foreach (KeyValuePair<ItemTypeId, int> pair in counts)
+                        if (pair.Key == total.Key) { found = true; break; }
+                    if (!found)
+                        throw new LoadException("Lots name an item with no saved count for " + where + ".");
+                }
+            }
+
             public WorldState Build(ContentBundle bundle)
             {
                 // Every value below was validated during Parse; the restore contracts
@@ -509,6 +832,25 @@ namespace LivingWorld.Simulation.Persistence
                         }
                     }
                 }
+                // Phase 2 state (formatVersion 2); a version 1 document leaves the
+                // defaults in place, matching a freshly built world.
+                state.Knowledge.RestoreRelationships(Relationships);
+                state.Knowledge.RestoreRelationshipBaselines(RelationshipBaselines);
+                state.Knowledge.RestoreDynamicsCursor(DynamicsCursor);
+                state.Knowledge.RestoreDynamicsDay(DynamicsDay);
+                state.Knowledge.RestoreRecallCursor(RecallCursor);
+                state.Knowledge.RestoreAttributedMemories(AttributedMemories);
+                state.RestoreSmithy(new SmithyState(SmithyIronExhaustionOrdered));
+                if (MerchantSchedule != null) state.RestoreMerchantSchedule(MerchantSchedule);
+                if (TravelerSpend != null) state.RestoreTravelerSpend(TravelerSpend);
+                if (WolfBounty != null) state.RestoreWolfBounty(WolfBounty);
+                if (VillageFund != null) state.RestoreVillageFund(VillageFund);
+                if (Harvest != null) state.RestoreHarvest(Harvest);
+                if (Tax != null) state.RestoreTax(Tax);
+                if (CommunityFund != null) state.RestoreCommunityFund(CommunityFund);
+                if (EconomyBaseline != null) state.RestoreEconomyBaseline(EconomyBaseline);
+                if (Spoilage != null) state.RestoreSpoilage(Spoilage);
+                if (DebtLedger != null) state.RestoreDebtLedger(DebtLedger);
                 return state;
             }
 
@@ -520,7 +862,10 @@ namespace LivingWorld.Simulation.Persistence
                 foreach (ShopPlan plan in Shops)
                 {
                     var stock = new Inventory(bundle.Catalog);
-                    foreach (KeyValuePair<ItemTypeId, int> pair in plan.Stock) stock.Add(pair.Key, pair.Value);
+                    if (plan.Lots != null)
+                        stock.RestoreLots(plan.Lots);
+                    else
+                        foreach (KeyValuePair<ItemTypeId, int> pair in plan.Stock) stock.Add(pair.Key, pair.Value);
                     // The owner's personal wallet is the shop's wallet: share the object so
                     // later transfers through either view stay identical (CrossCheckWallets
                     // already proved the saved balances agree).
@@ -539,8 +884,11 @@ namespace LivingWorld.Simulation.Persistence
                 foreach (BelongingsPlan plan in Belongings)
                 {
                     var inventory = new Inventory(bundle.Catalog);
-                    foreach (KeyValuePair<ItemTypeId, int> pair in plan.Inventory)
-                        inventory.Add(pair.Key, pair.Value);
+                    if (plan.Lots != null)
+                        inventory.RestoreLots(plan.Lots);
+                    else
+                        foreach (KeyValuePair<ItemTypeId, int> pair in plan.Inventory)
+                            inventory.Add(pair.Key, pair.Value);
                     entries.Add(new NpcBelongingsEntry(plan.Owner, inventory, new Wallet(plan.Copper)));
                 }
                 return entries;
@@ -797,25 +1145,31 @@ namespace LivingWorld.Simulation.Persistence
         private sealed class ShopPlan
         {
             public ShopPlan(LocationId location, NpcId owner, List<KeyValuePair<ItemTypeId, int>> stock,
-                int ownerCopper, List<KeyValuePair<ItemTypeId, int>> prices)
+                List<StockLotRecord> lots, int ownerCopper, List<KeyValuePair<ItemTypeId, int>> prices)
             {
-                Location = location; Owner = owner; Stock = stock; OwnerCopper = ownerCopper; Prices = prices;
+                Location = location; Owner = owner; Stock = stock; Lots = lots;
+                OwnerCopper = ownerCopper; Prices = prices;
             }
             public LocationId Location { get; }
             public NpcId Owner { get; }
             public List<KeyValuePair<ItemTypeId, int>> Stock { get; }
+            /// <summary>Per-lot ages (formatVersion 2); null for version 1 documents.</summary>
+            public List<StockLotRecord> Lots { get; }
             public int OwnerCopper { get; }
             public List<KeyValuePair<ItemTypeId, int>> Prices { get; }
         }
 
         private sealed class BelongingsPlan
         {
-            public BelongingsPlan(ActorId owner, List<KeyValuePair<ItemTypeId, int>> inventory, int copper)
+            public BelongingsPlan(ActorId owner, List<KeyValuePair<ItemTypeId, int>> inventory,
+                List<StockLotRecord> lots, int copper)
             {
-                Owner = owner; Inventory = inventory; Copper = copper;
+                Owner = owner; Inventory = inventory; Lots = lots; Copper = copper;
             }
             public ActorId Owner { get; }
             public List<KeyValuePair<ItemTypeId, int>> Inventory { get; }
+            /// <summary>Per-lot ages (formatVersion 2); null for version 1 documents.</summary>
+            public List<StockLotRecord> Lots { get; }
             public int Copper { get; }
         }
 
