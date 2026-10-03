@@ -139,7 +139,7 @@ and sinks, debts). All new mutable state must be save/load-compatible (P2-12).
 | P2-03 | Relationships shape behavior: rumor trust uses relationship trust; friends get better prices; social choices prefer liked NPCs | Knowledge, Agents | P2-02 | Tests: friend discount; distrusted rumor loses confidence | todo |
 | P2-04 | Attributed interaction memories: who-did-what memories that reinforce relationship shifts on recall | Knowledge | P2-02 | Tests: betrayal memory keeps trust low; kindness remembered | todo |
 | P2-05 | Goods expansion: general store stocks salt, cloth, lamp oil, nails, rope, basic tools (stock + prices) | Economy | P1-21 | Tests: buying goods moves stock and conserves money | done (2026-10-04) |
-| P2-06 | Bakery chain: farm grain → mill (Garrick's 1/12 toll in kind) → flour → Oda bakes ~40 loaves/day; oven constraint, sells out | Economy | P2-05 | Tests: daily bake; no flour = no bread; sellout by afternoon | todo |
+| P2-06 | Bakery chain: farm grain → mill (Garrick's 1/12 toll in kind) → flour → Oda bakes ~40 loaves/day; oven constraint, sells out | Economy | P2-05 | Tests: daily bake; no flour = no bread; sellout by afternoon | done (2026-10-04) |
 | P2-07 | Blacksmith: Doran's iron stock, tool production and repairs for copper | Economy | P2-05 | Tests: tools produced from iron; repair costs copper | todo |
 | P2-08 | Money sources: traveling merchants (~3 weeks, ~800 copper), seasonal travelers, winter wolf bounties (50/pelt) | Economy | P2-05 | Tests: merchant visit injects money; winter traveler drought | todo |
 | P2-09 | Money sinks: prosperity-scaled taxes, imports, community fund, two-stage spoilage (fresh→stale→spoiled) | Economy | P2-05 | Tests: tax scales with prosperity; spoilage destroys value | todo |
