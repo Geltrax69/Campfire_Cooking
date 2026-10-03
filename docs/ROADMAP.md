@@ -135,7 +135,7 @@ and sinks, debts). All new mutable state must be save/load-compatible (P2-12).
 | Task | What | Area | Depends on | Pass condition | Status |
 |---|---|---|---|---|---|
 | P2-01 | Relationship state: directed trust/affection pairs loaded from `Content/npcs/npcs.json` into `WorldState`, with validated internal capture/restore | Knowledge | P1-21 | Tests: Mira's 4 relationships load exactly; bad data rejected | done (2026-10-04) |
-| P2-02 | Relationship dynamics: trades, gifts, conversations, witnessed wrongs shift trust/affection by rule; slow decay toward baseline | Knowledge | P2-01 | Tests: honest trade raises trust; witnessed theft drops it; decay works | todo |
+| P2-02 | Relationship dynamics: trades, gifts, conversations, witnessed wrongs shift trust/affection by rule; slow decay toward baseline | Knowledge | P2-01 | Tests: honest trade raises trust; witnessed theft drops it; decay works | done (2026-10-04) |
 | P2-03 | Relationships shape behavior: rumor trust uses relationship trust; friends get better prices; social choices prefer liked NPCs | Knowledge, Agents | P2-02 | Tests: friend discount; distrusted rumor loses confidence | todo |
 | P2-04 | Attributed interaction memories: who-did-what memories that reinforce relationship shifts on recall | Knowledge | P2-02 | Tests: betrayal memory keeps trust low; kindness remembered | todo |
 | P2-05 | Goods expansion: general store stocks salt, cloth, lamp oil, nails, rope, basic tools (stock + prices) | Economy | P1-21 | Tests: buying goods moves stock and conserves money | done (2026-10-04) |
