@@ -97,6 +97,8 @@ inventory ages. Version 1 documents still load (see Compatibility below).
       // "lots" is absent in v1 documents: the loader builds age-0 lots from "stock".
       // Lot quantities must sum to the "stock" counts (contradiction → LoadException).
       "ownerCopper": 31,
+      "ownerWalletShared": true,   // v2: true if the till is the owner's personal wallet
+                                   // (one shared object); absent in v1 (defaults false).
       "prices": { "item_apple": 3 }                   // item ID → unit price, ordinal order
     }
   ],

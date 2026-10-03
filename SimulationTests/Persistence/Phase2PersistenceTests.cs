@@ -7,6 +7,7 @@ using LivingWorld.Simulation.Core;
 using LivingWorld.Simulation.Economy;
 using LivingWorld.Simulation.Knowledge;
 using LivingWorld.Simulation.Persistence;
+using LivingWorld.Simulation.Tests.Tools;
 using NUnit.Framework;
 
 namespace LivingWorld.Simulation.Tests.Persistence
@@ -348,6 +349,46 @@ namespace LivingWorld.Simulation.Tests.Persistence
 
             Assert.That(WorldDigest.Compute(loaded), Is.EqualTo(WorldDigest.Compute(uninterrupted)));
             Assert.That(WorldSaver.Save(loaded), Is.EqualTo(WorldSaver.Save(uninterrupted)));
+        }
+
+        /// <summary>
+        /// The literal full-village proof from the P2-12 brief: the assembled village
+        /// ticks 1000 uninterrupted, versus 400, save, load, re-register every system
+        /// against the loaded state, then 600 more. Equal digests and byte-identical
+        /// final saves prove a save/load cycle changes nothing about the world's future.
+        /// </summary>
+        [Test]
+        public void FullVillageSaveLoadMidRunProducesIdenticalFuture()
+        {
+            string root = RepositoryRoot();
+            const ulong seed = 20261004;
+
+            VillageAssembly.Village villageA = VillageAssembly.Build(root, seed);
+            VillageAssembly.Village villageB = VillageAssembly.Build(root, seed);
+
+            for (int i = 0; i < 400; i++)
+            {
+                villageA.World.Tick();
+                villageB.World.Tick();
+            }
+
+            string saved = WorldSaver.Save(villageB.State);
+            WorldState loaded = WorldLoader.Load(saved, root);
+            Assert.That(WorldDigest.Compute(loaded), Is.EqualTo(WorldDigest.Compute(villageB.State)),
+                "Save/load must preserve the exact village state before the future-evolution proof.");
+
+            VillageAssembly.Village reassembled = VillageAssembly.Reassemble(loaded, root);
+
+            for (int i = 0; i < 600; i++)
+            {
+                villageA.World.Tick();
+                reassembled.World.Tick();
+            }
+
+            Assert.That(WorldDigest.Compute(loaded), Is.EqualTo(WorldDigest.Compute(villageA.State)),
+                "A save/load cycle at tick 400 must not change the village's future.");
+            Assert.That(WorldSaver.Save(loaded), Is.EqualTo(WorldSaver.Save(villageA.State)),
+                "Final save documents must be byte-identical.");
         }
 
         private static void SeedTradeEvents(WorldState state)

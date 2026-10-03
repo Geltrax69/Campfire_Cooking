@@ -136,26 +136,28 @@ and sinks, debts). All new mutable state must be save/load-compatible (P2-12).
 |---|---|---|---|---|---|
 | P2-01 | Relationship state: directed trust/affection pairs loaded from `Content/npcs/npcs.json` into `WorldState`, with validated internal capture/restore | Knowledge | P1-21 | Tests: Mira's 4 relationships load exactly; bad data rejected | done (2026-10-04) |
 | P2-02 | Relationship dynamics: trades, gifts, conversations, witnessed wrongs shift trust/affection by rule; slow decay toward baseline | Knowledge | P2-01 | Tests: honest trade raises trust; witnessed theft drops it; decay works | done (2026-10-04) |
-| P2-03 | Relationships shape behavior: rumor trust uses relationship trust; friends get better prices; social choices prefer liked NPCs | Knowledge, Agents | P2-02 | Tests: friend discount; distrusted rumor loses confidence | todo |
-| P2-04 | Attributed interaction memories: who-did-what memories that reinforce relationship shifts on recall | Knowledge | P2-02 | Tests: betrayal memory keeps trust low; kindness remembered | todo |
+| P2-03 | Relationships shape behavior: rumor trust uses relationship trust; friends get better prices; social choices prefer liked NPCs | Knowledge, Agents | P2-02 | Tests: friend discount; distrusted rumor loses confidence | done (2026-10-04) |
+| P2-04 | Attributed interaction memories: who-did-what memories that reinforce relationship shifts on recall | Knowledge | P2-02 | Tests: betrayal memory keeps trust low; kindness remembered | done (2026-10-04) |
 | P2-05 | Goods expansion: general store stocks salt, cloth, lamp oil, nails, rope, basic tools (stock + prices) | Economy | P1-21 | Tests: buying goods moves stock and conserves money | done (2026-10-04) |
 | P2-06 | Bakery chain: farm grain → mill (Garrick's 1/12 toll in kind) → flour → Oda bakes ~40 loaves/day; oven constraint, sells out | Economy | P2-05 | Tests: daily bake; no flour = no bread; sellout by afternoon | done (2026-10-04) |
-| P2-07 | Blacksmith: Doran's iron stock, tool production and repairs for copper | Economy | P2-05 | Tests: tools produced from iron; repair costs copper | todo |
-| P2-08 | Money sources: traveling merchants (~3 weeks, ~800 copper), seasonal travelers, winter wolf bounties (50/pelt) | Economy | P2-05 | Tests: merchant visit injects money; winter traveler drought | todo |
-| P2-09 | Money sinks: prosperity-scaled taxes, imports, community fund, two-stage spoilage (fresh→stale→spoiled) | Economy | P2-05 | Tests: tax scales with prosperity; spoilage destroys value | todo |
+| P2-07 | Blacksmith: Doran's iron stock, tool production and repairs for copper | Economy | P2-05 | Tests: tools produced from iron; repair costs copper | done (2026-10-04) |
+| P2-08 | Money sources: traveling merchants (~3 weeks, ~800 copper), seasonal travelers, winter wolf bounties (50/pelt) | Economy | P2-05 | Tests: merchant visit injects money; winter traveler drought | done (2026-10-04) |
+| P2-09 | Money sinks: prosperity-scaled taxes, imports, community fund, two-stage spoilage (fresh→stale→spoiled) | Economy | P2-05 | Tests: tax scales with prosperity; spoilage destroys value | done (2026-10-04) |
 | P2-10 | Debts: Tilda's tab ledger as mechanical debts with repayment schedules | Economy | P2-05 | Tests: Doran repays 10/week; tabs affect trade willingness | done (2026-10-04) |
 | P2-11a | Daily-life drivers: village assembly, NPC eating/shopping, evening meetings, friend-pricing wiring | Agents + Knowledge | P2-01 … P2-10 | Tests: hungry NPC eats; low-food NPC buys; tavern rumors spread; 7-day run clean | done (2026-10-04) |
 | P2-11b | Phase 2 acceptance: month-long village simulation | Test & Scenario | P2-11a | Total village copper stays within ±10% month-to-month; bakery sells out most days; relationships shift measurably | done (2026-10-04) |
-| P2-12 | Persist Phase 2 state: extend saver/loader/schema; round-trip + determinism | Persistence | P2-01 … P2-11b | Tests: save→load→save byte-identical; P1-21f determinism still green | todo |
+| P2-12 | Persist Phase 2 state: extend saver/loader/schema; round-trip + determinism | Persistence | P2-01 … P2-11b | Tests: save→load→save byte-identical; P1-21f determinism still green; full-village 400/save/load/600 proof | done (2026-10-04) |
+
+**Phase 2 DONE (2026-10-04).** All 12 tasks complete. 560 tests green.
 
 ## Later simulation phases (plan in detail when the previous phase is done)
 
-| Phase | Focus |
-|---|---|
-| 2 | Relationships and economy — see Phase 2 section above |
-| 3 | Skills, crafting and cooking (cooking affects health, happiness, tavern popularity, prices) |
-| 4 | Animal ecosystem (wolves, deer, livestock) and taming through trust |
-| 5 | Town development emerging from population, food, housing, trade and safety; emergent events |
+| Phase | Focus | Status |
+|---|---|---|
+| 2 | Relationships and economy — see Phase 2 section above | DONE (2026-10-04) |
+| 3 | Skills, crafting and cooking (cooking affects health, happiness, tavern popularity, prices) | next |
+| 4 | Animal ecosystem (wolves, deer, livestock) and taming through trust | |
+| 5 | Town development emerging from population, food, housing, trade and safety; emergent events | |
 | 6 | Expanded world: more villages, trade routes, level-of-detail simulation |
 | 7 | Reincarnation and generations (aging, families, inheritance) |
 | 8 | AI dialogue from fact sheets (never changes game state) |

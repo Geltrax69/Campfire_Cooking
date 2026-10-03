@@ -134,7 +134,6 @@ namespace LivingWorld.Simulation.Persistence
                         plan.ParseDebtLedger(root, bundle);
                     }
                     plan.CrossCheckCommands();
-                    plan.CrossCheckWallets();
                     plan.CrossCheckLots();
                     return plan;
                 }
@@ -315,6 +314,10 @@ namespace LivingWorld.Simulation.Persistence
                     var stock = ParseItemCounts(entry.Property("stock"), bundle, path);
                     var lots = ParseLots(entry, bundle, path);
                     int ownerCopper = entry.Property("ownerCopper").Int32();
+                    // v1 documents lack "ownerWalletShared": default to separate tills.
+                    Reader sharedReader;
+                    bool ownerWalletShared = entry.TryProperty("ownerWalletShared", out sharedReader) &&
+                        sharedReader.Flag();
                     var prices = new List<KeyValuePair<ItemTypeId, int>>();
                     foreach (KeyValuePair<string, Reader> price in entry.Property("prices").Properties())
                     {
@@ -322,7 +325,7 @@ namespace LivingWorld.Simulation.Persistence
                         bundle.RequireItem(item, price.Value.Path);
                         prices.Add(new KeyValuePair<ItemTypeId, int>(item, price.Value.Int32(1, int.MaxValue)));
                     }
-                    Shops.Add(new ShopPlan(location, owner, stock, lots, ownerCopper, prices));
+                    Shops.Add(new ShopPlan(location, owner, stock, lots, ownerCopper, ownerWalletShared, prices));
                 }
             }
 
@@ -732,26 +735,6 @@ namespace LivingWorld.Simulation.Persistence
             }
 
             /// <summary>
-            /// A shop owner's wallet is their personal wallet (one object, registered once):
-            /// when the save holds both, the two copper values must agree and the loader
-            /// restores a single shared Wallet. Disagreement is contradictory.
-            /// </summary>
-            private void CrossCheckWallets()
-            {
-                var copper = new Dictionary<ActorId, int>();
-                foreach (BelongingsPlan belongings in Belongings) copper.Add(belongings.Owner, belongings.Copper);
-                foreach (ShopPlan shop in Shops)
-                {
-                    ActorId owner = ActorId.ForNpc(shop.Owner);
-                    int personal;
-                    if (copper.TryGetValue(owner, out personal) && personal != shop.OwnerCopper)
-                        throw new LoadException("Contradictory wallet balances for '" + shop.Owner.Value +
-                            "': shop owner copper is " + shop.OwnerCopper + " but belongings copper is " +
-                            personal + ".");
-                }
-            }
-
-            /// <summary>
             /// Lot quantities must sum to the saved counts: a document that claims 9 apples
             /// in "stock" but lots totaling 7 is corrupt. Version 1 documents have no lots
             /// and skip this check.
@@ -866,13 +849,26 @@ namespace LivingWorld.Simulation.Persistence
                         stock.RestoreLots(plan.Lots);
                     else
                         foreach (KeyValuePair<ItemTypeId, int> pair in plan.Stock) stock.Add(pair.Key, pair.Value);
-                    // The owner's personal wallet is the shop's wallet: share the object so
-                    // later transfers through either view stay identical (CrossCheckWallets
-                    // already proved the saved balances agree).
+                    // Restore the wallet sharing recorded by the saver: a shared till
+                    // reuses the owner's belongings wallet object (systems use
+                    // ReferenceEquals to avoid double-counting); a separate till gets
+                    // a fresh Wallet from the saved balance.
                     Wallet ownerWallet;
                     ActorId owner = ActorId.ForNpc(plan.Owner);
-                    if (!wallets.TryGetValue(owner, out ownerWallet))
+                    if (plan.OwnerWalletShared && wallets.TryGetValue(owner, out ownerWallet))
+                    {
+                        // Shared: use the belongings wallet object. The saved
+                        // ownerCopper must match the belongings copper (they were one
+                        // object when saved).
+                        if (ownerWallet.Balance != plan.OwnerCopper)
+                            throw new LoadException("Contradictory wallet balances for '" +
+                                plan.Owner.Value + "': shared till expects " + plan.OwnerCopper +
+                                " but belongings has " + ownerWallet.Balance + ".");
+                    }
+                    else
+                    {
                         ownerWallet = new Wallet(plan.OwnerCopper);
+                    }
                     shops.Add(new Shop(plan.Location, plan.Owner, stock, ownerWallet, plan.Prices));
                 }
                 return shops;
@@ -1145,10 +1141,11 @@ namespace LivingWorld.Simulation.Persistence
         private sealed class ShopPlan
         {
             public ShopPlan(LocationId location, NpcId owner, List<KeyValuePair<ItemTypeId, int>> stock,
-                List<StockLotRecord> lots, int ownerCopper, List<KeyValuePair<ItemTypeId, int>> prices)
+                List<StockLotRecord> lots, int ownerCopper, bool ownerWalletShared,
+                List<KeyValuePair<ItemTypeId, int>> prices)
             {
                 Location = location; Owner = owner; Stock = stock; Lots = lots;
-                OwnerCopper = ownerCopper; Prices = prices;
+                OwnerCopper = ownerCopper; OwnerWalletShared = ownerWalletShared; Prices = prices;
             }
             public LocationId Location { get; }
             public NpcId Owner { get; }
@@ -1156,6 +1153,8 @@ namespace LivingWorld.Simulation.Persistence
             /// <summary>Per-lot ages (formatVersion 2); null for version 1 documents.</summary>
             public List<StockLotRecord> Lots { get; }
             public int OwnerCopper { get; }
+            /// <summary>Whether the till is the owner's personal wallet (one shared object).</summary>
+            public bool OwnerWalletShared { get; }
             public List<KeyValuePair<ItemTypeId, int>> Prices { get; }
         }
 

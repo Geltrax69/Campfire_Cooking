@@ -302,6 +302,12 @@ namespace LivingWorld.Simulation.Persistence
                 writer.WriteEndObject();
                 WriteLots(writer, shop.Stock);
                 writer.WriteNumber("ownerCopper", shop.OwnerWallet.Balance);
+                // Record whether the till is the owner's personal wallet (one shared
+                // object) or a separate till: the loader must restore the same sharing,
+                // since systems use ReferenceEquals to avoid double-counting.
+                bool shared = state.Belongings.TryGet(ActorId.ForNpc(shop.Owner), out NpcBelongingsEntry entry)
+                    && ReferenceEquals(shop.OwnerWallet, entry.Wallet);
+                writer.WriteBoolean("ownerWalletShared", shared);
                 writer.WriteStartObject("prices");
                 foreach (var pair in shop.Prices)
                     writer.WriteNumber(pair.Key.Value, pair.Value);

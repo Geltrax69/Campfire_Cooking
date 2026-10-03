@@ -75,6 +75,20 @@ namespace LivingWorld.Simulation.Economy
             return new MoneySinksHandle(catalog, money);
         }
 
+        /// <summary>
+        /// Rebuilds the money-sink handle from a loaded world state (post-save/load
+        /// reassembly): the handle only wraps the catalog and the sources handle, so
+        /// this is a straight re-wrap. The progress states (tax, community fund,
+        /// spoilage, economy baseline) are restored by the loader, not rebuilt here.
+        /// </summary>
+        public static MoneySinksHandle Reassemble(ItemCatalog catalog,
+            MoneySourcesSetup.MoneySourcesHandle money)
+        {
+            if (catalog == null) throw new ArgumentNullException(nameof(catalog));
+            if (money == null) throw new ArgumentNullException(nameof(money));
+            return new MoneySinksHandle(catalog, money);
+        }
+
         /// <summary>Caller-owned handle to the wired money sinks: systems' configurations.</summary>
         public sealed class MoneySinksHandle
         {

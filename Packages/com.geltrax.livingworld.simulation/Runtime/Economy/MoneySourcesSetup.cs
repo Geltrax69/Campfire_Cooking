@@ -186,6 +186,47 @@ namespace LivingWorld.Simulation.Economy
                 tildaTill, doranTill, odaTill, garrickTill);
         }
 
+        /// <summary>
+        /// Rebuilds the money-gate handle from a loaded world state (post-save/load
+        /// reassembly, e.g. the determinism proof or the future Unity Bridge): looks up
+        /// the persisted wallets, export stocks and tills instead of creating them.
+        /// The progress states (merchant schedule, fund, travelers, bounties, harvest)
+        /// are restored by the loader, not rebuilt here.
+        /// </summary>
+        public static MoneySourcesHandle Reassemble(WorldState state,
+            Shop generalStore, Shop smithy, Shop bakery)
+        {
+            if (state == null) throw new ArgumentNullException(nameof(state));
+            if (generalStore == null) throw new ArgumentNullException(nameof(generalStore));
+            if (smithy == null) throw new ArgumentNullException(nameof(smithy));
+            if (bakery == null) throw new ArgumentNullException(nameof(bakery));
+
+            var wallets = new Dictionary<NpcId, Wallet>();
+            foreach (KeyValuePair<string, int> row in PersonalWallets)
+            {
+                var npc = new NpcId(row.Key);
+                var owner = ActorId.ForNpc(npc);
+                if (!state.Belongings.TryGet(owner, out NpcBelongingsEntry entry))
+                    throw new InvalidOperationException(
+                        "Loaded world has no belongings for '" + row.Key + "'.");
+                wallets[npc] = entry.Wallet;
+            }
+
+            // Export stocks are the sellers' own belongings inventories (see StockExports).
+            var exportStocks = new Dictionary<NpcId, Inventory>
+            {
+                { Mira, state.Belongings[ActorId.ForNpc(Mira)].Inventory },
+                { Tam, state.Belongings[ActorId.ForNpc(Tam)].Inventory },
+                { Maren, state.Belongings[ActorId.ForNpc(Maren)].Inventory },
+                { Ralf, state.Belongings[ActorId.ForNpc(Ralf)].Inventory },
+                { Bessa, state.Belongings[ActorId.ForNpc(Bessa)].Inventory },
+            };
+
+            return new MoneySourcesHandle(generalStore, smithy, wallets, exportStocks,
+                generalStore.OwnerWallet, smithy.OwnerWallet, bakery.OwnerWallet,
+                state.Belongings[ActorId.ForNpc(Garrick)].Wallet);
+        }
+
         private static Dictionary<NpcId, Wallet> RegisterPersonalWallets(
             WorldState state, ItemCatalog catalog)
         {

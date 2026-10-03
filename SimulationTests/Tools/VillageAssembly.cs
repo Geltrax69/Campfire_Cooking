@@ -100,6 +100,49 @@ namespace LivingWorld.Simulation.Tests.Tools
             return new Village(state, world, catalog, store, smithy, bakeryChain.BakeryShop);
         }
 
+        /// <summary>
+        /// Re-registers the full system set against a loaded <see cref="WorldState"/>
+        /// (post-save/load reassembly for the determinism proof, and the pattern the
+        /// future Unity Bridge will use): rebuilds the setup handles from the persisted
+        /// shops, belongings, wallets and inventories instead of creating them, then
+        /// wires friend pricing and registers every system in phase order.
+        /// </summary>
+        public static Village Reassemble(WorldState loadedState, string contentRoot)
+        {
+            if (loadedState == null) throw new ArgumentNullException(nameof(loadedState));
+            if (string.IsNullOrWhiteSpace(contentRoot))
+                throw new ArgumentException("A content root is required.", nameof(contentRoot));
+
+            ContentBundle bundle = ContentBundle.Load(contentRoot);
+            ItemCatalog catalog = bundle.Catalog;
+
+            Shop store = loadedState.Shops[GeneralStoreSetup.Store];
+            Shop smithy = loadedState.Shops[SmithySetup.Smithy];
+            Shop bakeryShop = loadedState.Shops[BakeryChainSetup.Bakery];
+
+            // Garrick's mill stock and till are his registered belongings (see the
+            // bakery chain setup); the loader restores them with their saved ages.
+            NpcBelongingsEntry millerEntry =
+                loadedState.Belongings[ActorId.ForNpc(BakeryChainSetup.Miller)];
+            var bakeryChain = new BakeryChainSetup.BakeryChain(
+                bakeryShop, millerEntry.Inventory, millerEntry.Wallet);
+            var smithyHandle = new SmithySetup.SmithyHandle(smithy);
+            MoneySourcesSetup.MoneySourcesHandle money =
+                MoneySourcesSetup.Reassemble(loadedState, store, smithy, bakeryShop);
+            MoneySinksSetup.MoneySinksHandle sinks = MoneySinksSetup.Reassemble(catalog, money);
+            // The ledger itself is restored by the loader; only the (constant)
+            // configuration is rebuilt here. Matches DebtSetup.OpenLedger's return.
+            var debts = new DebtConfiguration(
+                "debts-tilda-ledger", GeneralStoreSetup.Store, EventVisibility.Normal);
+
+            var world = new World(loadedState);
+            WireFriendPricing(loadedState, store, smithy, bakeryShop);
+            RegisterSystems(world, loadedState, catalog, contentRoot, bakeryChain, smithyHandle,
+                money, sinks, debts);
+
+            return new Village(loadedState, world, catalog, store, smithy, bakeryShop);
+        }
+
         private static List<NpcId> RegisterNpcs(WorldState state, ContentBundle bundle)
         {
             var ids = new List<NpcId>(bundle.NpcDefinitions.Keys);

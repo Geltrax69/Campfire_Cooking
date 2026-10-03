@@ -332,8 +332,9 @@ namespace LivingWorld.Simulation.Tests.Persistence
         {
             string root = RepositoryRoot();
             string json = WorldSaver.Save(RichWorld(ContentBundle.Load(root)));
-            // Mira's shop owner copper and her personal copper must agree: they are one wallet.
-            string bad = json.Replace("\"copper\": 31", "\"copper\": 32");
+            // Mira's shop till is shared with her personal wallet: if the saved
+            // balances disagree, the document is corrupt.
+            string bad = json.Replace("\"ownerCopper\": 31", "\"ownerCopper\": 32");
             Assert.That(bad, Is.Not.EqualTo(json));
             Assert.Throws<LoadException>(() => WorldLoader.Load(bad, root));
         }
