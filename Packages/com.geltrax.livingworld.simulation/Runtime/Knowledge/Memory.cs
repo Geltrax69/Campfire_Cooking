@@ -68,6 +68,29 @@ namespace LivingWorld.Simulation.Knowledge
 
         public IReadOnlyList<Memory> Query() => new List<Memory>(_memories.Values).AsReadOnly();
 
+        /// <summary>
+        /// Assembly-internal restore path for Persistence: replaces the store with exact immutable
+        /// memory records, preserving claim, importance, formed/reinforced times, strength and the
+        /// origin event. Every record is validated before anything changes, so a null record,
+        /// a duplicate claim or a null batch leaves the store unchanged.
+        /// </summary>
+        internal void Restore(IEnumerable<Memory> memories)
+        {
+            if (memories == null) throw new ArgumentNullException(nameof(memories));
+            var validated = new SortedList<BeliefClaim, Memory>();
+            foreach (Memory memory in memories)
+            {
+                if (memory == null)
+                    throw new ArgumentException("Memory records must not be null.", nameof(memories));
+                if (validated.ContainsKey(memory.Claim))
+                    throw new ArgumentException("Duplicate memory claim.", nameof(memories));
+                validated.Add(memory.Claim, memory);
+            }
+            _memories.Clear();
+            foreach (KeyValuePair<BeliefClaim, Memory> entry in validated)
+                _memories.Add(entry.Key, entry.Value);
+        }
+
         public void Decay(GameTime now, MemoryRules rules)
         {
             if (rules == null) throw new ArgumentNullException(nameof(rules));
