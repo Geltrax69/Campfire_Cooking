@@ -122,6 +122,66 @@ namespace LivingWorld.Simulation.Tests.Core.Events
         }
 
         [Test]
+        public void ReputationChangesRoundTripSignedFactsAndFollowExistingNumericValues()
+        {
+            var log = new EventLog();
+            var guards = new ReputationGroupId("group_guards");
+            var merchants = new ReputationGroupId("group_merchants");
+            Assert.That((int)WorldEventType.ReputationChanged, Is.EqualTo(12));
+
+            WorldEvent raised = log.Append(new GameTime(30), Shop, WorldEventType.ReputationChanged,
+                ActorId.Player, reputationGroup: guards, reputationDelta: 5);
+            WorldEvent lowered = log.Append(new GameTime(31), Shop, WorldEventType.ReputationChanged,
+                ActorId.Player, reputationGroup: merchants, reputationDelta: -15);
+
+            Assert.That(log.Query(), Is.EqualTo(new[] { raised, lowered }));
+            Assert.That((raised.ReputationGroup, raised.ReputationDelta),
+                Is.EqualTo(((ReputationGroupId?)guards, (int?)5)));
+            Assert.That((lowered.ReputationGroup, lowered.ReputationDelta),
+                Is.EqualTo(((ReputationGroupId?)merchants, (int?)(-15))));
+        }
+
+        [Test]
+        public void InvalidOrMisplacedReputationFactsFailAtomically()
+        {
+            var log = new EventLog();
+            var first = log.Append(new GameTime(5), Shop, WorldEventType.Arrival);
+            var later = new GameTime(100);
+            var guards = new ReputationGroupId("group_guards");
+            TestDelegate[] invalid =
+            {
+                () => log.Append(later, Shop, WorldEventType.ReputationChanged),
+                () => log.Append(later, Shop, WorldEventType.ReputationChanged, reputationGroup: guards),
+                () => log.Append(later, Shop, WorldEventType.ReputationChanged, reputationDelta: 1),
+                () => log.Append(later, Shop, WorldEventType.ReputationChanged,
+                    reputationGroup: guards, reputationDelta: 0),
+                () => log.Append(later, Shop, WorldEventType.ReputationChanged,
+                    reputationGroup: guards, reputationDelta: -101),
+                () => log.Append(later, Shop, WorldEventType.ReputationChanged,
+                    reputationGroup: guards, reputationDelta: 101),
+                () => log.Append(later, Shop, WorldEventType.ReputationChanged,
+                    reputationGroup: default(ReputationGroupId), reputationDelta: 1),
+                () => log.Append(later, Shop, WorldEventType.Arrival, reputationGroup: guards),
+                () => log.Append(later, Shop, WorldEventType.Arrival, reputationDelta: -1),
+                () => log.Append(later, Shop, WorldEventType.Arrival,
+                    reputationGroup: guards, reputationDelta: -1),
+                () => log.Append(later, Shop, (WorldEventType)13,
+                    reputationGroup: guards, reputationDelta: 1)
+            };
+
+            foreach (TestDelegate attempt in invalid)
+            {
+                Assert.That(attempt, Throws.InstanceOf<ArgumentException>());
+                Assert.That(log.Query(), Is.EqualTo(new[] { first }));
+            }
+
+            WorldEvent next = log.Append(new GameTime(5), Shop, WorldEventType.ReputationChanged,
+                reputationGroup: guards, reputationDelta: 1);
+            Assert.That(next.Id.Value, Is.EqualTo(2));
+            Assert.That(log.Count, Is.EqualTo(2));
+        }
+
+        [Test]
         public void InvalidAppendsLeaveRecordsNextIdAndTimeUnchanged()
         {
             var log = new EventLog();
@@ -206,11 +266,17 @@ namespace LivingWorld.Simulation.Tests.Core.Events
             Assert.That(a.Events, Is.Not.SameAs(b.Events));
             foreach (var state in new[] { a, b })
                 foreach (WorldEventType type in Enum.GetValues(typeof(WorldEventType)))
-                    state.Events.Append(state.Clock, Shop, type, Owner, new[] { ActorId.Player });
+                    if (type == WorldEventType.ReputationChanged)
+                        state.Events.Append(state.Clock, Shop, type, Owner, new[] { ActorId.Player },
+                            reputationGroup: new ReputationGroupId("group_guards"), reputationDelta: 1);
+                    else
+                        state.Events.Append(state.Clock, Shop, type, Owner, new[] { ActorId.Player });
             var left = a.Events.Query();
             var right = b.Events.Query();
-            Assert.That(left.Select(e => (e.Id, e.Time, e.Location, e.Type, e.Actor, e.Visibility, e.ItemType, e.Quantity, e.Copper)),
-                Is.EqualTo(right.Select(e => (e.Id, e.Time, e.Location, e.Type, e.Actor, e.Visibility, e.ItemType, e.Quantity, e.Copper))));
+            Assert.That(left.Select(e => (e.Id, e.Time, e.Location, e.Type, e.Actor, e.Visibility,
+                    e.ItemType, e.Quantity, e.Copper, e.ReputationGroup, e.ReputationDelta)),
+                Is.EqualTo(right.Select(e => (e.Id, e.Time, e.Location, e.Type, e.Actor, e.Visibility,
+                    e.ItemType, e.Quantity, e.Copper, e.ReputationGroup, e.ReputationDelta))));
             Assert.That(left.SelectMany(e => e.Targets), Is.EqualTo(right.SelectMany(e => e.Targets)));
             a.Events.Append(default, Farm, WorldEventType.Arrival);
             Assert.That(a.Events.Count, Is.EqualTo(b.Events.Count + 1));

@@ -16,14 +16,15 @@ namespace LivingWorld.Simulation.Core
 
         public WorldEvent Append(GameTime time, LocationId location, WorldEventType type,
             ActorId? actor = null, IEnumerable<ActorId> targets = null, EventVisibility visibility = EventVisibility.Normal,
-            ItemTypeId? itemType = null, int? quantity = null, int? copper = null)
+            ItemTypeId? itemType = null, int? quantity = null, int? copper = null,
+            ReputationGroupId? reputationGroup = null, int? reputationDelta = null)
         {
             BeginMutation();
             try
             {
                 if (time < _lastTime) throw new ArgumentException("Event time cannot go backwards.", nameof(time));
                 var entry = new WorldEvent(new WorldEventId(checked(_lastId + 1)), time, location,
-                    type, actor, targets, visibility, itemType, quantity, copper);
+                    type, actor, targets, visibility, itemType, quantity, copper, reputationGroup, reputationDelta);
                 _events.Add(entry);
                 _lastId = entry.Id.Value;
                 _lastTime = time;
