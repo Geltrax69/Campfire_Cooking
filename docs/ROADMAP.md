@@ -104,12 +104,12 @@ Run tasks in order unless marked parallel-safe. `Role` refers to `AGENTS.md` sec
 | P1-05 | Locations (shop, farm, tavern, homes, square) with simple travel time between them | Core | P1-02, P1-03/P1-04 for integration | Test: travel time lookup, NPC location changes after travel | done (2026-10-03; map and movement PRs) |
 | P1-06 | Item types (apple, bread, ale, coin) + inventories with aggregate counts | Economy | P1-02 | Tests: add/remove, can't go negative | done (2026-10-03) |
 | P1-07 | Shops: price list, buy (full/partial/fail) creating `Purchase` / `FailedPurchase` events; money transfer | Economy | P1-03, P1-06 | Tests incl. "wants 7, has 2"; money conserved | done (2026-10-03; wallet and shop PRs) |
-| P1-08 | Theft command: moves items, creates `Theft` event with visibility | Economy | P1-04, P1-07 | Test: stock drops, event logged, no money moves | todo |
+| P1-08 | Theft command: moves items, creates `Theft` event with visibility | Economy | P1-04, P1-07 | Test: stock drops, event logged, no money moves | doing |
 | P1-09 | NPC data: identity, traits, needs, money, home, workplace; load from `Content/npcs/npcs.json` (Design Phase output) | Agents | P1-05 | Test: loads sample village file; needs change over time | done (2026-10-03; definitions and state PRs) |
 | P1-10 | Schedules + utility decision-making (eat, sleep, work, shop, socialize) | Agents | P1-09 | Tests: hungry NPC with money goes shopping; night → sleep | done (2026-10-03; schedule and decision PRs; production tuning awaits human approval) |
 | P1-11 | Beliefs store (claim, source, confidence, time) per NPC | Knowledge | P1-03 | Tests: add/update/query beliefs | done (2026-10-03) |
-| P1-12 | Perception system: events → observations → beliefs with notice chance | Knowledge | P1-10, P1-11 | Tests: nearby awake NPC can notice; asleep/far NPC can't; seeded | todo |
-| P1-13 | Decisions use beliefs (e.g. NPC avoids a shop it believes is out of apples) | Agents | P1-10, P1-11 | Test: failed purchase changes next choice | todo |
+| P1-12 | Perception system: events → observations → beliefs with notice chance | Knowledge | P1-10, P1-11 | Tests: nearby awake NPC can notice; asleep/far NPC can't; seeded | doing |
+| P1-13 | Decisions use beliefs (e.g. NPC avoids a shop it believes is out of apples) | Agents | P1-10, P1-11 | Test: failed purchase changes next choice | doing |
 | P1-14 | Stock counting + inference: shopkeeper detects missing items | Knowledge | P1-07, P1-12 | Test: belief "6 apples missing", no thief identified | todo |
 | P1-15 | Conversations + rumor spreading with trust filter and distortion, source chain | Knowledge | P1-12 | Tests: rumor spreads in tavern; confidence drops with distrust | todo |
 | P1-16 | Restocking from farm + farm production + simple price adjustment | Economy | P1-07, P1-10 | Tests: low stock triggers order; missed sales raise price within bounds | todo |
