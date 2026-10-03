@@ -125,11 +125,33 @@ Parallel-safe groups once their dependencies are done: {P1-06, P1-09, P1-11}, {P
 
 ---
 
+## Phase 2: Relationships and economy (simulation only, no graphics)
+
+Planned 2026-10-04. Focus: dynamic directed relationships (trust/affection) that
+change through interaction and shape behavior; deeper attributed memories;
+economy expansion (general-store goods, bakery chain, blacksmith, money sources
+and sinks, debts). All new mutable state must be save/load-compatible (P2-12).
+
+| Task | What | Area | Depends on | Pass condition | Status |
+|---|---|---|---|---|---|
+| P2-01 | Relationship state: directed trust/affection pairs loaded from `Content/npcs/npcs.json` into `WorldState`, with validated internal capture/restore | Knowledge | P1-21 | Tests: Mira's 4 relationships load exactly; bad data rejected | todo |
+| P2-02 | Relationship dynamics: trades, gifts, conversations, witnessed wrongs shift trust/affection by rule; slow decay toward baseline | Knowledge | P2-01 | Tests: honest trade raises trust; witnessed theft drops it; decay works | todo |
+| P2-03 | Relationships shape behavior: rumor trust uses relationship trust; friends get better prices; social choices prefer liked NPCs | Knowledge, Agents | P2-02 | Tests: friend discount; distrusted rumor loses confidence | todo |
+| P2-04 | Attributed interaction memories: who-did-what memories that reinforce relationship shifts on recall | Knowledge | P2-02 | Tests: betrayal memory keeps trust low; kindness remembered | todo |
+| P2-05 | Goods expansion: general store stocks salt, cloth, lamp oil, nails, rope, basic tools (stock + prices) | Economy | P1-21 | Tests: buying goods moves stock and conserves money | todo |
+| P2-06 | Bakery chain: farm grain → mill (Garrick's 1/12 toll in kind) → flour → Oda bakes ~40 loaves/day; oven constraint, sells out | Economy | P2-05 | Tests: daily bake; no flour = no bread; sellout by afternoon | todo |
+| P2-07 | Blacksmith: Doran's iron stock, tool production and repairs for copper | Economy | P2-05 | Tests: tools produced from iron; repair costs copper | todo |
+| P2-08 | Money sources: traveling merchants (~3 weeks, ~800 copper), seasonal travelers, winter wolf bounties (50/pelt) | Economy | P2-05 | Tests: merchant visit injects money; winter traveler drought | todo |
+| P2-09 | Money sinks: prosperity-scaled taxes, imports, community fund, two-stage spoilage (fresh→stale→spoiled) | Economy | P2-05 | Tests: tax scales with prosperity; spoilage destroys value | todo |
+| P2-10 | Debts: Tilda's tab ledger as mechanical debts with repayment schedules | Economy | P2-05 | Tests: Doran repays 10/week; tabs affect trade willingness | todo |
+| P2-11 | Phase 2 acceptance: month-long village simulation | Test & Scenario | P2-01 … P2-10 | Total village copper stays within ±10% month-to-month; bakery sells out most days; relationships shift measurably | todo |
+| P2-12 | Persist Phase 2 state: extend saver/loader/schema; round-trip + determinism | Persistence | P2-01 … P2-10 | Tests: save→load→save byte-identical; P1-21f determinism still green | todo |
+
 ## Later simulation phases (plan in detail when the previous phase is done)
 
 | Phase | Focus |
 |---|---|
-| 2 | Relationships and memory depth; economy expansion (more goods, bakery, blacksmith, money sources and sinks) |
+| 2 | Relationships and economy — see Phase 2 section above |
 | 3 | Skills, crafting and cooking (cooking affects health, happiness, tavern popularity, prices) |
 | 4 | Animal ecosystem (wolves, deer, livestock) and taming through trust |
 | 5 | Town development emerging from population, food, housing, trade and safety; emergent events |
