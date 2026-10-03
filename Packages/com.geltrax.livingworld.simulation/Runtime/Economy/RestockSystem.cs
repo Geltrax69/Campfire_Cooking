@@ -133,16 +133,15 @@ namespace LivingWorld.Simulation.Economy
         }
     }
 
-    /// <summary>Creates and atomically fulfills wholesale orders using caller-owned restock state.</summary>
+    /// <summary>Creates and atomically fulfills wholesale orders using world-owned restock state.</summary>
     public sealed class RestockSystem : IWorldSystem
     {
         private readonly List<RestockConfiguration> _configurations;
-        private readonly RestockState _state;
 
-        public RestockSystem(IEnumerable<RestockConfiguration> configurations, RestockState state)
+        public RestockSystem(IEnumerable<RestockConfiguration> configurations, WorldState world)
         {
             if (configurations == null) throw new ArgumentNullException(nameof(configurations));
-            _state = state ?? throw new ArgumentNullException(nameof(state));
+            if (world == null) throw new ArgumentNullException(nameof(world));
             _configurations = new List<RestockConfiguration>();
             foreach (RestockConfiguration configuration in configurations)
             {
@@ -154,16 +153,15 @@ namespace LivingWorld.Simulation.Economy
             ValidateConfigurations();
             var known = new HashSet<string>(_configurations.ConvertAll(configuration => configuration.Id),
                 StringComparer.Ordinal);
-            foreach (string id in _state.TriggeredIds)
+            foreach (string id in world.Restock.TriggeredIds)
                 if (!known.Contains(id)) throw new ArgumentException("Restock state references unknown trigger.");
-            foreach (PendingRestockOrder order in _state.PendingOrders)
+            foreach (PendingRestockOrder order in world.Restock.PendingOrders)
                 if (!known.Contains(order.ConfigurationId))
                     throw new ArgumentException("Restock state references unknown pending order.");
         }
 
         public string Id => "economy.restocking";
         public SimulationPhase Phase => SimulationPhase.Economy;
-        public RestockState State => _state;
 
         public void Tick(WorldState state)
         {
@@ -174,28 +172,30 @@ namespace LivingWorld.Simulation.Economy
 
         private void CreateOrders(WorldState state)
         {
+            RestockState progress = state.Restock;
             foreach (RestockConfiguration configuration in _configurations)
             {
                 if (configuration.Shop.Stock.Count(configuration.Item) >= configuration.LowStockThreshold)
                 {
-                    if (!_state.HasPending(configuration.Id)) _state.ClearTrigger(configuration.Id);
+                    if (!progress.HasPending(configuration.Id)) progress.ClearTrigger(configuration.Id);
                     continue;
                 }
-                if (_state.IsTriggered(configuration.Id) || _state.HasPending(configuration.Id)) continue;
+                if (progress.IsTriggered(configuration.Id) || progress.HasPending(configuration.Id)) continue;
                 int copper = checked(configuration.OrderQuantity * configuration.WholesaleUnitPrice);
                 state.Events.Append(state.Clock, configuration.Shop.Location, WorldEventType.RestockOrdered,
                     ActorId.ForNpc(configuration.Shop.Owner), new[] { ActorId.ForNpc(configuration.Producer) },
                     configuration.Visibility, configuration.Item, configuration.OrderQuantity, copper);
-                _state.AddPending(new PendingRestockOrder(configuration.Id, state.Clock));
-                _state.Trigger(configuration.Id);
+                progress.AddPending(new PendingRestockOrder(configuration.Id, state.Clock));
+                progress.Trigger(configuration.Id);
             }
         }
 
         private void FulfillOrders(WorldState state)
         {
+            RestockState progress = state.Restock;
             foreach (RestockConfiguration configuration in _configurations)
             {
-                if (!_state.TryGetPending(configuration.Id)) continue;
+                if (!progress.TryGetPending(configuration.Id)) continue;
                 int available = configuration.ProducerStock.Count(configuration.Item);
                 int affordable = configuration.Shop.OwnerWallet.Balance / configuration.WholesaleUnitPrice;
                 int actual = Math.Min(configuration.OrderQuantity, Math.Min(available, affordable));
@@ -212,7 +212,7 @@ namespace LivingWorld.Simulation.Economy
                     throw new InvalidOperationException("Preflighted restock inventory transfer unexpectedly failed.");
                 if (!configuration.Shop.OwnerWallet.TransferTo(configuration.ProducerWallet, copper))
                     throw new InvalidOperationException("Preflighted restock copper transfer unexpectedly failed.");
-                _state.RemovePending(configuration.Id);
+                progress.RemovePending(configuration.Id);
             }
         }
 

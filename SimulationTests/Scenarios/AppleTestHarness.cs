@@ -22,12 +22,12 @@ namespace LivingWorld.Simulation.Tests.Scenarios
         public int MaximumRetailCopper => 4;
     }
 
-    /// <summary>Immutable observable outcome and caller-owned subsystem progress from one scenario run.</summary>
+    /// <summary>Immutable observable outcome and world-owned subsystem progress from one scenario run.</summary>
     public sealed class AppleTestResult
     {
         internal AppleTestResult(AppleTestConfiguration configuration, WorldState state, ScenarioVillage village,
-            int initialApples, int initialCopper, ProductionState production, RestockState restock,
-            PriceAdjustmentState prices, AppleScenarioState scenarioState, SuspicionResult suspicion, string report)
+            int initialApples, int initialCopper, AppleScenarioState scenarioState, SuspicionResult suspicion,
+            string report)
         {
             Configuration = configuration;
             EndTime = state.Clock;
@@ -39,9 +39,9 @@ namespace LivingWorld.Simulation.Tests.Scenarios
             PlayerApples = village.PlayerInventory.Count(ScenarioVillage.Apple);
             FinalShopStock = village.Shop.Stock.Count(ScenarioVillage.Apple);
             FinalRetailCopper = village.Shop.UnitPrice(ScenarioVillage.Apple);
-            ProductionState = production;
-            RestockState = restock;
-            PriceState = prices;
+            ProductionState = state.Production;
+            RestockState = state.Restock;
+            PriceState = state.Prices;
             ScenarioState = scenarioState;
             GuardSuspicion = suspicion;
             Beliefs = CaptureBeliefs(state);
@@ -133,34 +133,11 @@ namespace LivingWorld.Simulation.Tests.Scenarios
         public static AppleTestResult Run(ulong seed)
         {
             var configuration = new AppleTestConfiguration();
-            var village = new ScenarioVillage(configuration);
             var state = new WorldState(seed, new GameTime(5 * 60 + 59));
-            foreach (NpcId npc in new[] { ScenarioVillage.Mira, ScenarioVillage.Witness,
-                ScenarioVillage.Contact, ScenarioVillage.Guard }) state.Knowledge.Register(npc);
-
-            var productionState = new ProductionState();
-            var restockState = new RestockState();
-            var priceState = new PriceAdjustmentState();
+            var village = new ScenarioVillage(configuration, state);
             var scenarioState = new AppleScenarioState(configuration.StartingStock);
             var world = new World(state);
-            world.RegisterSystem(new CommandSystem());
-            world.RegisterSystem(new TheftScheduleSystem(village, scenarioState, Time(1, 13, 59)));
-            world.RegisterSystem(new BuyerActionSystem(village, scenarioState));
-            world.RegisterSystem(new PerceptionSystem(new WitnessContext(), new WitnessTuning()));
-            world.RegisterSystem(new MeetingSystem(scenarioState));
-            world.RegisterSystem(new PriceAdjustmentSystem(new[] { new PriceAdjustmentConfiguration("apple-price",
-                village.Shop, ScenarioVillage.Apple, Time(1, 18), 1440, 10, 100, 1, 3, 4,
-                EventVisibility.Normal) }, priceState));
-            world.RegisterSystem(new ProductionSystem(new[] { new ProductionConfiguration("farm-apples",
-                ScenarioVillage.Farm, ScenarioVillage.Farmer, village.FarmerInventory, ScenarioVillage.Apple,
-                configuration.DeliveryQuantity, Time(3, 8), EventVisibility.Normal) }, productionState));
-            world.RegisterSystem(new RestockSystem(new[] { new RestockConfiguration("farm-to-stall", village.Shop,
-                ScenarioVillage.Farm, ScenarioVillage.Farmer, village.FarmerInventory, village.FarmerWallet,
-                ScenarioVillage.Apple, configuration.LowStockThreshold, configuration.DeliveryQuantity,
-                configuration.WholesaleCopper, RestockFulfillmentPolicy.FullOnly,
-                EventVisibility.Normal) }, restockState));
-            using (Stream stream = File.OpenRead(Path.Combine(RepositoryRoot(), "Content/social/social.json")))
-                world.RegisterSystem(new MemorySystem(MemoryRules.Load(stream)));
+            RegisterAppleSystems(state, world, configuration, scenarioState);
 
             int initialApples = village.TotalApples();
             int initialCopper = village.TotalCopper();
@@ -172,13 +149,47 @@ namespace LivingWorld.Simulation.Tests.Scenarios
             SimulationLogWriter.Write(writer, state.Events.Query(), ScenarioVillage.Names,
                 ScenarioVillage.Locations, ScenarioVillage.Items);
             return new AppleTestResult(configuration, state, village, initialApples, initialCopper,
-                productionState, restockState, priceState, scenarioState, suspicion, writer.ToString());
+                scenarioState, suspicion, writer.ToString());
         }
 
         private static GameTime Time(int day, int hour, int minute = 0) =>
             new GameTime((day - 1L) * 1440 + hour * 60 + minute);
 
-        private static string RepositoryRoot()
+        /// <summary>
+        /// Registers the full Apple Test system set against a world whose shops, belongings and
+        /// knowledge were built through WorldState APIs. Shared with the world-completeness test
+        /// so only the village assembly differs between the two paths.
+        /// </summary>
+        internal static void RegisterAppleSystems(WorldState state, World world,
+            AppleTestConfiguration configuration, AppleScenarioState scenarioState)
+        {
+            if (state == null) throw new ArgumentNullException(nameof(state));
+            if (world == null) throw new ArgumentNullException(nameof(world));
+            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
+            if (scenarioState == null) throw new ArgumentNullException(nameof(scenarioState));
+            world.RegisterSystem(new CommandSystem());
+            world.RegisterSystem(new TheftScheduleSystem(scenarioState, Time(1, 13, 59),
+                configuration.StolenQuantity));
+            world.RegisterSystem(new BuyerActionSystem(ScenarioVillage.BuyerPlans(configuration), scenarioState));
+            world.RegisterSystem(new PerceptionSystem(new WitnessContext(), new WitnessTuning()));
+            world.RegisterSystem(new MeetingSystem(scenarioState));
+            world.RegisterSystem(new PriceAdjustmentSystem(new[] { new PriceAdjustmentConfiguration("apple-price",
+                state.Shops[ScenarioVillage.Stall], ScenarioVillage.Apple, Time(1, 18), 1440, 10, 100, 1, 3, 4,
+                EventVisibility.Normal) }, state));
+            NpcBelongingsEntry farmer = state.Belongings[ActorId.ForNpc(ScenarioVillage.Farmer)];
+            world.RegisterSystem(new ProductionSystem(new[] { new ProductionConfiguration("farm-apples",
+                ScenarioVillage.Farm, ScenarioVillage.Farmer, farmer.Inventory, ScenarioVillage.Apple,
+                configuration.DeliveryQuantity, Time(3, 8), EventVisibility.Normal) }, state));
+            world.RegisterSystem(new RestockSystem(new[] { new RestockConfiguration("farm-to-stall",
+                state.Shops[ScenarioVillage.Stall], ScenarioVillage.Farm, ScenarioVillage.Farmer,
+                farmer.Inventory, farmer.Wallet, ScenarioVillage.Apple, configuration.LowStockThreshold,
+                configuration.DeliveryQuantity, configuration.WholesaleCopper,
+                RestockFulfillmentPolicy.FullOnly, EventVisibility.Normal) }, state));
+            using (Stream stream = File.OpenRead(Path.Combine(RepositoryRoot(), "Content/social/social.json")))
+                world.RegisterSystem(new MemorySystem(MemoryRules.Load(stream)));
+        }
+
+        internal static string RepositoryRoot()
         {
             var directory = new DirectoryInfo(AppContext.BaseDirectory);
             while (directory != null && !File.Exists(Path.Combine(directory.FullName, "Content/social/social.json")))
@@ -188,6 +199,10 @@ namespace LivingWorld.Simulation.Tests.Scenarios
         }
     }
 
+    /// <summary>
+    /// Builds the Apple Test village solely through WorldState registration APIs and reads it
+    /// back the same way, so no scenario game state lives outside the world.
+    /// </summary>
     internal sealed class ScenarioVillage
     {
         internal static readonly ItemTypeId Apple = new ItemTypeId("item_apple");
@@ -206,52 +221,76 @@ namespace LivingWorld.Simulation.Tests.Scenarios
         internal static readonly IReadOnlyDictionary<ItemTypeId, string> Items = new Dictionary<ItemTypeId, string> {
             [Apple] = "apple" };
 
-        private readonly List<Inventory> _inventories = new List<Inventory>();
-        private readonly List<Wallet> _wallets = new List<Wallet>();
-        internal ScenarioVillage(AppleTestConfiguration configuration)
+        private readonly WorldState _state;
+
+        internal ScenarioVillage(AppleTestConfiguration configuration, WorldState state)
         {
+            _state = state ?? throw new ArgumentNullException(nameof(state));
+            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
             var catalog = new ItemCatalog(new[] { new ItemDefinition(Apple, "Apple", "food", 3, 1) });
-            Inventory shopStock = Inventory(catalog, configuration.StartingStock);
-            FarmerInventory = Inventory(catalog, 0);
-            PlayerInventory = Inventory(catalog, 0);
-            var miraWallet = Wallet(850);
-            FarmerWallet = Wallet(1200);
-            Shop = new Shop(Stall, Mira, shopStock, miraWallet,
-                new[] { new KeyValuePair<ItemTypeId, int>(Apple, configuration.RetailCopper) });
-            StolenQuantity = configuration.StolenQuantity;
-            Buyers = new[] {
-                new BuyerPlan("morning-a", new NpcId("npc_tansy_alder"), Time(1, 8), 80, 50, 2, true, Inventory(catalog, 0), Wallet(100)),
-                new BuyerPlan("morning-b", Guard, Time(1, 10), 80, 50, 3, true, Inventory(catalog, 0), Wallet(100)),
-                new BuyerPlan("afternoon", Contact, Time(1, 15), 80, 50, 5, true, Inventory(catalog, 0), Wallet(100)),
-                new BuyerPlan("day2-partial", Guard, Time(2, 9), 80, 50, 7, true, Inventory(catalog, 0), Wallet(100)),
-                new BuyerPlan("day2-failed", Contact, Time(2, 10), 80, 50, 2, false, Inventory(catalog, 0), Wallet(100)) };
+
+            var shopStock = new Inventory(catalog);
+            shopStock.Add(Apple, configuration.StartingStock);
+            var miraWallet = new Wallet(850);
+            _state.Shops.Register(new Shop(Stall, Mira, shopStock, miraWallet,
+                new[] { new KeyValuePair<ItemTypeId, int>(Apple, configuration.RetailCopper) }));
+            // Mira's personal wallet is the shop's owner wallet: one object, registered once.
+            _state.Belongings.Register(ActorId.ForNpc(Mira), new Inventory(catalog), miraWallet);
+
+            var farmerStock = new Inventory(catalog);
+            var farmerWallet = new Wallet(1200);
+            _state.Belongings.Register(ActorId.ForNpc(Farmer), farmerStock, farmerWallet);
+            _state.Belongings.Register(ActorId.Player, new Inventory(catalog), new Wallet());
+            // Several buyer plans share an NPC: each owner registers belongings exactly once.
+            var registeredBuyers = new HashSet<NpcId>();
+            foreach (BuyerPlan plan in BuyerPlans(configuration))
+                if (registeredBuyers.Add(plan.Buyer))
+                    _state.Belongings.Register(ActorId.ForNpc(plan.Buyer), new Inventory(catalog),
+                        new Wallet(100));
+
+            foreach (NpcId npc in new[] { Mira, Witness, Contact, Guard }) _state.Knowledge.Register(npc);
         }
 
-        internal Shop Shop { get; }
-        internal Inventory FarmerInventory { get; }
-        internal Inventory PlayerInventory { get; }
-        internal Wallet FarmerWallet { get; }
-        internal int StolenQuantity { get; }
-        internal IReadOnlyList<BuyerPlan> Buyers { get; }
-        internal int TotalApples() => _inventories.Sum(inventory => inventory.Count(Apple));
-        internal int TotalCopper() => _wallets.Sum(wallet => wallet.Balance);
-        private Inventory Inventory(ItemCatalog catalog, int apples)
+        internal static IReadOnlyList<BuyerPlan> BuyerPlans(AppleTestConfiguration configuration)
         {
-            var inventory = new Inventory(catalog);
-            if (apples > 0) inventory.Add(Apple, apples);
-            _inventories.Add(inventory);
-            return inventory;
+            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
+            return new[]
+            {
+                new BuyerPlan("morning-a", new NpcId("npc_tansy_alder"), Time(1, 8), 80, 50, 2, true),
+                new BuyerPlan("morning-b", Guard, Time(1, 10), 80, 50, 3, true),
+                new BuyerPlan("afternoon", Contact, Time(1, 15), 80, 50, 5, true),
+                new BuyerPlan("day2-partial", Guard, Time(2, 9), 80, 50, 7, true),
+                new BuyerPlan("day2-failed", Contact, Time(2, 10), 80, 50, 2, false)
+            };
         }
-        private Wallet Wallet(int copper) { var wallet = new Wallet(copper); _wallets.Add(wallet); return wallet; }
+
+        internal Shop Shop => _state.Shops[Stall];
+        internal Inventory FarmerInventory => _state.Belongings[ActorId.ForNpc(Farmer)].Inventory;
+        internal Inventory PlayerInventory => _state.Belongings[ActorId.Player].Inventory;
+        internal Wallet FarmerWallet => _state.Belongings[ActorId.ForNpc(Farmer)].Wallet;
+        internal int TotalApples() =>
+            _state.Belongings.Entries.Sum(entry => entry.Inventory.Count(Apple))
+            + _state.Shops.Shops.Sum(shop => shop.Stock.Count(Apple));
+        internal int TotalCopper() =>
+            // The shop owner wallet is Mira's registered wallet: counted once via belongings.
+            _state.Belongings.Entries.Sum(entry => entry.Wallet.Balance);
+
         private static GameTime Time(int day, int hour) => new GameTime((day - 1L) * 1440 + hour * 60);
     }
 
+    /// <summary>Immutable scenario input: who buys how many apples, and when.</summary>
     internal sealed class BuyerPlan
     {
         internal BuyerPlan(string id, NpcId buyer, GameTime at, int hunger, int minimumHunger, int quantity,
-            bool allowPartial, Inventory inventory, Wallet wallet)
-        { Id = id; Buyer = buyer; At = at; Hunger = hunger; MinimumHunger = minimumHunger; Quantity = quantity;
-            AllowPartial = allowPartial; Inventory = inventory; Wallet = wallet; }
+            bool allowPartial)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                throw new ArgumentException("A buyer plan needs a stable ID.", nameof(id));
+            if (!buyer.IsValid) throw new ArgumentException("A buyer plan needs a valid buyer.", nameof(buyer));
+            if (quantity <= 0) throw new ArgumentOutOfRangeException(nameof(quantity));
+            Id = id; Buyer = buyer; At = at; Hunger = hunger; MinimumHunger = minimumHunger;
+            Quantity = quantity; AllowPartial = allowPartial;
+        }
         internal string Id { get; }
         internal NpcId Buyer { get; }
         internal GameTime At { get; }
@@ -259,8 +298,6 @@ namespace LivingWorld.Simulation.Tests.Scenarios
         internal int MinimumHunger { get; }
         internal int Quantity { get; }
         internal bool AllowPartial { get; }
-        internal Inventory Inventory { get; }
-        internal Wallet Wallet { get; }
     }
 
     /// <summary>Caller-owned progress sufficient to reconstruct test-only scheduling systems.</summary>
@@ -300,38 +337,54 @@ namespace LivingWorld.Simulation.Tests.Scenarios
 
     internal sealed class TheftScheduleSystem : IWorldSystem
     {
-        private readonly ScenarioVillage _village;
         private readonly AppleScenarioState _progress;
         private readonly GameTime _queueAt;
-        internal TheftScheduleSystem(ScenarioVillage village, AppleScenarioState progress, GameTime queueAt)
-        { _village = village; _progress = progress; _queueAt = queueAt; }
+        private readonly int _stolenQuantity;
+        internal TheftScheduleSystem(AppleScenarioState progress, GameTime queueAt, int stolenQuantity)
+        {
+            _progress = progress ?? throw new ArgumentNullException(nameof(progress));
+            _queueAt = queueAt;
+            if (stolenQuantity <= 0) throw new ArgumentOutOfRangeException(nameof(stolenQuantity));
+            _stolenQuantity = stolenQuantity;
+        }
         public string Id => "scenario.theft-schedule";
         public SimulationPhase Phase => SimulationPhase.Commands;
         public void Tick(WorldState state)
         {
+            if (state == null) throw new ArgumentNullException(nameof(state));
             if (_progress.TheftQueued || state.Clock < _queueAt) return;
+            Shop shop = state.Shops[ScenarioVillage.Stall];
+            Inventory playerInventory = state.Belongings[ActorId.Player].Inventory;
             state.EnqueueCommand(new TheftCommand(ScenarioVillage.Stall, ActorId.Player,
-                ActorId.ForNpc(ScenarioVillage.Mira), _village.Shop.Stock, _village.PlayerInventory,
-                ScenarioVillage.Apple, _village.StolenQuantity, EventVisibility.Normal));
+                ActorId.ForNpc(ScenarioVillage.Mira), shop.Stock, playerInventory,
+                ScenarioVillage.Apple, _stolenQuantity, EventVisibility.Normal));
             _progress.TheftQueued = true;
         }
     }
 
     internal sealed class BuyerActionSystem : IWorldSystem
     {
-        private readonly ScenarioVillage _village;
+        private readonly IReadOnlyList<BuyerPlan> _plans;
         private readonly AppleScenarioState _progress;
-        internal BuyerActionSystem(ScenarioVillage village, AppleScenarioState progress)
-        { _village = village; _progress = progress; }
+        internal BuyerActionSystem(IReadOnlyList<BuyerPlan> plans, AppleScenarioState progress)
+        {
+            if (plans == null) throw new ArgumentNullException(nameof(plans));
+            _plans = plans;
+            _progress = progress ?? throw new ArgumentNullException(nameof(progress));
+        }
         public string Id => "scenario.buyer-actions";
         public SimulationPhase Phase => SimulationPhase.Actions;
         public void Tick(WorldState state)
         {
-            foreach (BuyerPlan plan in _village.Buyers)
+            if (state == null) throw new ArgumentNullException(nameof(state));
+            Shop shop = state.Shops[ScenarioVillage.Stall];
+            foreach (BuyerPlan plan in _plans)
                 if (!_progress.HasBuyer(plan.Id) && state.Clock >= plan.At && plan.Hunger >= plan.MinimumHunger)
                 {
-                    PurchaseResult result = _village.Shop.Purchase(state, new PurchaseRequest(ActorId.ForNpc(plan.Buyer),
-                        plan.Inventory, plan.Wallet, ScenarioVillage.Apple, plan.Quantity, plan.AllowPartial));
+                    NpcBelongingsEntry belongings = state.Belongings[ActorId.ForNpc(plan.Buyer)];
+                    PurchaseResult result = shop.Purchase(state, new PurchaseRequest(ActorId.ForNpc(plan.Buyer),
+                        belongings.Inventory, belongings.Wallet, ScenarioVillage.Apple, plan.Quantity,
+                        plan.AllowPartial));
                     _progress.ExpectedShopStock -= result.ActualQuantity;
                     _progress.CompleteBuyer(plan.Id);
                 }
@@ -339,7 +392,7 @@ namespace LivingWorld.Simulation.Tests.Scenarios
             {
                 StockCountInference.Record(state, new StockCountSnapshot(ScenarioVillage.Mira, ScenarioVillage.Stall,
                     ScenarioVillage.Apple, _progress.ExpectedShopStock,
-                    _village.Shop.Stock.Count(ScenarioVillage.Apple)), 90);
+                    state.Shops[ScenarioVillage.Stall].Stock.Count(ScenarioVillage.Apple)), 90);
                 _progress.StockCounted = true;
             }
         }

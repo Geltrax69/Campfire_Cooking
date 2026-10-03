@@ -70,16 +70,15 @@ namespace LivingWorld.Simulation.Economy
         internal void Complete(string id) => _completedIds.Add(id);
     }
 
-    /// <summary>Applies configured production once while storing completion in caller-owned state.</summary>
+    /// <summary>Applies configured production once while storing completion in world-owned state.</summary>
     public sealed class ProductionSystem : IWorldSystem
     {
         private readonly List<ProductionConfiguration> _configurations;
-        private readonly ProductionState _state;
 
-        public ProductionSystem(IEnumerable<ProductionConfiguration> configurations, ProductionState state)
+        public ProductionSystem(IEnumerable<ProductionConfiguration> configurations, WorldState world)
         {
             if (configurations == null) throw new ArgumentNullException(nameof(configurations));
-            _state = state ?? throw new ArgumentNullException(nameof(state));
+            if (world == null) throw new ArgumentNullException(nameof(world));
             _configurations = new List<ProductionConfiguration>();
             foreach (ProductionConfiguration configuration in configurations)
             {
@@ -91,26 +90,26 @@ namespace LivingWorld.Simulation.Economy
             ValidateConfigurations();
             var known = new HashSet<string>(_configurations.ConvertAll(configuration => configuration.Id),
                 StringComparer.Ordinal);
-            foreach (string id in _state.CompletedIds)
+            foreach (string id in world.Production.CompletedIds)
                 if (!known.Contains(id)) throw new ArgumentException("Production state references unknown configuration.");
         }
 
         public string Id => "economy.production";
         public SimulationPhase Phase => SimulationPhase.Economy;
-        public ProductionState State => _state;
 
         public void Tick(WorldState state)
         {
             if (state == null) throw new ArgumentNullException(nameof(state));
+            ProductionState progress = state.Production;
             foreach (ProductionConfiguration configuration in _configurations)
             {
-                if (_state.IsCompleted(configuration.Id) || state.Clock < configuration.EligibleAt) continue;
+                if (progress.IsCompleted(configuration.Id) || state.Clock < configuration.EligibleAt) continue;
                 configuration.Inventory.EnsureCanReceive(configuration.Item, configuration.Quantity);
                 state.Events.Append(state.Clock, configuration.Location, WorldEventType.Produced,
                     ActorId.ForNpc(configuration.Producer), visibility: configuration.Visibility,
                     itemType: configuration.Item, quantity: configuration.Quantity);
                 configuration.Inventory.Add(configuration.Item, configuration.Quantity);
-                _state.Complete(configuration.Id);
+                progress.Complete(configuration.Id);
             }
         }
 

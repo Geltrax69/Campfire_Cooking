@@ -65,13 +65,14 @@ namespace LivingWorld.Simulation.Knowledge
     /// <summary>Applies bounded player standing changes after their truth event is recorded.</summary>
     public static class ReputationAdjuster
     {
-        public static WorldEvent Apply(WorldState world, ReputationState reputation, LocationId location,
+        public static WorldEvent Apply(WorldState world, LocationId location,
             ReputationGroupId group, int requestedDelta)
         {
             if (world == null) throw new ArgumentNullException(nameof(world));
-            if (reputation == null) throw new ArgumentNullException(nameof(reputation));
             if (!location.IsValid) throw new ArgumentException("A reputation change needs a location.", nameof(location));
             if (!group.IsValid) throw new ArgumentException("A reputation change needs a valid group.", nameof(group));
+            ReputationState reputation = world.Knowledge.Reputation
+                ?? throw new InvalidOperationException("Reputation must be initialized before use.");
 
             int current = reputation.Get(group);
             long requestedValue = (long)current + requestedDelta;

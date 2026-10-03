@@ -152,11 +152,16 @@ namespace LivingWorld.Simulation.Tests.Economy
         private static Scenario Create(int stock = 20, int buyerCopper = 100, int sellerCopper = 0)
         {
             var catalog = TinyCatalog();
+            var world = new WorldState(42);
             var sellerStock = new Inventory(catalog);
             sellerStock.Add(Apple, stock);
             var sellerWallet = new Wallet(sellerCopper);
             var shop = new Shop(Stall, Mira, sellerStock, sellerWallet, new[] { Price(Bread, 3), Price(Apple, 3) });
-            return new Scenario(shop, new Inventory(catalog), new Wallet(buyerCopper), new WorldState(42));
+            world.Shops.Register(shop);
+            var buyerStock = new Inventory(catalog);
+            var buyerWallet = new Wallet(buyerCopper);
+            world.Belongings.Register(ActorId.ForNpc(Tom), buyerStock, buyerWallet);
+            return new Scenario(shop, buyerStock, buyerWallet, world);
         }
 
         private static Shop NewShop(LocationId location, NpcId owner, IEnumerable<KeyValuePair<ItemTypeId, int>> prices)

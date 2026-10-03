@@ -117,13 +117,12 @@ namespace LivingWorld.Simulation.Economy
     public sealed class PriceAdjustmentSystem : IWorldSystem
     {
         private readonly List<PriceAdjustmentConfiguration> _configurations;
-        private readonly PriceAdjustmentState _state;
 
         public PriceAdjustmentSystem(IEnumerable<PriceAdjustmentConfiguration> configurations,
-            PriceAdjustmentState state)
+            WorldState world)
         {
             if (configurations == null) throw new ArgumentNullException(nameof(configurations));
-            _state = state ?? throw new ArgumentNullException(nameof(state));
+            if (world == null) throw new ArgumentNullException(nameof(world));
             _configurations = new List<PriceAdjustmentConfiguration>();
             foreach (PriceAdjustmentConfiguration configuration in configurations)
             {
@@ -135,14 +134,13 @@ namespace LivingWorld.Simulation.Economy
             ValidateConfigurations();
             var known = new HashSet<string>(_configurations.ConvertAll(configuration => configuration.Id),
                 StringComparer.Ordinal);
-            foreach (PriceAdjustmentProgress progress in _state.Progress)
+            foreach (PriceAdjustmentProgress progress in world.Prices.Progress)
                 if (!known.Contains(progress.ConfigurationId))
                     throw new ArgumentException("Price state references an unknown configuration.");
         }
 
         public string Id => "economy.prices";
         public SimulationPhase Phase => SimulationPhase.Economy;
-        public PriceAdjustmentState State => _state;
 
         public void Tick(WorldState state)
         {
@@ -153,7 +151,8 @@ namespace LivingWorld.Simulation.Economy
 
         private void Process(PriceAdjustmentConfiguration configuration, WorldState world)
         {
-            PriceAdjustmentProgress prior = _state.Get(configuration.Id);
+            PriceAdjustmentState progressState = world.Prices;
+            PriceAdjustmentProgress prior = progressState.Get(configuration.Id);
             long cursor = prior.LastProcessedEventId;
             bool missedSale = prior.MissedSalePending;
             foreach (WorldEvent worldEvent in world.Events.Query())
@@ -170,7 +169,7 @@ namespace LivingWorld.Simulation.Economy
             long interval = CurrentInterval(configuration, world.Clock);
             if (interval == 0 || interval <= prior.CompletedInterval)
             {
-                _state.Set(new PriceAdjustmentProgress(configuration.Id, cursor,
+                progressState.Set(new PriceAdjustmentProgress(configuration.Id, cursor,
                     prior.CompletedInterval, missedSale));
                 return;
             }
@@ -193,7 +192,7 @@ namespace LivingWorld.Simulation.Economy
                 configuration.Shop.SetUnitPrice(configuration.Item, adjustedPrice);
                 cursor = changed.Id.Value;
             }
-            _state.Set(new PriceAdjustmentProgress(configuration.Id, cursor, interval, false));
+            progressState.Set(new PriceAdjustmentProgress(configuration.Id, cursor, interval, false));
         }
 
         private void ValidateConfigurations()

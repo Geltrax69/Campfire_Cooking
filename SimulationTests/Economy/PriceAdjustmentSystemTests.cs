@@ -21,7 +21,7 @@ namespace LivingWorld.Simulation.Tests.Economy
         {
             Scenario scenario = Create(stock: 20, price: 3);
             var configuration = Configuration(scenario.Shop, maximumPrice: 4);
-            var system = new PriceAdjustmentSystem(new[] { configuration }, new PriceAdjustmentState());
+            var system = new PriceAdjustmentSystem(new[] { configuration }, scenario.State);
             MissedSale(scenario.State, Stall, Apple, eventType);
 
             system.Tick(scenario.State);
@@ -34,7 +34,7 @@ namespace LivingWorld.Simulation.Tests.Economy
             WorldEvent changed = scenario.State.Events.Query(type: WorldEventType.PriceChanged).Single();
             Assert.That((changed.Location, changed.Actor, changed.ItemType, changed.Copper),
                 Is.EqualTo((Stall, (ActorId?)ActorId.ForNpc(Shopkeeper), (ItemTypeId?)Apple, (int?)4)));
-            Assert.That(system.State.Progress.Single().CompletedInterval, Is.EqualTo(2));
+            Assert.That(scenario.State.Prices.Progress.Single().CompletedInterval, Is.EqualTo(2));
         }
 
         [Test]
@@ -42,7 +42,7 @@ namespace LivingWorld.Simulation.Tests.Economy
         {
             Scenario low = Create(stock: 2, price: 3);
             var lowSystem = new PriceAdjustmentSystem(new[] { Configuration(low.Shop, maximumPrice: 4) },
-                new PriceAdjustmentState());
+                low.State);
             lowSystem.Tick(low.State);
             low.State.Clock = new GameTime(160);
             lowSystem.Tick(low.State);
@@ -51,7 +51,7 @@ namespace LivingWorld.Simulation.Tests.Economy
 
             Scenario high = Create(stock: 40, price: 3);
             var highSystem = new PriceAdjustmentSystem(new[] { Configuration(high.Shop, minimumPrice: 2) },
-                new PriceAdjustmentState());
+                high.State);
             highSystem.Tick(high.State);
             high.State.Clock = new GameTime(160);
             highSystem.Tick(high.State);
@@ -64,13 +64,13 @@ namespace LivingWorld.Simulation.Tests.Economy
         {
             Scenario scenario = Create(stock: 20, price: 3);
             var system = new PriceAdjustmentSystem(new[] { Configuration(scenario.Shop) },
-                new PriceAdjustmentState());
+                scenario.State);
 
             system.Tick(scenario.State);
 
             Assert.That(scenario.Shop.UnitPrice(Apple), Is.EqualTo(3));
             Assert.That(scenario.State.Events.Count, Is.Zero);
-            Assert.That(system.State.Progress.Single().CompletedInterval, Is.EqualTo(1));
+            Assert.That(scenario.State.Prices.Progress.Single().CompletedInterval, Is.EqualTo(1));
         }
 
         [Test]
@@ -80,13 +80,13 @@ namespace LivingWorld.Simulation.Tests.Economy
             MissedSale(scenario.State, OtherShop, Apple);
             MissedSale(scenario.State, Stall, Bread);
             var system = new PriceAdjustmentSystem(new[] { Configuration(scenario.Shop) },
-                new PriceAdjustmentState());
+                scenario.State);
 
             system.Tick(scenario.State);
 
             Assert.That(scenario.Shop.UnitPrice(Apple), Is.EqualTo(3));
             Assert.That(scenario.State.Events.Query(type: WorldEventType.PriceChanged), Is.Empty);
-            Assert.That(system.State.Progress.Single().LastProcessedEventId, Is.EqualTo(2));
+            Assert.That(scenario.State.Prices.Progress.Single().LastProcessedEventId, Is.EqualTo(2));
         }
 
         [Test]
@@ -94,21 +94,21 @@ namespace LivingWorld.Simulation.Tests.Economy
         {
             Scenario scenario = Create(stock: 20, price: 3, time: new GameTime(100));
             var configuration = Configuration(scenario.Shop, firstAdjustmentAt: new GameTime(200));
-            var system = new PriceAdjustmentSystem(new[] { configuration }, new PriceAdjustmentState());
+            var system = new PriceAdjustmentSystem(new[] { configuration }, scenario.State);
             MissedSale(scenario.State, Stall, Apple);
             system.Tick(scenario.State);
-            Assert.That(system.State.Progress.Single().MissedSalePending, Is.True);
+            Assert.That(scenario.State.Prices.Progress.Single().MissedSalePending, Is.True);
 
-            var restored = new PriceAdjustmentState(system.State.Progress);
-            system = new PriceAdjustmentSystem(new[] { configuration }, restored);
+            scenario.State.RestorePrices(new PriceAdjustmentState(scenario.State.Prices.Progress));
+            system = new PriceAdjustmentSystem(new[] { configuration }, scenario.State);
             scenario.State.Clock = new GameTime(200);
             system.Tick(scenario.State);
-            system = new PriceAdjustmentSystem(new[] { configuration }, system.State);
+            system = new PriceAdjustmentSystem(new[] { configuration }, scenario.State);
             system.Tick(scenario.State);
 
             Assert.That(scenario.Shop.UnitPrice(Apple), Is.EqualTo(4));
             Assert.That(scenario.State.Events.Query(type: WorldEventType.PriceChanged), Has.Count.EqualTo(1));
-            PriceAdjustmentProgress progress = system.State.Progress.Single();
+            PriceAdjustmentProgress progress = scenario.State.Prices.Progress.Single();
             Assert.That((progress.CompletedInterval, progress.MissedSalePending), Is.EqualTo((1L, false)));
         }
 
@@ -118,12 +118,12 @@ namespace LivingWorld.Simulation.Tests.Economy
             Scenario scenario = Create(stock: 2, price: 3);
             scenario.State.Events.Append(new GameTime(101), OtherShop, WorldEventType.Conversation);
             var system = new PriceAdjustmentSystem(new[] { Configuration(scenario.Shop) },
-                new PriceAdjustmentState());
+                scenario.State);
 
             Assert.Throws<ArgumentException>(() => system.Tick(scenario.State));
 
             Assert.That(scenario.Shop.UnitPrice(Apple), Is.EqualTo(3));
-            Assert.That(system.State.Progress, Is.Empty);
+            Assert.That(scenario.State.Prices.Progress, Is.Empty);
             Assert.That(scenario.State.Events.Count, Is.EqualTo(1));
         }
 
@@ -138,7 +138,9 @@ namespace LivingWorld.Simulation.Tests.Economy
             Assert.Throws<ArgumentOutOfRangeException>(() => Configuration(scenario.Shop, priceStep: 0));
             Assert.Throws<ArgumentException>(() => Configuration(scenario.Shop, minimumPrice: 4, maximumPrice: 3));
             Assert.Throws<ArgumentNullException>(() => new PriceAdjustmentSystem(null,
-                new PriceAdjustmentState()));
+                scenario.State));
+            Assert.Throws<ArgumentNullException>(() => new PriceAdjustmentSystem(
+                new[] { Configuration(scenario.Shop) }, null));
             Assert.Throws<ArgumentException>(() => new PriceAdjustmentState(new[]
             {
                 new PriceAdjustmentProgress("price_apples", 0, 0, false),
@@ -159,6 +161,7 @@ namespace LivingWorld.Simulation.Tests.Economy
         private static Scenario Create(int stock, int price, GameTime time = default)
         {
             ItemCatalog catalog = TinyCatalog();
+            var state = new WorldState(42, time == default ? new GameTime(100) : time);
             var inventory = new Inventory(catalog);
             if (stock > 0) inventory.Add(Apple, stock);
             var shop = new Shop(Stall, Shopkeeper, inventory, new Wallet(), new[]
@@ -166,7 +169,8 @@ namespace LivingWorld.Simulation.Tests.Economy
                 new KeyValuePair<ItemTypeId, int>(Apple, price),
                 new KeyValuePair<ItemTypeId, int>(Bread, 2)
             });
-            return new Scenario(shop, new WorldState(42, time == default ? new GameTime(100) : time));
+            state.Shops.Register(shop);
+            return new Scenario(shop, state);
         }
 
         private static void MissedSale(WorldState state, LocationId location, ItemTypeId item,
