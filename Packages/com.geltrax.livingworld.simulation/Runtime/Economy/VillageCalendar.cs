@@ -55,5 +55,21 @@ namespace LivingWorld.Simulation.Economy
             long springStart = year * DaysPerYear + 2 * DaysPerSeason + 1;
             return day <= springStart ? springStart : springStart + DaysPerYear;
         }
+
+        /// <summary>
+        /// The Harvest Feast falls on the last Restday of autumn (WORLD.md festivals).
+        /// Day 1 is Thirdday and Restday is weekday index 6 (see NpcSchedule), so a day
+        /// is a Restday exactly when (day+1) is divisible by 7 with remainder 6; the
+        /// largest such day in autumn (days 1–90) is day 89. Returns the feast day of
+        /// the year containing the given day.
+        /// </summary>
+        public static long HarvestFeastDay(long day)
+        {
+            if (day < 1) throw new ArgumentOutOfRangeException(nameof(day));
+            long yearStart = (day - 1) / DaysPerYear * DaysPerYear;
+            long feast = yearStart + DaysPerSeason;
+            while ((feast + 1) % 7 != 6) feast--;
+            return feast;
+        }
     }
 }
