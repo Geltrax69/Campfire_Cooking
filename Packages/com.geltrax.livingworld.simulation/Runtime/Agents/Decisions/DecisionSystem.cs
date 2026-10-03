@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using LivingWorld.Simulation.Core;
+using LivingWorld.Simulation.Knowledge;
 
 namespace LivingWorld.Simulation.Agents
 {
@@ -33,6 +34,54 @@ namespace LivingWorld.Simulation.Agents
         public int SocialUrgency { get; }
     }
 
+    /// <summary>Caller-supplied penalty for an activity when an owned belief meets a confidence threshold.</summary>
+    public sealed class BeliefUtilityAdjustment
+    {
+        public BeliefUtilityAdjustment(ActivityKind activity, BeliefClaim claim,
+            int minimumConfidence, int penalty)
+        {
+            ScheduleEntry.ValidateKind(activity);
+            if (claim == null) throw new ArgumentNullException(nameof(claim));
+            if (minimumConfidence < 0 || minimumConfidence > 100)
+                throw new ArgumentOutOfRangeException(nameof(minimumConfidence));
+            if (penalty <= 0) throw new ArgumentOutOfRangeException(nameof(penalty));
+            Activity = activity;
+            Claim = claim;
+            MinimumConfidence = minimumConfidence;
+            Penalty = penalty;
+        }
+
+        public ActivityKind Activity { get; }
+        public BeliefClaim Claim { get; }
+        public int MinimumConfidence { get; }
+        public int Penalty { get; }
+    }
+
+    /// <summary>Immutable, owner-labelled belief view supplied for one NPC decision.</summary>
+    public sealed class NpcBeliefSnapshot
+    {
+        public NpcBeliefSnapshot(NpcId owner, IEnumerable<Belief> beliefs)
+        {
+            if (!owner.IsValid) throw new ArgumentException("A belief snapshot needs a valid owner.", nameof(owner));
+            if (beliefs == null) throw new ArgumentNullException(nameof(beliefs));
+            var copied = new List<Belief>();
+            foreach (Belief belief in beliefs)
+            {
+                if (belief == null) throw new ArgumentException("Beliefs cannot contain null.", nameof(beliefs));
+                copied.Add(belief);
+            }
+            copied.Sort((left, right) => left.Claim.CompareTo(right.Claim));
+            for (int index = 1; index < copied.Count; index++)
+                if (copied[index - 1].Claim.Equals(copied[index].Claim))
+                    throw new ArgumentException("A belief snapshot cannot repeat a claim.", nameof(beliefs));
+            Owner = owner;
+            Beliefs = copied.AsReadOnly();
+        }
+
+        public NpcId Owner { get; }
+        public IReadOnlyList<Belief> Beliefs { get; }
+    }
+
     /// <summary>Validated, caller-supplied utility values with no production balancing defaults.</summary>
     public sealed class DecisionTuning
     {
@@ -40,6 +89,13 @@ namespace LivingWorld.Simulation.Agents
 
         public DecisionTuning(IEnumerable<KeyValuePair<ActivityKind, ActivityUtilityWeights>> weights,
             int shopHungerThreshold, int shopMinimumCopper, TieBreakBehavior tieBreak)
+            : this(weights, shopHungerThreshold, shopMinimumCopper, tieBreak, null)
+        {
+        }
+
+        public DecisionTuning(IEnumerable<KeyValuePair<ActivityKind, ActivityUtilityWeights>> weights,
+            int shopHungerThreshold, int shopMinimumCopper, TieBreakBehavior tieBreak,
+            IEnumerable<BeliefUtilityAdjustment> beliefAdjustments)
         {
             if (weights == null) throw new ArgumentNullException(nameof(weights));
             if (shopHungerThreshold < 0 || shopHungerThreshold > 100)
@@ -57,6 +113,20 @@ namespace LivingWorld.Simulation.Agents
             int expected = Enum.GetValues(typeof(ActivityKind)).Length;
             if (copied.Count != expected) throw new ArgumentException("Every activity requires explicit weights.", nameof(weights));
             _weights = new ReadOnlyDictionary<ActivityKind, ActivityUtilityWeights>(copied);
+            var copiedAdjustments = new List<BeliefUtilityAdjustment>();
+            if (beliefAdjustments != null)
+                foreach (BeliefUtilityAdjustment adjustment in beliefAdjustments)
+                {
+                    if (adjustment == null)
+                        throw new ArgumentException("Belief adjustments cannot contain null.", nameof(beliefAdjustments));
+                    copiedAdjustments.Add(adjustment);
+                }
+            copiedAdjustments.Sort(CompareAdjustments);
+            for (int index = 1; index < copiedAdjustments.Count; index++)
+                if (CompareAdjustments(copiedAdjustments[index - 1], copiedAdjustments[index]) == 0)
+                    throw new ArgumentException("Belief adjustments must be unique by activity and claim.",
+                        nameof(beliefAdjustments));
+            BeliefAdjustments = copiedAdjustments.AsReadOnly();
             ShopHungerThreshold = shopHungerThreshold;
             ShopMinimumCopper = shopMinimumCopper;
             TieBreak = tieBreak;
@@ -65,7 +135,14 @@ namespace LivingWorld.Simulation.Agents
         public int ShopHungerThreshold { get; }
         public int ShopMinimumCopper { get; }
         public TieBreakBehavior TieBreak { get; }
+        public IReadOnlyList<BeliefUtilityAdjustment> BeliefAdjustments { get; }
         internal ActivityUtilityWeights For(ActivityKind kind) => _weights[kind];
+
+        private static int CompareAdjustments(BeliefUtilityAdjustment left, BeliefUtilityAdjustment right)
+        {
+            int comparison = left.Activity.CompareTo(right.Activity);
+            return comparison != 0 ? comparison : left.Claim.CompareTo(right.Claim);
+        }
     }
 
     /// <summary>Read-only external facts needed for one NPC decision.</summary>
@@ -73,6 +150,12 @@ namespace LivingWorld.Simulation.Agents
     {
         public DecisionContext(int availableCopper, bool shopAvailable, LocationId foodLocation,
             LocationId shopLocation, LocationId socialLocation)
+            : this(availableCopper, shopAvailable, foodLocation, shopLocation, socialLocation, null)
+        {
+        }
+
+        public DecisionContext(int availableCopper, bool shopAvailable, LocationId foodLocation,
+            LocationId shopLocation, LocationId socialLocation, NpcBeliefSnapshot beliefs)
         {
             if (availableCopper < 0) throw new ArgumentOutOfRangeException(nameof(availableCopper));
             if (!foodLocation.IsValid) throw new ArgumentException("Food location must be valid.", nameof(foodLocation));
@@ -83,6 +166,7 @@ namespace LivingWorld.Simulation.Agents
             FoodLocation = foodLocation;
             ShopLocation = shopLocation;
             SocialLocation = socialLocation;
+            Beliefs = beliefs;
         }
 
         public int AvailableCopper { get; }
@@ -90,9 +174,10 @@ namespace LivingWorld.Simulation.Agents
         public LocationId FoodLocation { get; }
         public LocationId ShopLocation { get; }
         public LocationId SocialLocation { get; }
+        public NpcBeliefSnapshot Beliefs { get; }
     }
 
-    /// <summary>Supplies an immutable context snapshot without coupling Agents to Economy or Knowledge.</summary>
+    /// <summary>Supplies an immutable context snapshot without exposing mutable external state.</summary>
     public interface IDecisionContextProvider
     {
         DecisionContext GetSnapshot(NpcState npc);
@@ -139,6 +224,8 @@ namespace LivingWorld.Simulation.Agents
             {
                 DecisionContext context = _contexts.GetSnapshot(npc)
                     ?? throw new ArgumentNullException(nameof(context), "Decision context cannot be null.");
+                if (context.Beliefs != null && context.Beliefs.Owner != npc.Definition.Id)
+                    throw new InvalidOperationException("A decision context may contain only the deciding NPC's beliefs.");
                 ScheduleEntry scheduled = npc.Definition.Schedule.At(state.Clock);
                 NpcIntention intention = Choose(npc, context, scheduled, state);
                 npc.SetIntention(intention);
@@ -158,7 +245,7 @@ namespace LivingWorld.Simulation.Agents
                     || context.AvailableCopper < _tuning.ShopMinimumCopper
                     || (scheduled?.Kind != ActivityKind.Shop
                         && npc.Needs.Hunger < _tuning.ShopHungerThreshold))) continue;
-                long score = Score(kind, npc, scheduled);
+                long score = Score(kind, npc, scheduled, context);
                 if (score > best)
                 {
                     best = score;
@@ -171,14 +258,27 @@ namespace LivingWorld.Simulation.Agents
             return new NpcIntention(chosen, Destination(chosen, npc, context, scheduled), state.Clock);
         }
 
-        private long Score(ActivityKind kind, NpcState npc, ScheduleEntry scheduled)
+        private long Score(ActivityKind kind, NpcState npc, ScheduleEntry scheduled, DecisionContext context)
         {
             ActivityUtilityWeights weights = _tuning.For(kind);
-            return weights.BaseScore
+            long score = weights.BaseScore
                 + (scheduled != null && scheduled.Kind == kind ? weights.ScheduleFit : 0L)
                 + (long)npc.Needs.Hunger * weights.HungerUrgency
                 + (long)(100 - npc.Needs.Energy) * weights.EnergyUrgency
                 + (long)(100 - npc.Needs.Social) * weights.SocialUrgency;
+            if (context.Beliefs == null) return score;
+            foreach (BeliefUtilityAdjustment adjustment in _tuning.BeliefAdjustments)
+            {
+                if (adjustment.Activity != kind) continue;
+                foreach (Belief belief in context.Beliefs.Beliefs)
+                    if (belief.Claim.Equals(adjustment.Claim)
+                        && belief.Confidence >= adjustment.MinimumConfidence)
+                    {
+                        score -= adjustment.Penalty;
+                        break;
+                    }
+            }
+            return score;
         }
 
         private static LocationId Destination(ActivityKind kind, NpcState npc,
