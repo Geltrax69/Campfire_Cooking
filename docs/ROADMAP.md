@@ -94,7 +94,7 @@ Run tasks in order unless marked parallel-safe. `Role` refers to `AGENTS.md` sec
 | P1-02 | `WorldState` container + `World.Tick()` running registered systems in a fixed order | Core | P1-01 | Test: empty world ticks 1440 times; order of systems is fixed | done (2026-10-03) |
 | P1-03 | `WorldEvent` + `EventLog` (append, query by time/location/type, prune) | Core | P1-02 | Tests for append/query/prune | done (2026-10-03) |
 | P1-04 | Command queue for player/NPC actions processed at tick start | Core | P1-02 | Test: commands apply in order at the next tick | done (2026-10-03) |
-| P1-05 | Locations (shop, farm, tavern, homes, square) with simple travel time between them | Core | P1-02 | Test: travel time lookup, NPC location changes after travel | todo |
+| P1-05 | Locations (shop, farm, tavern, homes, square) with simple travel time between them | Core | P1-02 | Test: travel time lookup, NPC location changes after travel | doing (map verified; timed travel next) |
 | P1-06 | Item types (apple, bread, ale, coin) + inventories with aggregate counts | Economy | P1-02 | Tests: add/remove, can't go negative | todo |
 | P1-07 | Shops: price list, buy (full/partial/fail) creating `Purchase` / `FailedPurchase` events; money transfer | Economy | P1-03, P1-06 | Tests incl. "wants 7, has 2"; money conserved | todo |
 | P1-08 | Theft command: moves items, creates `Theft` event with visibility | Economy | P1-04, P1-07 | Test: stock drops, event logged, no money moves | todo |
