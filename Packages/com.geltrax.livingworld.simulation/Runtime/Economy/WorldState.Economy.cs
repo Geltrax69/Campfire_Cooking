@@ -11,6 +11,7 @@ namespace LivingWorld.Simulation.Core
         public ProductionState Production { get; private set; } = new ProductionState();
         public RestockState Restock { get; private set; } = new RestockState();
         public PriceAdjustmentState Prices { get; private set; } = new PriceAdjustmentState();
+        public SmithyState Smithy { get; private set; } = new SmithyState();
 
         /// <summary>Installs validated production progress for Persistence.</summary>
         internal void RestoreProduction(ProductionState state)
@@ -28,6 +29,15 @@ namespace LivingWorld.Simulation.Core
         internal void RestorePrices(PriceAdjustmentState state)
         {
             Prices = state ?? throw new ArgumentNullException(nameof(state));
+        }
+
+        /// <summary>
+        /// Installs validated smithy progress for Persistence. P2-12 wires the JSON saver/loader
+        /// to call this; tests and the loader use it directly until then.
+        /// </summary>
+        internal void RestoreSmithy(SmithyState state)
+        {
+            Smithy = state ?? throw new ArgumentNullException(nameof(state));
         }
     }
 }
