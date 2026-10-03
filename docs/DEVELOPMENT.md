@@ -36,3 +36,23 @@ suite on pushes and pull requests. Check CI before merging a task branch.
 The repository's current default branch is `claude/wizardly-clarke-tigogn`,
 not `main`; task PRs target that branch. Preserve that choice unless the
 owner requests a rename.
+
+## Current foundation checkpoint (2026-10-03)
+
+P1-01–P1-05 are implemented: typed IDs/time/RNG, deterministic world ticks,
+immutable event truth, next-minute FIFO commands, location maps and timed travel.
+Full Debug and Release suites each contain 100 passing tests. The pure runtime
+also compiled independently for .NET Standard 2.1 with C# 9 and zero warnings.
+No Unity editor or device build was run.
+
+Try the integrated command → departure → travel → arrival behaviour:
+
+```sh
+dotnet test SimulationTests --filter FullyQualifiedName~QueuedTravelLogsNextTickDepartureAndTimedArrivalDespiteReversedRegistration
+```
+
+For world setup, explicitly register `CommandSystem` and `TravelSystem` before
+the first tick. Initialise travel with `state.InitializeTravel(map)`, register
+NPC locations through `state.Travel.RegisterNpc`, and submit immutable
+`IWorldCommand` instances with `state.EnqueueCommand`. NPC game logic, inventory
+and beliefs are the next work; no playable village or Apple Test is claimed yet.
