@@ -85,7 +85,8 @@ namespace LivingWorld.Simulation.Economy
         public MerchantConfiguration(string id, LocationId market,
             IReadOnlyList<MerchantPurchaseOffer> purchaseOffers,
             IReadOnlyList<MerchantImportOffer> importOffers,
-            int budgetPerVisitCopper, EventVisibility visibility)
+            int budgetPerVisitCopper, EventVisibility visibility,
+            IImportOrderPolicy orderPolicy = null)
         {
             ProductionConfiguration.RequireId(id, nameof(id));
             if (!market.IsValid) throw new ArgumentException("A market location is required.", nameof(market));
@@ -100,6 +101,7 @@ namespace LivingWorld.Simulation.Economy
             ImportOffers = importOffers;
             BudgetPerVisitCopper = budgetPerVisitCopper;
             Visibility = visibility;
+            OrderPolicy = orderPolicy;
         }
 
         public string Id { get; }
@@ -108,6 +110,11 @@ namespace LivingWorld.Simulation.Economy
         public IReadOnlyList<MerchantImportOffer> ImportOffers { get; }
         public int BudgetPerVisitCopper { get; }
         public EventVisibility Visibility { get; }
+        /// <summary>
+        /// Optional policy scaling import targets (P2-09 adaptive orders); null keeps the
+        /// fixed P2-08 targets.
+        /// </summary>
+        public IImportOrderPolicy OrderPolicy { get; }
     }
 
     /// <summary>
@@ -219,7 +226,12 @@ namespace LivingWorld.Simulation.Economy
             foreach (MerchantImportOffer offer in configuration.ImportOffers)
             {
                 if (offer.RequiresExhaustionOrder && !state.Smithy.IronExhaustionOrdered) continue;
-                int needed = offer.TargetStock - offer.Stock.Count(offer.Item);
+                // Adaptive orders (P2-09): scale the target by prosperity before measuring
+                // the gap; without a policy the fixed approved target applies.
+                int target = configuration.OrderPolicy != null
+                    ? configuration.OrderPolicy.ScaledTarget(offer, state)
+                    : offer.TargetStock;
+                int needed = target - offer.Stock.Count(offer.Item);
                 if (needed < 1) continue;
                 int affordable = offer.Till.Balance / offer.SellPriceCopper;
                 int units = Math.Min(needed, affordable);

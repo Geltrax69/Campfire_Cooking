@@ -8,7 +8,7 @@ namespace LivingWorld.Simulation.Core
     {
         Purchase, PartialPurchase, FailedPurchase, Theft, StockCounted, Conversation, Departure, Arrival,
         RestockOrdered, Produced, Restocked, PriceChanged, ReputationChanged,
-        Gift, DebtMissed, RelationshipShift
+        Gift, DebtMissed, RelationshipShift, TurnedStale, Spoiled
     }
 
     /// <summary>Describes noticeability, not whether anybody actually perceived the event.</summary>
@@ -71,7 +71,7 @@ namespace LivingWorld.Simulation.Core
 
         internal static void ValidateType(WorldEventType type)
         {
-            if (type < WorldEventType.Purchase || type > WorldEventType.RelationshipShift)
+            if (type < WorldEventType.Purchase || type > WorldEventType.Spoiled)
                 throw new ArgumentOutOfRangeException(nameof(type));
         }
 

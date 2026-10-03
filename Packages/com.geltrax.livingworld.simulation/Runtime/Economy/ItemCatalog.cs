@@ -17,6 +17,11 @@ namespace LivingWorld.Simulation.Economy
         public int? HungerEffect { get; }
         public int? HealthEffect { get; }
         public int? SocialEffect { get; }
+        /// <summary>
+        /// Two-stage spoilage spec, or null when the good does not spoil. Populated from
+        /// the approved `perishable` block in Content/items/items.json (see PerishableInfo).
+        /// </summary>
+        public PerishableInfo Perishable { get; }
 
         public ItemDefinition(
             ItemTypeId id,
@@ -26,7 +31,8 @@ namespace LivingWorld.Simulation.Economy
             int phase,
             int? hungerEffect = null,
             int? healthEffect = null,
-            int? socialEffect = null)
+            int? socialEffect = null,
+            PerishableInfo perishable = null)
         {
             if (!id.IsValid) throw new ArgumentException("An item type ID must be valid.", nameof(id));
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("A name is required.", nameof(name));
@@ -42,6 +48,7 @@ namespace LivingWorld.Simulation.Economy
             HungerEffect = hungerEffect;
             HealthEffect = healthEffect;
             SocialEffect = socialEffect;
+            Perishable = perishable;
         }
     }
 
