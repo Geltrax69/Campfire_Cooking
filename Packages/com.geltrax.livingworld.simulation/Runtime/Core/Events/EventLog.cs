@@ -49,6 +49,24 @@ namespace LivingWorld.Simulation.Core
             return results.AsReadOnly();
         }
 
+        /// <summary>Captures retained events plus the high-water marks; later appends never affect the snapshot.</summary>
+        internal EventLogState CaptureState() => new EventLogState(_events, _lastId, _lastTime);
+
+        /// <summary>
+        /// Replaces this log with a validated snapshot. Event records are shared by reference
+        /// (they are immutable), so the next append continues the snapshot's ID and time rules.
+        /// </summary>
+        internal void RestoreState(EventLogState snapshot)
+        {
+            if (snapshot == null) throw new ArgumentNullException(nameof(snapshot));
+            // The snapshot was validated at construction, so installation cannot fail partway.
+            // No caller enumerators are involved, so the mutation guard does not apply here.
+            _events.Clear();
+            _events.AddRange(snapshot.Events);
+            _lastId = snapshot.LastIssuedId;
+            _lastTime = snapshot.LastIssuedTime;
+        }
+
         /// <summary>Removes events strictly before cutoff unless retained; unknown valid IDs are harmless.</summary>
         public int PruneBefore(GameTime cutoff, IEnumerable<WorldEventId> retainedIds)
         {
