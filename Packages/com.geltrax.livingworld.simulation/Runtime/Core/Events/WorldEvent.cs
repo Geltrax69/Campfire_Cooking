@@ -6,7 +6,8 @@ namespace LivingWorld.Simulation.Core
     /// <summary>Classifies a fact without implying that any NPC knows about it.</summary>
     public enum WorldEventType
     {
-        Purchase, PartialPurchase, FailedPurchase, Theft, StockCounted, Conversation, Departure, Arrival
+        Purchase, PartialPurchase, FailedPurchase, Theft, StockCounted, Conversation, Departure, Arrival,
+        RestockOrdered, Produced, Restocked, PriceChanged
     }
 
     /// <summary>Describes noticeability, not whether anybody actually perceived the event.</summary>
@@ -60,7 +61,7 @@ namespace LivingWorld.Simulation.Core
 
         internal static void ValidateType(WorldEventType type)
         {
-            if (type < WorldEventType.Purchase || type > WorldEventType.Arrival)
+            if (type < WorldEventType.Purchase || type > WorldEventType.PriceChanged)
                 throw new ArgumentOutOfRangeException(nameof(type));
         }
     }
