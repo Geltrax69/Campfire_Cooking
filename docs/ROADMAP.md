@@ -144,7 +144,8 @@ and sinks, debts). All new mutable state must be save/load-compatible (P2-12).
 | P2-08 | Money sources: traveling merchants (~3 weeks, ~800 copper), seasonal travelers, winter wolf bounties (50/pelt) | Economy | P2-05 | Tests: merchant visit injects money; winter traveler drought | todo |
 | P2-09 | Money sinks: prosperity-scaled taxes, imports, community fund, two-stage spoilage (fresh→stale→spoiled) | Economy | P2-05 | Tests: tax scales with prosperity; spoilage destroys value | todo |
 | P2-10 | Debts: Tilda's tab ledger as mechanical debts with repayment schedules | Economy | P2-05 | Tests: Doran repays 10/week; tabs affect trade willingness | done (2026-10-04) |
-| P2-11 | Phase 2 acceptance: month-long village simulation | Test & Scenario | P2-01 … P2-10 | Total village copper stays within ±10% month-to-month; bakery sells out most days; relationships shift measurably | todo |
+| P2-11a | Daily-life drivers: village assembly, NPC eating/shopping, evening meetings, friend-pricing wiring | Agents + Knowledge | P2-01 … P2-10 | Tests: hungry NPC eats; low-food NPC buys; tavern rumors spread; 7-day run clean | todo |
+| P2-11b | Phase 2 acceptance: month-long village simulation | Test & Scenario | P2-11a | Total village copper stays within ±10% month-to-month; bakery sells out most days; relationships shift measurably | todo |
 | P2-12 | Persist Phase 2 state: extend saver/loader/schema; round-trip + determinism | Persistence | P2-01 … P2-10 | Tests: save→load→save byte-identical; P1-21f determinism still green | todo |
 
 ## Later simulation phases (plan in detail when the previous phase is done)
