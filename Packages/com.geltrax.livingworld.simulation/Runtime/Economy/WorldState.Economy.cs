@@ -21,6 +21,7 @@ namespace LivingWorld.Simulation.Core
         public CommunityFundState CommunityFund { get; private set; } = new CommunityFundState();
         public EconomyBaselineState EconomyBaseline { get; private set; } = new EconomyBaselineState();
         public SpoilageState Spoilage { get; private set; } = new SpoilageState();
+        public DebtLedgerState DebtLedger { get; private set; } = new DebtLedgerState();
 
         /// <summary>Installs validated production progress for Persistence.</summary>
         internal void RestoreProduction(ProductionState state)
@@ -128,6 +129,15 @@ namespace LivingWorld.Simulation.Core
         internal void RestoreSpoilage(SpoilageState state)
         {
             Spoilage = state ?? throw new ArgumentNullException(nameof(state));
+        }
+
+        /// <summary>
+        /// Installs validated debt ledger progress for Persistence. P2-12 wires the JSON
+        /// saver/loader to call this; tests and the loader use it directly until then.
+        /// </summary>
+        internal void RestoreDebtLedger(DebtLedgerState state)
+        {
+            DebtLedger = state ?? throw new ArgumentNullException(nameof(state));
         }
     }
 }
