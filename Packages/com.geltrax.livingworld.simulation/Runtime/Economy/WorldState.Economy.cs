@@ -17,6 +17,10 @@ namespace LivingWorld.Simulation.Core
         public WolfBountyState WolfBounty { get; private set; } = new WolfBountyState();
         public VillageFundState VillageFund { get; private set; } = new VillageFundState();
         public HarvestState Harvest { get; private set; } = new HarvestState();
+        public TaxState Tax { get; private set; } = new TaxState();
+        public CommunityFundState CommunityFund { get; private set; } = new CommunityFundState();
+        public EconomyBaselineState EconomyBaseline { get; private set; } = new EconomyBaselineState();
+        public SpoilageState Spoilage { get; private set; } = new SpoilageState();
 
         /// <summary>Installs validated production progress for Persistence.</summary>
         internal void RestoreProduction(ProductionState state)
@@ -88,6 +92,42 @@ namespace LivingWorld.Simulation.Core
         internal void RestoreHarvest(HarvestState state)
         {
             Harvest = state ?? throw new ArgumentNullException(nameof(state));
+        }
+
+        /// <summary>
+        /// Installs validated tax progress for Persistence. P2-12 wires the JSON
+        /// saver/loader to call this; tests and the loader use it directly until then.
+        /// </summary>
+        internal void RestoreTax(TaxState state)
+        {
+            Tax = state ?? throw new ArgumentNullException(nameof(state));
+        }
+
+        /// <summary>
+        /// Installs validated community fund progress for Persistence. P2-12 wires the JSON
+        /// saver/loader to call this; tests and the loader use it directly until then.
+        /// </summary>
+        internal void RestoreCommunityFund(CommunityFundState state)
+        {
+            CommunityFund = state ?? throw new ArgumentNullException(nameof(state));
+        }
+
+        /// <summary>
+        /// Installs the validated economy baseline for Persistence. P2-12 wires the JSON
+        /// saver/loader to call this; tests and the loader use it directly until then.
+        /// </summary>
+        internal void RestoreEconomyBaseline(EconomyBaselineState state)
+        {
+            EconomyBaseline = state ?? throw new ArgumentNullException(nameof(state));
+        }
+
+        /// <summary>
+        /// Installs validated spoilage progress for Persistence. P2-12 wires the JSON
+        /// saver/loader to call this; tests and the loader use it directly until then.
+        /// </summary>
+        internal void RestoreSpoilage(SpoilageState state)
+        {
+            Spoilage = state ?? throw new ArgumentNullException(nameof(state));
         }
     }
 }

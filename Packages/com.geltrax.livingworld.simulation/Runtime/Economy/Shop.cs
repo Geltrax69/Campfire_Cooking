@@ -123,7 +123,10 @@ namespace LivingWorld.Simulation.Economy
             if (world == null) throw new ArgumentNullException(nameof(world));
             if (request == null) throw new ArgumentNullException(nameof(request));
 
-            int unitPrice = ShopDiscount.DiscountedPrice(UnitPrice(request.Item),
+            // The shop sells its oldest lot first: a stale oldest lot marks the sale down by
+            // the item's approved stale price factor, before any friend discount.
+            int unitPrice = ShopDiscount.DiscountedPrice(
+                Stock.EffectiveUnitPrice(request.Item, UnitPrice(request.Item)),
                 DiscountPolicy != null ? DiscountPolicy.DiscountPercentFor(request.Buyer) : 0);
             int available = Stock.Count(request.Item);
             _ = request.Inventory.Count(request.Item);
