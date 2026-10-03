@@ -105,7 +105,8 @@ namespace LivingWorld.Simulation.Tests.Agents
         private static NpcState State(string id, int hunger, int energy, int social, NeedRates rates)
         {
             var definition = new NpcDefinition(new NpcId(id), id, 30, "test", "tester", Home, Home, 0,
-                new Dictionary<string, int> { ["honest"] = 50 }, rates);
+                new Dictionary<string, int> { ["honest"] = 50 }, rates,
+                new NpcSchedule(Array.Empty<ScheduleEntry>(), Array.Empty<ScheduleEntry>()));
             return new NpcState(definition, hunger, energy, social);
         }
     }

@@ -10,7 +10,7 @@ namespace LivingWorld.Simulation.Agents
     {
         public NpcDefinition(NpcId id, string name, int age, string gender, string occupation,
             LocationId home, LocationId workplace, int startingMoneyCopper,
-            IEnumerable<KeyValuePair<string, int>> traits, NeedRates needRates)
+            IEnumerable<KeyValuePair<string, int>> traits, NeedRates needRates, NpcSchedule schedule)
         {
             if (!id.IsValid) throw new ArgumentException("NPC ID must be valid.", nameof(id));
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name is required.", nameof(name));
@@ -22,6 +22,7 @@ namespace LivingWorld.Simulation.Agents
             if (startingMoneyCopper < 0) throw new ArgumentOutOfRangeException(nameof(startingMoneyCopper));
             if (traits == null) throw new ArgumentNullException(nameof(traits));
             if (needRates == null) throw new ArgumentNullException(nameof(needRates));
+            if (schedule == null) throw new ArgumentNullException(nameof(schedule));
 
             var sortedTraits = new SortedDictionary<string, int>(StringComparer.Ordinal);
             foreach (var trait in traits)
@@ -45,6 +46,7 @@ namespace LivingWorld.Simulation.Agents
             StartingMoneyCopper = startingMoneyCopper;
             Traits = new ReadOnlyDictionary<string, int>(sortedTraits);
             NeedRates = needRates;
+            Schedule = schedule;
         }
 
         public NpcId Id { get; }
@@ -57,5 +59,6 @@ namespace LivingWorld.Simulation.Agents
         public int StartingMoneyCopper { get; }
         public IReadOnlyDictionary<string, int> Traits { get; }
         public NeedRates NeedRates { get; }
+        public NpcSchedule Schedule { get; }
     }
 }
