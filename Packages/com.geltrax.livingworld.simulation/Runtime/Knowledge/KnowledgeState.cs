@@ -11,6 +11,7 @@ namespace LivingWorld.Simulation.Knowledge
         private readonly SortedDictionary<NpcId, MemoryStore> _memoryStores = new SortedDictionary<NpcId, MemoryStore>();
 
         private long _perceptionCursor;
+        private bool _relationshipsInitialized;
 
         /// <summary>Last world event ID perception has processed; zero before any event.</summary>
         internal long PerceptionCursor
@@ -54,6 +55,51 @@ namespace LivingWorld.Simulation.Knowledge
             if (Reputation != null) throw new InvalidOperationException("Reputation is already initialized.");
             Reputation = new ReputationState(standings);
         }
+
+        /// <summary>
+        /// Directed trust/affection between NPC pairs (world truth). It lives here, not in
+        /// Core, because relationships are social knowledge: the substrate the rumor and
+        /// reputation systems read, installed alongside the rest of what the world knows.
+        /// Installed once from Content at world build; P2-02 dynamics mutate it via Set.
+        /// </summary>
+        public RelationshipRegistry Relationships { get; } = new RelationshipRegistry();
+
+        /// <summary>
+        /// Installs the content relationships exactly once; every endpoint must already
+        /// be registered. A rejected batch installs nothing; a second call is rejected.
+        /// </summary>
+        public void InitializeRelationships(IEnumerable<Relationship> relationships)
+        {
+            if (relationships == null) throw new ArgumentNullException(nameof(relationships));
+            if (_relationshipsInitialized)
+                throw new InvalidOperationException("Relationships are already initialized.");
+            var staged = new List<Relationship>();
+            foreach (Relationship relationship in relationships)
+            {
+                if (relationship == null)
+                    throw new ArgumentException("Relationships cannot contain null.", nameof(relationships));
+                if (!_stores.ContainsKey(relationship.From))
+                    throw new InvalidOperationException("Unknown NPC '" + relationship.From.Value +
+                        "' in relationships.");
+                if (!_stores.ContainsKey(relationship.To))
+                    throw new InvalidOperationException("Unknown NPC '" + relationship.To.Value +
+                        "' in relationships.");
+                staged.Add(relationship);
+            }
+            Relationships.Restore(staged);
+            _relationshipsInitialized = true;
+        }
+
+        /// <summary>Captures the relationship pairs for Persistence, in deterministic pair order.</summary>
+        internal IReadOnlyList<Relationship> CaptureRelationships() => Relationships.Capture();
+
+        /// <summary>
+        /// Replaces relationship pairs with a validated snapshot for Persistence; a rejected
+        /// snapshot leaves the current pairs unchanged. This is the restore path, not
+        /// initialization: the world build still installs content relationships first.
+        /// </summary>
+        internal void RestoreRelationships(IEnumerable<Relationship> snapshot) =>
+            Relationships.Restore(snapshot);
 
         /// <summary>Replaces reputation standings with a validated snapshot for Persistence.</summary>
         internal void RestoreReputation(ReputationState state)
