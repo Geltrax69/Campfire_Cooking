@@ -113,7 +113,11 @@ namespace LivingWorld.Simulation.Knowledge
             WorldEvent conversation = state.Events.Append(state.Clock, context.Location,
                 WorldEventType.Conversation, ActorId.ForNpc(context.Speaker),
                 new[] { ActorId.ForNpc(context.Listener) }, EventVisibility.Quiet);
-            if (shouldAdopt) listenerStore.Set(candidate);
+            if (shouldAdopt)
+            {
+                listenerStore.Set(candidate);
+                RecordHeardWrongdoing(state, context.Listener, candidate);
+            }
             return new ConversationResult(conversation, selected, shouldAdopt ? candidate : null, wasMutated);
         }
 
@@ -147,6 +151,29 @@ namespace LivingWorld.Simulation.Knowledge
         {
             long weighted = (long)speakerConfidence * context.TrustPercent * context.PlausibilityPercent / 10000;
             return Math.Max(0, (int)weighted - context.ConfidenceLoss);
+        }
+
+        /// <summary>
+        /// A rumor about someone's wrongdoing that is believed with high confidence is
+        /// remembered second-hand: half the importance of witnessing it (the divisor is 2),
+        /// and no first-hand shift, so hearsay is remembered but never stings on sight —
+        /// the recall bound stays zero because there was no direct experience to relive.
+        /// </summary>
+        private const int HeardWrongdoingMinConfidence = 60;
+        private const int HeardWrongdoingImportanceDivisor = 2;
+
+        private static void RecordHeardWrongdoing(WorldState state, NpcId listener, Belief adopted)
+        {
+            if (adopted.Claim.Kind != BeliefClaimKind.WrongedBy) return;
+            if (adopted.Confidence < HeardWrongdoingMinConfidence) return;
+            if (!adopted.Claim.Subject.HasValue) return;
+            ActorId subject = adopted.Claim.Subject.Value;
+            if (subject.IsPlayer || !subject.Npc.HasValue) return;
+            if (!state.Knowledge.TryGet(listener, out _)) return; // Nowhere to remember.
+            int importance = Math.Max(1, adopted.Confidence / HeardWrongdoingImportanceDivisor);
+            state.Knowledge.GetMemories(listener).Remember(adopted.Claim, importance, state.Clock,
+                adopted.Source.OriginEventId);
+            state.Knowledge.RecordAttributedMemory(listener, adopted.Claim, 0, 0);
         }
 
         private static bool IsSafeDistortion(BeliefClaim original, BeliefClaim distorted)

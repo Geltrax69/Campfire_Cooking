@@ -87,6 +87,12 @@ namespace LivingWorld.Simulation.Economy
         public NpcId Owner { get; }
         public Inventory Stock { get; }
         public Wallet OwnerWallet { get; }
+
+        /// <summary>
+        /// Optional per-buyer discount policy (e.g. friend prices from the owner's
+        /// relationships). Null (the default) means every buyer pays the list price.
+        /// </summary>
+        public IShopDiscountPolicy DiscountPolicy { get; set; }
         public IReadOnlyList<KeyValuePair<ItemTypeId, int>> Prices
         {
             get
@@ -117,7 +123,8 @@ namespace LivingWorld.Simulation.Economy
             if (world == null) throw new ArgumentNullException(nameof(world));
             if (request == null) throw new ArgumentNullException(nameof(request));
 
-            int unitPrice = UnitPrice(request.Item);
+            int unitPrice = ShopDiscount.DiscountedPrice(UnitPrice(request.Item),
+                DiscountPolicy != null ? DiscountPolicy.DiscountPercentFor(request.Buyer) : 0);
             int available = Stock.Count(request.Item);
             _ = request.Inventory.Count(request.Item);
             int affordable = request.Wallet.Balance / unitPrice;
