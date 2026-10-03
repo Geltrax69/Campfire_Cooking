@@ -70,6 +70,13 @@ namespace LivingWorld.Simulation.Economy
             return true;
         }
 
+        internal void EnsureCanReceive(ItemTypeId item, int quantity)
+        {
+            _catalog.Require(item);
+            RequirePositive(quantity);
+            _ = checked(CountKnown(item) + quantity);
+        }
+
         private int CountKnown(ItemTypeId item)
         {
             return _counts.TryGetValue(item, out int count) ? count : 0;
