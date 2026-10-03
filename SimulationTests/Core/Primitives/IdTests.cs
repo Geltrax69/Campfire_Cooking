@@ -15,6 +15,7 @@ namespace LivingWorld.Simulation.Tests.Core.Primitives
             CheckId(value => new NpcId(value), id => id.Value, id => id.IsValid);
             CheckId(value => new LocationId(value), id => id.Value, id => id.IsValid);
             CheckId(value => new ItemTypeId(value), id => id.Value, id => id.IsValid);
+            CheckId(value => new ReputationGroupId(value), id => id.Value, id => id.IsValid);
         }
 
         private static void CheckId<T>(Func<string, T> create, Func<T, string> value, Func<T, bool> valid)
@@ -52,6 +53,7 @@ namespace LivingWorld.Simulation.Tests.Core.Primitives
             Assert.That(() => new NpcId(value), Throws.ArgumentException);
             Assert.That(() => new LocationId(value), Throws.ArgumentException);
             Assert.That(() => new ItemTypeId(value), Throws.ArgumentException);
+            Assert.That(() => new ReputationGroupId(value), Throws.ArgumentException);
         }
 
         [Test]
@@ -60,9 +62,12 @@ namespace LivingWorld.Simulation.Tests.Core.Primitives
             Assert.That(new NpcId("same").Equals((object)new LocationId("same")), Is.False);
             Assert.That(new LocationId("same").Equals((object)new ItemTypeId("same")), Is.False);
             Assert.That(new ItemTypeId("same").Equals((object)new NpcId("same")), Is.False);
+            Assert.That(new ReputationGroupId("same").Equals((object)new ItemTypeId("same")), Is.False);
             Assert.That(new NpcId("a") == new NpcId("a") && new NpcId("a") != new NpcId("A"), Is.True);
             Assert.That(new LocationId("a") == new LocationId("a") && new LocationId("a") != new LocationId("A"), Is.True);
             Assert.That(new ItemTypeId("a") == new ItemTypeId("a") && new ItemTypeId("a") != new ItemTypeId("A"), Is.True);
+            Assert.That(new ReputationGroupId("a") == new ReputationGroupId("a")
+                && new ReputationGroupId("a") != new ReputationGroupId("A"), Is.True);
         }
     }
 }
