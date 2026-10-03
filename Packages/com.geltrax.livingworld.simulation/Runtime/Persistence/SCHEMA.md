@@ -193,3 +193,9 @@ shop stock or an actor's belongings, makes saving fail with `SaveException`
    belongings, production/restock/price states, reputation (skip when null),
    travel (re-register NPCs and re-apply journeys when non-null).
 3. `AppleScenarioState` is harness-owned and intentionally not persisted.
+4. Wallet aliasing: a shop owner's wallet IS their personal wallet (one shared
+   object — `Shop.Purchase` has a `ReferenceEquals` fast path for self-purchase).
+   The save writes the copper value in both the shop and belongings sections;
+   the loader must validate they agree (contradiction → `LoadException`) and
+   restore a single shared `Wallet`. If a future phase ever wants them separate,
+   the schema needs an explicit aliasing marker.
