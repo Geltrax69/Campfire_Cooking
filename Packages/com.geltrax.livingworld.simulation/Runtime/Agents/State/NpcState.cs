@@ -16,10 +16,17 @@ namespace LivingWorld.Simulation.Agents
         public NpcDefinition Definition { get; }
         public NeedState Needs { get; }
         public bool IsSleeping { get; set; }
+        public NpcIntention CurrentIntention { get; private set; }
 
         public void AdvanceNeedsOneMinute()
         {
             if (!IsSleeping) Needs.AdvanceOneAwakeMinute(Definition.NeedRates);
+        }
+
+        internal void SetIntention(NpcIntention intention)
+        {
+            CurrentIntention = intention ?? throw new ArgumentNullException(nameof(intention));
+            IsSleeping = intention.Kind == ActivityKind.Sleep;
         }
     }
 }
