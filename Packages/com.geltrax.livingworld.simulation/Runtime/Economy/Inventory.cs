@@ -136,6 +136,20 @@ namespace LivingWorld.Simulation.Economy
         }
 
         /// <summary>
+        /// Freshness of the oldest lot (the one a removal or sale would take): non-perishable
+        /// goods and empty stocks report fresh. The eat system uses this to apply the right
+        /// effects for the food actually consumed.
+        /// </summary>
+        internal Freshness FreshnessOfOldestLot(ItemTypeId item)
+        {
+            _catalog.Require(item);
+            PerishableInfo perishable = _catalog[item].Perishable;
+            if (perishable == null) return Freshness.Fresh;
+            if (!_lots.TryGetValue(item, out Queue<StockLot> lots) || lots.Count == 0) return Freshness.Fresh;
+            return perishable.FreshnessAtAge(lots.Peek().AgeDays);
+        }
+
+        /// <summary>
         /// Ages every lot by one day, transitioning lots that cross their fresh and stale
         /// limits. Returns what turned stale and what spoiled (and was removed) so the
         /// caller can log the quiet events. Deterministic: items in sorted ID order.

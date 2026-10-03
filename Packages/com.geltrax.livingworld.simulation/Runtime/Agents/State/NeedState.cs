@@ -50,6 +50,16 @@ namespace LivingWorld.Simulation.Agents
             SocialSixtieths = social;
         }
 
+        /// <summary>
+        /// Eating reduces hunger: the eat system calls this after removing food from
+        /// the NPC's inventory. Clamped at zero; never negative.
+        /// </summary>
+        internal void ReduceHunger(int points)
+        {
+            if (points < 0) throw new ArgumentOutOfRangeException(nameof(points));
+            HungerSixtieths = Math.Max(0, HungerSixtieths - points * UnitsPerPoint);
+        }
+
         private static int ToSixtieths(int value, string parameterName)
         {
             if (value < 0 || value > 100) throw new ArgumentOutOfRangeException(parameterName);
