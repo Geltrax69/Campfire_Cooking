@@ -18,6 +18,17 @@ namespace LivingWorld.Simulation.Knowledge
         public NpcId Owner { get; }
         public int Count => _beliefs.Count;
 
+        internal void RemoveStockMissing(LocationId location, ItemTypeId itemType)
+        {
+            var removals = new List<BeliefClaim>();
+            foreach (var belief in _beliefs.Values)
+                if (belief.Claim.Kind == BeliefClaimKind.StockMissing && belief.Claim.Location == location &&
+                    belief.Claim.ItemType == itemType)
+                    removals.Add(belief.Claim);
+            foreach (var claim in removals)
+                _beliefs.Remove(claim);
+        }
+
         public void Set(Belief belief)
         {
             if (belief == null) throw new ArgumentNullException(nameof(belief));
