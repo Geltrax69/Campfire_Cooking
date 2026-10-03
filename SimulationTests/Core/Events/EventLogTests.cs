@@ -85,6 +85,43 @@ namespace LivingWorld.Simulation.Tests.Core.Events
         }
 
         [Test]
+        public void EconomyEventKindsPreserveAppendOrderAndSuppliedFacts()
+        {
+            var log = new EventLog();
+            var item = new ItemTypeId("apple");
+            WorldEventType[] types =
+            {
+                WorldEventType.RestockOrdered,
+                WorldEventType.Produced,
+                WorldEventType.Restocked,
+                WorldEventType.PriceChanged
+            };
+            Assert.That(new[]
+            {
+                WorldEventType.Purchase, WorldEventType.PartialPurchase, WorldEventType.FailedPurchase,
+                WorldEventType.Theft, WorldEventType.StockCounted, WorldEventType.Conversation,
+                WorldEventType.Departure, WorldEventType.Arrival
+            }.Select(type => (int)type), Is.EqualTo(Enumerable.Range(0, 8)));
+            Assert.That(types.Select(type => (int)type), Is.EqualTo(Enumerable.Range(8, 4)));
+
+            for (int i = 0; i < types.Length; i++)
+                log.Append(new GameTime(20), Farm, types[i], Owner, new[] { ActorId.Player },
+                    EventVisibility.Quiet, item, i + 1, 10 + i);
+
+            IReadOnlyList<WorldEvent> events = log.Query();
+            Assert.That(events.Select(entry => entry.Type), Is.EqualTo(types));
+            Assert.That(events.Select(entry => entry.Id.Value), Is.EqualTo(new long[] { 1, 2, 3, 4 }));
+            Assert.That(events.Select(entry => entry.Time), Is.All.EqualTo(new GameTime(20)));
+            Assert.That(events.Select(entry => entry.Location), Is.All.EqualTo(Farm));
+            Assert.That(events.Select(entry => entry.Actor), Is.All.EqualTo(Owner));
+            Assert.That(events.SelectMany(entry => entry.Targets), Is.All.EqualTo(ActorId.Player));
+            Assert.That(events.Select(entry => entry.Visibility), Is.All.EqualTo(EventVisibility.Quiet));
+            Assert.That(events.Select(entry => entry.ItemType), Is.All.EqualTo(item));
+            Assert.That(events.Select(entry => entry.Quantity), Is.EqualTo(new int?[] { 1, 2, 3, 4 }));
+            Assert.That(events.Select(entry => entry.Copper), Is.EqualTo(new int?[] { 10, 11, 12, 13 }));
+        }
+
+        [Test]
         public void InvalidAppendsLeaveRecordsNextIdAndTimeUnchanged()
         {
             var log = new EventLog();
