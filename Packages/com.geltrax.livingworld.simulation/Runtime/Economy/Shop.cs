@@ -81,15 +81,21 @@ namespace LivingWorld.Simulation.Economy
             Stock = stock;
             OwnerWallet = ownerWallet;
             _prices = new Dictionary<ItemTypeId, int>(ordered);
-            Prices = new ReadOnlyCollection<KeyValuePair<ItemTypeId, int>>(
-                new List<KeyValuePair<ItemTypeId, int>>(ordered));
         }
 
         public LocationId Location { get; }
         public NpcId Owner { get; }
         public Inventory Stock { get; }
         public Wallet OwnerWallet { get; }
-        public IReadOnlyList<KeyValuePair<ItemTypeId, int>> Prices { get; }
+        public IReadOnlyList<KeyValuePair<ItemTypeId, int>> Prices
+        {
+            get
+            {
+                var ordered = new SortedDictionary<ItemTypeId, int>(_prices);
+                return new ReadOnlyCollection<KeyValuePair<ItemTypeId, int>>(
+                    new List<KeyValuePair<ItemTypeId, int>>(ordered));
+            }
+        }
 
         public int UnitPrice(ItemTypeId item)
         {
@@ -97,6 +103,13 @@ namespace LivingWorld.Simulation.Economy
             if (!_prices.TryGetValue(item, out int price))
                 throw new ArgumentException("The shop does not sell this item.", nameof(item));
             return price;
+        }
+
+        internal void SetUnitPrice(ItemTypeId item, int price)
+        {
+            _ = UnitPrice(item);
+            if (price <= 0) throw new ArgumentOutOfRangeException(nameof(price));
+            _prices[item] = price;
         }
 
         public PurchaseResult Purchase(WorldState world, PurchaseRequest request)
