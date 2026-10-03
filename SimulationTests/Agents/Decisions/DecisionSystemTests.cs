@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using LivingWorld.Simulation.Agents;
 using LivingWorld.Simulation.Core;
+using LivingWorld.Simulation.Knowledge;
 using NUnit.Framework;
 
 namespace LivingWorld.Simulation.Tests.Agents
@@ -15,6 +16,7 @@ namespace LivingWorld.Simulation.Tests.Agents
         private static readonly LocationId Food = new LocationId("loc_food");
         private static readonly LocationId Shop = new LocationId("loc_shop");
         private static readonly LocationId Social = new LocationId("loc_social");
+        private static readonly ItemTypeId Apple = new ItemTypeId("item_apple");
 
         [Test]
         public void HungryNpcShopsOnlyWithSuppliedMoneyAndAvailability()
@@ -64,6 +66,65 @@ namespace LivingWorld.Simulation.Tests.Agents
         }
 
         [Test]
+        public void ConfidentOwnBeliefThatShopItemIsUnavailableChangesChoice()
+        {
+            var npc = State("npc_test", 90, 80, 80);
+            var withoutBelief = Decide(npc, Context(),
+                Tuning(eatHunger: 5, shopHunger: 10, adjustments: UnavailableAppleAdjustment(70, 500)));
+            Assert.That(withoutBelief.Kind, Is.EqualTo(ActivityKind.Shop));
+
+            npc = State("npc_test", 90, 80, 80);
+            var beliefs = BeliefsFor(npc.Definition.Id, Belief(Shop, Apple, quantity: 0, confidence: 80));
+            var withBelief = Decide(npc, Context(beliefs: beliefs),
+                Tuning(eatHunger: 5, shopHunger: 10, adjustments: UnavailableAppleAdjustment(70, 500)));
+            Assert.That(withBelief.Kind, Is.EqualTo(ActivityKind.Eat));
+        }
+
+        [Test]
+        public void AnotherNpcsMatchingBeliefDoesNotAffectDecision()
+        {
+            var decidingNpc = State("npc_deciding", 90, 80, 80);
+            var state = WorldStateAt(day: 1, hour: 14, decidingNpc);
+            var otherStore = state.Knowledge.Register(new NpcId("npc_other"));
+            otherStore.Set(Belief(Shop, Apple, quantity: 0, confidence: 100));
+            var decidingStore = state.Knowledge.Register(decidingNpc.Definition.Id);
+
+            new DecisionSystem(
+                Tuning(eatHunger: 5, shopHunger: 10, adjustments: UnavailableAppleAdjustment(70, 500)),
+                new FixedContexts(Context(beliefs: BeliefsFor(decidingStore.Owner, decidingStore.Query()))))
+                .Tick(state);
+
+            Assert.That(otherStore.Query(), Has.Count.EqualTo(1));
+            Assert.That(decidingNpc.CurrentIntention.Kind, Is.EqualTo(ActivityKind.Shop));
+        }
+
+        [Test]
+        public void LowConfidenceAndUnrelatedBeliefsPreserveExistingChoice()
+        {
+            var tuning = Tuning(eatHunger: 5, shopHunger: 10,
+                adjustments: UnavailableAppleAdjustment(70, 500));
+            var lowConfidenceNpc = State("npc_low", 90, 80, 80);
+            var lowConfidence = BeliefsFor(lowConfidenceNpc.Definition.Id,
+                Belief(Shop, Apple, quantity: 0, confidence: 69));
+            Assert.That(Decide(lowConfidenceNpc, Context(beliefs: lowConfidence), tuning).Kind,
+                Is.EqualTo(ActivityKind.Shop));
+
+            var unrelatedNpc = State("npc_unrelated", 90, 80, 80);
+            var unrelated = BeliefsFor(unrelatedNpc.Definition.Id,
+                Belief(Shop, new ItemTypeId("item_bread"), quantity: 0, confidence: 100));
+            Assert.That(Decide(unrelatedNpc, Context(beliefs: unrelated), tuning).Kind,
+                Is.EqualTo(ActivityKind.Shop));
+        }
+
+        [Test]
+        public void BeliefAdjustedSeededTieIsRepeatable()
+        {
+            ActivityKind first = RunBeliefTie(seed: 17);
+            Assert.That(RunBeliefTie(seed: 17), Is.EqualTo(first));
+            Assert.That(RunBeliefTie(seed: 17), Is.EqualTo(first));
+        }
+
+        [Test]
         public void DecisionInputsAndSystemMetadataAreValidated()
         {
             Assert.Throws<ArgumentNullException>(() => new DecisionSystem(null, new FixedContexts(Context())));
@@ -77,6 +138,14 @@ namespace LivingWorld.Simulation.Tests.Agents
             Assert.Throws<ArgumentOutOfRangeException>(() => new ActivityUtilityWeights(-1, 0, 0, 0, 0));
             Assert.Throws<ArgumentException>(() => new DecisionTuning(Array.Empty<KeyValuePair<ActivityKind, ActivityUtilityWeights>>(),
                 50, 1, TieBreakBehavior.SeededRandom));
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                new BeliefUtilityAdjustment(ActivityKind.Shop, UnavailableAppleClaim(), -1, 10));
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                new BeliefUtilityAdjustment(ActivityKind.Shop, UnavailableAppleClaim(), 70, 0));
+            Assert.Throws<ArgumentException>(() => new NpcBeliefSnapshot(default, Array.Empty<Belief>()));
+            var wrongOwner = BeliefsFor(new NpcId("npc_other"));
+            Assert.Throws<InvalidOperationException>(() =>
+                Decide(State("npc_test", 90, 80, 80), Context(beliefs: wrongOwner), Tuning()));
             Assert.That(new DecisionSystem(Tuning(), new FixedContexts(Context())).Phase, Is.EqualTo(SimulationPhase.Decisions));
             Assert.That(new DecisionSystem(Tuning(), new FixedContexts(Context())).Id, Is.EqualTo("agents.decisions"));
         }
@@ -97,6 +166,18 @@ namespace LivingWorld.Simulation.Tests.Agents
                 npc => npc.Definition.Id.Value, npc => npc.CurrentIntention.Kind), StringComparer.Ordinal);
         }
 
+        private static ActivityKind RunBeliefTie(ulong seed)
+        {
+            var npc = State("npc_test", 90, 80, 80);
+            var state = new WorldState(seed, Time(1, 14));
+            state.Npcs.Register(npc);
+            var beliefs = BeliefsFor(npc.Definition.Id, Belief(Shop, Apple, quantity: 0, confidence: 80));
+            new DecisionSystem(Tuning(eatHunger: 5, shopHunger: 10,
+                    adjustments: UnavailableAppleAdjustment(70, 450)),
+                new FixedContexts(Context(beliefs: beliefs))).Tick(state);
+            return npc.CurrentIntention.Kind;
+        }
+
         private static WorldState WorldStateAt(int day, int hour, NpcState npc)
         {
             var state = new WorldState(42, Time(day, hour));
@@ -115,19 +196,41 @@ namespace LivingWorld.Simulation.Tests.Agents
             return new NpcState(definition, hunger, energy, social);
         }
 
-        private static DecisionContext Context(int copper = 10, bool shopAvailable = true) =>
-            new DecisionContext(copper, shopAvailable, Food, Shop, Social);
+        private static DecisionContext Context(int copper = 10, bool shopAvailable = true,
+            NpcBeliefSnapshot beliefs = null) =>
+            new DecisionContext(copper, shopAvailable, Food, Shop, Social, beliefs);
 
         private static DecisionTuning Tuning(int schedule = 0, int eatHunger = 0,
-            int shopHunger = 0, int socialUrgency = 0)
+            int shopHunger = 0, int socialUrgency = 0,
+            IEnumerable<BeliefUtilityAdjustment> adjustments = null)
         {
             var values = Enum.GetValues(typeof(ActivityKind)).Cast<ActivityKind>().ToDictionary(kind => kind,
                 kind => new ActivityUtilityWeights(0, schedule, kind == ActivityKind.Eat ? eatHunger :
                     kind == ActivityKind.Shop ? shopHunger : 0, 0,
                     kind == ActivityKind.Socialize ? socialUrgency : 0));
             return new DecisionTuning(values, shopHungerThreshold: 70, shopMinimumCopper: 1,
-                TieBreakBehavior.SeededRandom);
+                TieBreakBehavior.SeededRandom, adjustments);
         }
+
+        private static IEnumerable<BeliefUtilityAdjustment> UnavailableAppleAdjustment(
+            int minimumConfidence, int penalty)
+        {
+            return new[] { new BeliefUtilityAdjustment(ActivityKind.Shop, UnavailableAppleClaim(),
+                minimumConfidence, penalty) };
+        }
+
+        private static BeliefClaim UnavailableAppleClaim() =>
+            new BeliefClaim(BeliefClaimKind.StockAvailable, Shop, Apple, quantity: 0);
+
+        private static Belief Belief(LocationId location, ItemTypeId item, int quantity, int confidence) =>
+            new Belief(new BeliefClaim(BeliefClaimKind.StockAvailable, location, item, quantity: quantity),
+                new BeliefSource(BeliefSourceKind.Inferred), confidence, Time(1, 13));
+
+        private static NpcBeliefSnapshot BeliefsFor(NpcId owner, params Belief[] beliefs) =>
+            new NpcBeliefSnapshot(owner, beliefs);
+
+        private static NpcBeliefSnapshot BeliefsFor(NpcId owner, IEnumerable<Belief> beliefs) =>
+            new NpcBeliefSnapshot(owner, beliefs);
 
         private static GameTime Time(int day, int hour) => new GameTime((day - 1L) * 1440 + hour * 60);
 
