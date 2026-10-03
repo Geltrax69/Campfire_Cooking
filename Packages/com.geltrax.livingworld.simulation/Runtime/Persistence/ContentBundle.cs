@@ -72,10 +72,30 @@ namespace LivingWorld.Simulation.Persistence
                 if (!seen.Add(id)) throw new LoadException("Duplicate item ID '" + id.Value + "' in " + path + ".");
                 definitions.Add(new ItemDefinition(id, RequiredText(row, "name", path),
                     RequiredText(row, "category", path), row.GetProperty("baseValue").GetInt32(),
-                    row.GetProperty("phase").GetInt32()));
+                    row.GetProperty("phase").GetInt32(), perishable: LoadPerishable(row, path)));
             }
             try { return new ItemCatalog(definitions); }
             catch (Exception failure) { throw new LoadException("Invalid item catalog in " + path + ".", failure); }
+        }
+
+        private static PerishableInfo LoadPerishable(JsonElement row, string path)
+        {
+            // Reason: the approved `perishable` block in items.json is the two-stage
+            // spoilage spec (P2-09); items without it never spoil.
+            if (!row.TryGetProperty("perishable", out JsonElement spec)
+                || spec.ValueKind == JsonValueKind.Null) return null;
+            int? hunger = null, health = null;
+            if (spec.TryGetProperty("staleEffect", out JsonElement effect))
+            {
+                if (effect.TryGetProperty("hunger", out JsonElement h)) hunger = h.GetInt32();
+                if (effect.TryGetProperty("health", out JsonElement hp)) health = hp.GetInt32();
+            }
+            string staleName = spec.TryGetProperty("staleName", out JsonElement sn) ? sn.GetString() : null;
+            string spoiledName = spec.TryGetProperty("spoiledName", out JsonElement rn) ? rn.GetString() : null;
+            int pricePercent = (int)Math.Round(spec.GetProperty("stalePriceFactor").GetDouble() * 100);
+            return new PerishableInfo(spec.GetProperty("freshDays").GetInt32(),
+                spec.GetProperty("staleDays").GetInt32(), pricePercent,
+                staleName, spoiledName, hunger, health);
         }
 
         private static LocationMap LoadLocationMap(string path)
