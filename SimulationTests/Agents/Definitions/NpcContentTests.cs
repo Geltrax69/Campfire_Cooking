@@ -17,7 +17,8 @@ namespace LivingWorld.Simulation.Tests.Agents
         private const string Row = "{\"id\":\"npc_test\",\"name\":\"Test\",\"age\":34,\"gender\":\"female\","
             + "\"occupation\":\"shopkeeper\",\"home\":\"loc_home\",\"workplace\":\"loc_home\",\"money\":850,"
             + "\"traits\":{\"honest\":85,\"friendly\":65},"
-            + "\"needRates\":{\"hungerPerHour\":6,\"energyPerHour\":4,\"socialPerHour\":3}}";
+            + "\"needRates\":{\"hungerPerHour\":6,\"energyPerHour\":4,\"socialPerHour\":3},"
+            + "\"schedule\":{\"workday\":[],\"restday\":[]}}";
         private static readonly LocationId Home = new LocationId("loc_home");
         private static LocationMap Map() => new LocationMap(
             new[] { new LocationDefinition(Home, "Home", "home", 0, 0) }, Array.Empty<TravelLink>());
@@ -159,6 +160,7 @@ namespace LivingWorld.Simulation.Tests.Agents
 
         private static NpcDefinition Define(IEnumerable<KeyValuePair<string, int>> traits, NpcId? id = null,
             LocationId? home = null, LocationId? workplace = null) => new NpcDefinition(id ?? new NpcId("npc_test"),
-                "Test", 34, "female", "shopkeeper", home ?? Home, workplace ?? Home, 850, traits, new NeedRates(6, 4, 3));
+                "Test", 34, "female", "shopkeeper", home ?? Home, workplace ?? Home, 850, traits,
+                new NeedRates(6, 4, 3), new NpcSchedule(Array.Empty<ScheduleEntry>(), Array.Empty<ScheduleEntry>()));
     }
 }

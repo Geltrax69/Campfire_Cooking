@@ -39,15 +39,19 @@ namespace LivingWorld.Simulation.Agents
                 if (!row.Money.HasValue) throw new SerializationException("NPC money is required.");
                 if (row.Traits == null) throw new SerializationException("NPC traits are required.");
                 if (row.NeedRates == null) throw new SerializationException("NPC needRates are required.");
+                if (row.Schedule == null || row.Schedule.Workday == null || row.Schedule.Restday == null)
+                    throw new SerializationException("NPC workday and restday schedules are required.");
                 if (!row.NeedRates.HungerPerHour.HasValue || !row.NeedRates.EnergyPerHour.HasValue
                     || !row.NeedRates.SocialPerHour.HasValue)
                     throw new SerializationException("All NPC need rates are required.");
 
                 var rates = new NeedRates(row.NeedRates.HungerPerHour.Value,
                     row.NeedRates.EnergyPerHour.Value, row.NeedRates.SocialPerHour.Value);
+                var schedule = new NpcSchedule(LoadSchedule(row.Schedule.Workday, locations),
+                    LoadSchedule(row.Schedule.Restday, locations));
                 var definition = new NpcDefinition(id, RequiredText(row.Name, "name"), row.Age.Value,
                     RequiredText(row.Gender, "gender"), RequiredText(row.Occupation, "occupation"),
-                    home, workplace, row.Money.Value, row.Traits, rates);
+                    home, workplace, row.Money.Value, row.Traits, rates, schedule);
                 if (definitions.ContainsKey(id)) throw new SerializationException("NPC IDs must be unique.");
                 definitions.Add(id, definition);
             }
@@ -70,6 +74,51 @@ namespace LivingWorld.Simulation.Agents
             }
         }
 
+        private static IReadOnlyList<ScheduleEntry> LoadSchedule(ScheduleEntryDto[] rows, LocationMap locations)
+        {
+            var entries = new List<ScheduleEntry>(rows.Length);
+            foreach (ScheduleEntryDto row in rows)
+            {
+                if (row == null) throw new SerializationException("Schedule entries must not be null.");
+                var location = new LocationId(RequiredText(row.Location, "schedule location"));
+                ValidateLocation(locations, location, "schedule location");
+                entries.Add(new ScheduleEntry(ParseActivity(row.Activity), ParseTime(row.From, "from"),
+                    ParseTime(row.To, "to"), location));
+            }
+            return entries;
+        }
+
+        private static ActivityKind ParseActivity(string value)
+        {
+            switch (RequiredText(value, "schedule activity"))
+            {
+                case "eat": return ActivityKind.Eat;
+                case "sleep": return ActivityKind.Sleep;
+                case "work": return ActivityKind.Work;
+                case "socialize": return ActivityKind.Socialize;
+                case "shop": return ActivityKind.Shop;
+                case "rest": return ActivityKind.Rest;
+                case "chores": return ActivityKind.Chores;
+                case "pray": return ActivityKind.Pray;
+                case "learn": return ActivityKind.Learn;
+                case "play": return ActivityKind.Play;
+                default: throw new SerializationException("Unknown NPC schedule activity.");
+            }
+        }
+
+        private static int ParseTime(string value, string field)
+        {
+            value = RequiredText(value, "schedule " + field);
+            if (value.Length != 5 || value[2] != ':' || value[0] < '0' || value[0] > '9'
+                || value[1] < '0' || value[1] > '9' || value[3] < '0' || value[3] > '9'
+                || value[4] < '0' || value[4] > '9')
+                throw new SerializationException("Schedule times must use strict HH:mm format.");
+            int hour = (value[0] - '0') * 10 + value[1] - '0';
+            int minute = (value[3] - '0') * 10 + value[4] - '0';
+            if (hour >= 24 || minute >= 60) throw new SerializationException("Schedule time is out of range.");
+            return hour * 60 + minute;
+        }
+
         [DataContract]
         private sealed class NpcDocumentDto
         {
@@ -90,6 +139,7 @@ namespace LivingWorld.Simulation.Agents
             [DataMember(Name = "money", IsRequired = true)] public int? Money { get; set; }
             [DataMember(Name = "traits", IsRequired = true)] public Dictionary<string, int> Traits { get; set; }
             [DataMember(Name = "needRates", IsRequired = true)] public NeedRatesDto NeedRates { get; set; }
+            [DataMember(Name = "schedule", IsRequired = true)] public ScheduleDto Schedule { get; set; }
         }
 
         [DataContract]
@@ -98,6 +148,22 @@ namespace LivingWorld.Simulation.Agents
             [DataMember(Name = "hungerPerHour", IsRequired = true)] public int? HungerPerHour { get; set; }
             [DataMember(Name = "energyPerHour", IsRequired = true)] public int? EnergyPerHour { get; set; }
             [DataMember(Name = "socialPerHour", IsRequired = true)] public int? SocialPerHour { get; set; }
+        }
+
+        [DataContract]
+        private sealed class ScheduleDto
+        {
+            [DataMember(Name = "workday", IsRequired = true)] public ScheduleEntryDto[] Workday { get; set; }
+            [DataMember(Name = "restday", IsRequired = true)] public ScheduleEntryDto[] Restday { get; set; }
+        }
+
+        [DataContract]
+        private sealed class ScheduleEntryDto
+        {
+            [DataMember(Name = "activity", IsRequired = true)] public string Activity { get; set; }
+            [DataMember(Name = "from", IsRequired = true)] public string From { get; set; }
+            [DataMember(Name = "to", IsRequired = true)] public string To { get; set; }
+            [DataMember(Name = "location", IsRequired = true)] public string Location { get; set; }
         }
     }
 }
