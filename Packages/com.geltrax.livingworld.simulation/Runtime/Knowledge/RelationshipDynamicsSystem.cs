@@ -35,6 +35,12 @@ namespace LivingWorld.Simulation.Knowledge
         private const int TheftTrustFactor = 4;
         // Decay: each in-game day, every shifted axis moves this many points toward baseline.
         private const int DecayPointsPerDay = 1;
+        // Attributed memories: only shifts that actually move a pair by this much leave a
+        // memory about the actor (tavern small-talk at +1 does not; honest trade at +2 does).
+        private const int AttributedMemoryShiftThreshold = 2;
+        // Memory importance = 20 x shift magnitude: 2 -> 40 Notable, 3 -> 60 Important,
+        // 4-5 -> 80-100 Major. A trusted friend's betrayal is remembered for seasons.
+        private const int AttributedMemoryImportancePerPoint = 20;
 
         private const string StrangerBaselineReason = "Strangers";
         private const string LatelySeparator = " — lately: ";
@@ -84,8 +90,10 @@ namespace LivingWorld.Simulation.Knowledge
             // Only completed (full) purchases count; partial and failed ones do not.
             if (!TryNpcPair(trade.Actor, FirstTarget(trade), out NpcId buyer, out NpcId seller)) return;
             string cause = "honest trade at " + trade.Location.Value;
-            ApplyShift(state, trade, buyer, seller, HonestTradeTrustGain, 0, cause);
-            ApplyShift(state, trade, seller, buyer, HonestTradeTrustGain, 0, cause);
+            ApplyShift(state, trade, buyer, seller, HonestTradeTrustGain, 0, cause,
+                BeliefClaimKind.FairTradeWith);
+            ApplyShift(state, trade, seller, buyer, HonestTradeTrustGain, 0, cause,
+                BeliefClaimKind.FairTradeWith);
         }
 
         private static void ApplyGift(WorldState state, WorldEvent gift)
@@ -93,7 +101,7 @@ namespace LivingWorld.Simulation.Knowledge
             // Reason: a freely given gift warms the receiver toward the giver.
             if (!TryNpcPair(gift.Actor, FirstTarget(gift), out NpcId giver, out NpcId receiver)) return;
             ApplyShift(state, gift, receiver, giver, GiftTrustGain, GiftAffectionGain,
-                "received a gift from " + giver.Value);
+                "received a gift from " + giver.Value, BeliefClaimKind.GiftFrom);
         }
 
         private static void ApplyTavernConversation(WorldState state, WorldEvent conversation)
@@ -103,8 +111,12 @@ namespace LivingWorld.Simulation.Knowledge
             if (!TryNpcPair(conversation.Actor, FirstTarget(conversation),
                 out NpcId speaker, out NpcId listener)) return;
             string cause = "evening talk at the tavern with ";
-            ApplyShift(state, conversation, speaker, listener, 0, TavernChatAffectionGain, cause + listener.Value);
-            ApplyShift(state, conversation, listener, speaker, 0, TavernChatAffectionGain, cause + speaker.Value);
+            // Tavern talk shifts affection by only 1: below the memory threshold, so no
+            // attributed memory is ever formed here and the kind is unused (null).
+            ApplyShift(state, conversation, speaker, listener, 0, TavernChatAffectionGain, cause + listener.Value,
+                null);
+            ApplyShift(state, conversation, listener, speaker, 0, TavernChatAffectionGain, cause + speaker.Value,
+                null);
         }
 
         private static void ApplyWitnessedTheft(WorldState state, WorldEvent theft)
@@ -122,7 +134,7 @@ namespace LivingWorld.Simulation.Knowledge
                 int priorTrust = state.Knowledge.Relationships.Trust(witness, thief);
                 int drop = TheftBaseDrop + priorTrust * TheftTrustFactor / 100;
                 ApplyShift(state, theft, witness, thief, -drop, 0,
-                    "saw " + thief.Value + " steal at " + theft.Location.Value);
+                    "saw " + thief.Value + " steal at " + theft.Location.Value, BeliefClaimKind.WrongedBy);
             }
         }
 
@@ -131,7 +143,7 @@ namespace LivingWorld.Simulation.Knowledge
             // Reason: an unpaid debt breaks the lender's trust in the borrower.
             if (!TryNpcPair(missed.Actor, FirstTarget(missed), out NpcId debtor, out NpcId creditor)) return;
             ApplyShift(state, missed, creditor, debtor, -DebtMissedTrustLoss, 0,
-                debtor.Value + " missed a debt repayment");
+                debtor.Value + " missed a debt repayment", BeliefClaimKind.WrongedBy);
         }
 
         private static bool SawTheft(BeliefStore store, ActorId thief, WorldEventId theftId)
@@ -145,23 +157,44 @@ namespace LivingWorld.Simulation.Knowledge
         }
 
         private static void ApplyShift(WorldState state, WorldEvent trigger, NpcId from, NpcId to,
-            int trustDelta, int affectionDelta, string cause)
+            int trustDelta, int affectionDelta, string cause, BeliefClaimKind? memoryKind)
         {
             // Reason: shifts are clamped to 0–100 and always explain themselves in the reason.
+            // memoryKind names the attributed-memory claim for this interaction, or null when
+            // the interaction never forms one (only sub-threshold shifts may pass null).
             EnsureBaseline(state, from, to);
             state.Knowledge.TryGetRelationshipBaseline(from, to, out RelationshipBaseline baseline);
             RelationshipRegistry registry = state.Knowledge.Relationships;
-            int newTrust = Clamp(registry.Trust(from, to) + trustDelta);
-            int newAffection = Clamp(registry.Affection(from, to) + affectionDelta);
-            if (newTrust == registry.Trust(from, to) && newAffection == registry.Affection(from, to))
+            int oldTrust = registry.Trust(from, to);
+            int oldAffection = registry.Affection(from, to);
+            int newTrust = Clamp(oldTrust + trustDelta);
+            int newAffection = Clamp(oldAffection + affectionDelta);
+            if (newTrust == oldTrust && newAffection == oldAffection)
                 return; // Clamped at the edge: nothing moved, so nothing is logged.
             registry.Set(new Relationship(from, to, newTrust, newAffection,
                 baseline.Reason + LatelySeparator + cause));
             // The shift happens now: the event log requires non-decreasing times, and the
             // trigger's time can predate later log entries, so the shift is stamped with the
             // current clock (which never precedes any logged event time).
-            state.Events.Append(state.Clock, trigger.Location, WorldEventType.RelationshipShift,
+            WorldEvent shift = state.Events.Append(state.Clock, trigger.Location, WorldEventType.RelationshipShift,
                 ActorId.ForNpc(from), new[] { ActorId.ForNpc(to) }, EventVisibility.Quiet);
+            RecordAttributedMemory(state, shift, from, to, newTrust - oldTrust, newAffection - oldAffection,
+                memoryKind);
+        }
+
+        private static void RecordAttributedMemory(WorldState state, WorldEvent shift, NpcId from, NpcId to,
+            int trustMoved, int affectionMoved, BeliefClaimKind? memoryKind)
+        {
+            // Reason: the memory records what the NPC actually felt (post-clamp movement),
+            // never world truth beyond the shift itself. Only the shifted NPC holds it;
+            // rumor-spread memories are a later task.
+            int magnitude = Math.Max(Math.Abs(trustMoved), Math.Abs(affectionMoved));
+            if (magnitude < AttributedMemoryShiftThreshold || !memoryKind.HasValue) return;
+            if (!state.Knowledge.TryGet(from, out _)) return; // No knowledge store: nowhere to remember.
+            var claim = new BeliefClaim(memoryKind.Value, shift.Location, subject: ActorId.ForNpc(to));
+            state.Knowledge.GetMemories(from).Remember(claim,
+                magnitude * AttributedMemoryImportancePerPoint, state.Clock, shift.Id);
+            state.Knowledge.RecordAttributedMemory(from, claim, trustMoved, affectionMoved);
         }
 
         private static void EnsureBaseline(WorldState state, NpcId from, NpcId to)
