@@ -125,7 +125,11 @@ namespace LivingWorld.Simulation.Tests.Persistence
                 {
                     "formatVersion", "clock", "rngState", "eventLog", "pendingCommands", "npcs",
                     "beliefs", "memories", "perceptionCursor", "shops", "belongings",
-                    "production", "restock", "prices", "reputation", "travel"
+                    "production", "restock", "prices", "reputation", "travel",
+                    "relationships", "attributedMemories", "smithy", "merchantSchedule",
+                    "travelerSpend", "wolfBounty", "villageFund", "harvest", "tax",
+                    "communityFund", "economyBaseline", "spoilage", "debtLedger",
+                    "skills", "tavernPopularity", "ingredientDemand"
                 };
                 foreach (string section in sections)
                     Assert.That(root.TryGetProperty(section, out _), Is.True, section);
@@ -145,12 +149,12 @@ namespace LivingWorld.Simulation.Tests.Persistence
         }
 
         [Test]
-        public void FormatVersionIsTwo()
+        public void FormatVersionIsThree()
         {
             using (JsonDocument document = JsonDocument.Parse(WorldSaver.Save(RichWorld())))
             {
-                Assert.That(document.RootElement.GetProperty("formatVersion").GetInt32(), Is.EqualTo(2));
-                Assert.That(WorldSaver.FormatVersion, Is.EqualTo(2));
+                Assert.That(document.RootElement.GetProperty("formatVersion").GetInt32(), Is.EqualTo(3));
+                Assert.That(WorldSaver.FormatVersion, Is.EqualTo(3));
             }
         }
 

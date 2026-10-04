@@ -7,8 +7,8 @@ namespace LivingWorld.Simulation.Agents
 {
     /// <summary>
     /// What a cooked meal does to the eater and the village (P3-03, SKILLS.md section 2).
-    /// Meal quality moves happiness by round((quality - 50) / 25): a small daily effect
-    /// that compounds. Every meal is recorded as a MealEaten truth event carrying the
+    /// Meal quality moves happiness by a small step around average (+1 above, -1 below,
+    /// +2/-2 for the exceptional): a small daily effect that compounds. Every meal is recorded as a MealEaten truth event carrying the
     /// quality. Feeding someone is a social act: a good meal (quality >= 60) is given
     /// as a Gift, which the P2-03 relationship system rewards with +1 trust; a great
     /// meal (quality >= 80) adds +1 trust directly, for +2 total once the Social phase
@@ -25,16 +25,24 @@ namespace LivingWorld.Simulation.Agents
         private const int DirectTrustBonus = 1;
 
         /// <summary>
-        /// Happiness shift for a meal of the given quality: round((quality - 50) / 25).
-        /// Quality 80 gives +1, 100 gives +2, 25 gives -1, 50 gives 0. Quality is an
-        /// integer 0-100, so (quality - 50) / 25 never lands exactly on a .5 midpoint
-        /// and the rounding mode never matters.
+        /// Happiness shift for a meal of the given quality. The reachable cooking
+        /// band is quality 50-54 (a level bonus on the 50 input-quality base), so
+        /// the curve is calibrated for small differences around average: an
+        /// above-average meal is a small daily lift (+1), a great one (85+) is
+        /// remembered longer (+2), and the scale is symmetric below average.
+        /// Quality 80 gives +1, 100 gives +2, 50 gives 0, 25 gives -1.
         /// </summary>
         public static int HappinessDeltaForQuality(int quality)
         {
             if (quality < 0 || quality > 100)
                 throw new ArgumentOutOfRangeException(nameof(quality), "Meal quality is 0-100.");
-            return (int)Math.Round((quality - 50) / 25.0);
+            // A good cook's stew is a small daily happiness that compounds
+            // (WORLD.md section 8, SKILLS.md section 1): a level-3 cook's
+            // quality-52 stew must lift mood, which the old round((q-50)/25)
+            // curve could not do — ordinary cooking never reaches quality 63.
+            if (quality == 50) return 0;
+            if (quality > 50) return quality >= 85 ? 2 : 1;
+            return quality <= 15 ? -2 : -1;
         }
 
         /// <summary>

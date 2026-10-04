@@ -27,17 +27,19 @@ namespace LivingWorld.Simulation.Agents
         /// Everything is validated before anything is built; a failed restore throws
         /// without mutating its inputs.
         /// </summary>
+        /// <remarks>
+        /// The sleeping flag and the intention are restored independently, without
+        /// requiring them to agree: the running world sets IsSleeping from the
+        /// NPC's schedule every tick (NeedsSystem) while the intention driver is
+        /// still unwired, so a night-time save honestly carries IsSleeping=true
+        /// with no Sleep intention. IsSleeping is recomputed from the schedule on
+        /// the next tick, so the disagreement is transient and self-healing.
+        /// </remarks>
         internal static NpcState Restore(NpcDefinition definition, NeedState needs,
             bool isSleeping, NpcIntention intention)
         {
             if (definition == null) throw new ArgumentNullException(nameof(definition));
             if (needs == null) throw new ArgumentNullException(nameof(needs));
-            bool sleepsByIntention = intention != null && intention.Kind == ActivityKind.Sleep;
-            if (isSleeping != sleepsByIntention)
-                throw new ArgumentException(
-                    "The sleeping flag must agree with the restored intention: sleeping requires " +
-                    "a Sleep intention, being awake requires no intention or a non-Sleep intention.",
-                    nameof(isSleeping));
             // Copy the exact sixtieths so the restored NPC owns its needs and later caller
             // changes to the snapshot cannot leak into the world.
             var exact = NeedState.FromSixtieths(needs.HungerSixtieths, needs.EnergySixtieths,

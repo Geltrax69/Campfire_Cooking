@@ -12,7 +12,8 @@ namespace LivingWorld.Simulation.Tests.Tools
     /// <summary>
     /// Builds the full Phase 2 village: every NPC from approved Content with starting
     /// needs, knowledge stores and relationships, every Phase 2 setup in dependency
-    /// order, friend pricing on the shops, and every system registered in phase order
+    /// order, friend pricing on the shops, the Phase 3 tavern-popularity and
+    /// ingredient-demand systems, and every system registered in phase order
     /// (the world runs systems in registration order, so this is the phase order).
     ///
     /// Assembly order and why:
@@ -224,6 +225,10 @@ namespace LivingWorld.Simulation.Tests.Tools
             world.RegisterSystem(new CommunityFundSystem(new[] { sinks.CommunityFund() }));
             world.RegisterSystem(new SpoilageSystem(new[] { sinks.Spoilage() }));
             world.RegisterSystem(new DebtSystem(new[] { debts }));
+            // Phase 3: tavern renown and ingredient demand (P3-03). Both decay once
+            // per game day; the acceptance scenario's cooking keeps them moving.
+            world.RegisterSystem(new TavernPopularitySystem());
+            world.RegisterSystem(new IngredientDemandSystem());
             // Memory.
             using (Stream stream = File.OpenRead(Path.Combine(contentRoot, "Content", "social", "social.json")))
                 world.RegisterSystem(new MemorySystem(MemoryRules.Load(stream)));
