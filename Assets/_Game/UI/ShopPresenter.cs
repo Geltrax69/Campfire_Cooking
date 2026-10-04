@@ -25,6 +25,7 @@ namespace LivingWorld.Game.UI
         public ShopPresenter(IShopCommands commands) { _commands = commands; }
         public void Update(int stock, int price, int coins, bool paused, int playerApples = 0)
         {
+            bool recovering = !Ready;
             if (Pending)
             {
                 bool completed = _pendingBuy ? coins < _coins : playerApples >= _apples + 6;
@@ -32,7 +33,7 @@ namespace LivingWorld.Game.UI
             }
             _apples = playerApples;
             _stock = stock; _price = price; _coins = coins; Paused = paused; Ready = true;
-            if (Message == "Connecting to the village…") Message = "Choose an action. The village keeps living while you browse.";
+            if (recovering || Message == "Connecting to the village…") Message = "Choose an action. The village keeps living while you browse.";
             Pending = false;
         }
         public void Unavailable(string message) { Ready = false; Pending = false; Message = message; }

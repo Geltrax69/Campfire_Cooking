@@ -81,6 +81,11 @@ remain human checks. New large files need LFS approval; no asset history
 migration was performed. Unity-generated .meta files are versioned to keep
 references stable; original vendor art files were not changed.
 
-Final Unity verification: 16 EditMode tests and one PlayMode interaction test
+Final Unity verification: 17 EditMode tests and two PlayMode interaction/configuration tests
 passed. Captures are in ignored TestResults/. Mac development build is at
 Builds/LivingWorld.app (generated, not versioned). See UNITY_VALIDATION.md.
+
+Active Input Handling must enable Input System (currently Both). Restart Unity
+if this setting changes; the Mac build helper refuses stale compilation defines.
+Standalone Mac shop opening, purchasing, stealing, pause/resume and closing were
+verified with actual mouse clicks; see UNITY_VALIDATION.md.

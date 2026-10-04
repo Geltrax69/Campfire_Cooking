@@ -64,6 +64,19 @@ namespace LivingWorld.Game.UI.Tests
             Assert.That(shop.Paused, Is.True); Assert.That(shop.Pending, Is.True);
             Assert.That(shop.CanBuy, Is.False); Assert.That(commands.Paused, Is.False);
         }
+        [Test] public void ValidSnapshotClearsStartupUnavailableMessage()
+        {
+            var commands = new Commands(); var shop = new ShopPresenter(commands);
+            shop.Unavailable("Village unavailable. Check the scene's WorldRunner and content setup.");
+            shop.Update(20, 3, 15, true);
+            Assert.That(shop.Ready, Is.True);
+            Assert.That(shop.Message, Does.StartWith("Choose an action"));
+            Assert.That(shop.CanBuy, Is.True);
+            shop.Buy();
+            Assert.That(commands.Bought, Is.EqualTo(1));
+            Assert.That(shop.Pending, Is.True);
+            Assert.That(shop.Message, Does.Contain("Resume"));
+        }
         [Test] public void FaultClearsPendingAndDisablesActions()
         {
             var commands = new Commands(); var shop = new ShopPresenter(commands);

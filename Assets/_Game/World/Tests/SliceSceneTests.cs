@@ -17,6 +17,9 @@ namespace LivingWorld.Game.World.Tests
         [UnityTest]
         public IEnumerator SceneWiresShopColliderAndCapturesLandscapeUi()
         {
+#if !ENABLE_INPUT_SYSTEM
+            Assert.Fail("Input System must be active; restart Unity after changing Active Input Handling.");
+#endif
             yield return SceneManager.LoadSceneAsync("AppleShopSlice");
             yield return null;
             var runner = Object.FindFirstObjectByType<WorldRunner>();
@@ -66,6 +69,17 @@ namespace LivingWorld.Game.World.Tests
             ScreenCapture.CaptureScreenshot("TestResults/apple-shop-small-landscape.png");
             yield return null;
         }
+#if UNITY_EDITOR
+        [Test]
+        public void ProjectSettingsEnableInputSystem()
+        {
+            var settings = new UnityEditor.SerializedObject(
+                UnityEditor.AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/ProjectSettings.asset")[0]);
+            var inputHandler = settings.FindProperty("activeInputHandler");
+            Assert.That(inputHandler, Is.Not.Null);
+            Assert.That(inputHandler.intValue, Is.Not.EqualTo(0), "Legacy-only input disables shop pointer handling.");
+        }
+#endif
         private static void SetCaptureSize(int width, int height)
         {
 #if UNITY_EDITOR

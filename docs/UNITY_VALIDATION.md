@@ -17,15 +17,15 @@ Unity project, not completion of the Unity Phase.
 ## Validation
 
 - Simulation: 875/875 passed, Debug, .NET 8.0.425.
-- Final Unity EditMode: **16/16 passed**, including JSON parsing/writing
+- Final Unity EditMode: **17/17 passed**, including JSON parsing/writing
   inside Unity and regression tests for clock boundaries and pause state.
-- Runtime PlayMode: 1/1 passed; an actual Buy-button submit leaves stock
+- Runtime PlayMode: 2/2 passed; an actual Buy-button submit leaves stock
   unchanged until the tick, then moves one apple and charges three copper.
 - Graphics captures: 1366×1024 and 844×390 actual Game View dimensions.
   A compact layout correction was required after first screenshot inspection.
 - Local Mac development build: succeeded (Mono); iOS/IL2CPP not verified.
 
-Final PlayMode confirmation: **1/1 passed** after the compact layout correction.
+Final PlayMode confirmation: **2/2 passed** after the compact layout correction.
 Both captures were visually inspected; shop actions are visible on both sizes.
 
 ## Remaining / known limitations
@@ -49,3 +49,28 @@ asset/scene references remain stable. No new large art assets or LFS migration.
 
 The simulation limitations in OPEN_QUESTIONS.md remain open; starting Unity
 was not approval to change animal pacing, weather, health or persistence rules.
+
+## Standalone Mac follow-up
+
+Real app testing caught a gap in the initial validation: the original Mac build
+used legacy-only input, so the Input System shop pointer was inactive. The
+project now enables Both input backends. The scene/build setup checks that
+Input System compilation is active and refuses a build needing an editor
+restart. Runtime purchase tests alone were not proof of pointer interaction.
+
+The rebuilt standalone app was operated using actual mouse clicks: pause,
+click shop to open, queue Buy one while paused, Resume to process, Take six,
+and close. Purchase changed stock20→19, copper15→12 and player apples0→1.
+The theft changed stock19→13 and player apples1→7 without changing copper.
+Closing the panel did not reopen it through the underlying scene collider.
+No runtime exceptions were found in Player.log. Unity's text engine reports a
+nonfatal ICU fallback for basic line breaking; non-Latin/emoji text is not
+validated by this prototype.
+
+Also fixed startup recovery: if HUD enables before the runner initializes,
+the first valid snapshot now clears its stale “Village unavailable” message.
+A regression test covers recovery and queuing while paused. Screenshots of
+the real app are kept under ignored TestResults/mac-*.png.
+
+Follow-up checks: 17/17 EditMode and 2/2 PlayMode passed; the extra PlayMode
+check rejects legacy-only Active Input Handling.

@@ -293,3 +293,5 @@ Add new entries at the bottom: date, decision, reason.
 
 | 2026-10-04 | Owner authorized Unity; first slice is Apple shop and village | Establish the real simulation-to-Unity boundary before the full playable village. |
 | 2026-10-04 | Ship System.Text.Json 8.0.6 and its non-platform runtime dependencies with simulation package, retaining MIT licenses | Unity lacks the serializer used by existing simulation; preserve schema and behavior instead of rewriting persistence. Orchestrator approved; IL2CPP remains to verify. |
+
+| 2026-10-04 | Enable Both input backends and reject builds without active Input System compilation | Real Mac mouse testing exposed legacy-only setting; enforce the fixed touch-first Input System choice while preserving editor tooling. |

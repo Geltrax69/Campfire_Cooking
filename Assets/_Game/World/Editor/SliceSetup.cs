@@ -73,10 +73,25 @@ namespace LivingWorld.Game.World.Editor
             Debug.Log("Apple shop slice generated. Preview lighting only; movement, NPC navigation and day/night are not implemented.");
         }
 
-        private static void ConfigureProduct()
+        private static void ConfigureProduct(bool building = false)
         {
             PlayerSettings.productName = "Living World";
             PlayerSettings.companyName = "Geltrax";
+            var settings = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/ProjectSettings.asset")[0]);
+            var inputHandler = settings.FindProperty("activeInputHandler");
+            if (inputHandler == null) throw new System.InvalidOperationException("Cannot verify Active Input Handling in this Unity version.");
+            var changed = inputHandler.intValue == 0;
+            if (changed)
+            {
+                inputHandler.intValue = 2; // Both preserves editor tooling while enabling touch via Input System.
+                settings.ApplyModifiedPropertiesWithoutUndo();
+                AssetDatabase.SaveAssets();
+                if (building) throw new System.InvalidOperationException("Input System was enabled. Restart Unity before building so input compilation defines match PlayerSettings.");
+                Debug.LogWarning("Input System enabled. Restart Unity before playing or building the slice.");
+            }
+#if !ENABLE_INPUT_SYSTEM
+            if (building) throw new System.InvalidOperationException("Input System compilation is inactive. Restart Unity after enabling Active Input Handling before building.");
+#endif
         }
 
         private static void ConfigurePipeline()
@@ -131,7 +146,7 @@ namespace LivingWorld.Game.World.Editor
         /// <summary>Builds the generated slice as a local Mac smoke-test application.</summary>
         public static void BuildMac()
         {
-            ConfigureProduct();
+            ConfigureProduct(true);
             Directory.CreateDirectory("Builds");
             var report = BuildPipeline.BuildPlayer(new[] { ScenePath }, "Builds/LivingWorld.app",
                 BuildTarget.StandaloneOSX, BuildOptions.Development);

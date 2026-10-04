@@ -20,8 +20,8 @@ completed task evidence. The current full simulation suite passed **875/875** on
 using .NET 8.0.425 on 2026-10-04.
 The owner authorized the Unity Phase and selected an Apple shop and village
 slice. Unity project/package setup and the first bridge are implemented; the
-U-02 scene slice and U-07 shop UI slice passed 16 EditMode tests and one
-runtime interaction test, with iPad/small landscape captures visually checked. These slices do not complete the full village tasks. iOS Build Support is not installed. Known simulation limitations
+U-02 scene slice and U-07 shop UI slice passed 17 EditMode tests and two
+runtime/configuration tests, with iPad/small landscape captures visually checked. These slices do not complete the full village tasks. iOS Build Support is not installed. Known simulation limitations
 remain tracked in [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
 See `docs/tasks/completed/` for finished task evidence and
 [DEVELOPMENT.md](DEVELOPMENT.md) for local commands.
