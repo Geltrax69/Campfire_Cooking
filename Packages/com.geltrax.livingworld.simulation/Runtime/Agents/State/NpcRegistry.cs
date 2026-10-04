@@ -19,6 +19,9 @@ namespace LivingWorld.Simulation.Agents
         public int Count => _npcs.Count;
         public IReadOnlyList<NpcState> Npcs => _readOnlyNpcs;
 
+        /// <summary>True when an NPC with this ID is registered (P7-02 family setup).</summary>
+        public bool Contains(NpcId id) => id.IsValid && _npcs.ContainsKey(id);
+
         public NpcState this[NpcId id]
         {
             get

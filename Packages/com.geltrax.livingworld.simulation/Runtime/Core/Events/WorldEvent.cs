@@ -98,7 +98,16 @@ namespace LivingWorld.Simulation.Core
         /// is the primary truth record; this event lets perception, memory and
         /// rumor see it. ValidateType's upper bound was extended to cover it.
         /// </summary>
-        Death
+        Death,
+        /// <summary>
+        /// A baby was born to village parents (P7-02 addition, flagged for
+        /// orchestrator ratification: the Agents folder may not edit Core):
+        /// actor is the newborn NPC; targets are the mother and father;
+        /// location is the household home. The NpcState parent links are the
+        /// primary truth record; this event lets perception, memory and rumor
+        /// see it. ValidateType's upper bound was extended to cover it.
+        /// </summary>
+        Birth
     }
 
     /// <summary>Describes noticeability, not whether anybody actually perceived the event.</summary>
@@ -161,7 +170,7 @@ namespace LivingWorld.Simulation.Core
 
         internal static void ValidateType(WorldEventType type)
         {
-            if (type < WorldEventType.Purchase || type > WorldEventType.Death)
+            if (type < WorldEventType.Purchase || type > WorldEventType.Birth)
                 throw new ArgumentOutOfRangeException(nameof(type));
         }
 
