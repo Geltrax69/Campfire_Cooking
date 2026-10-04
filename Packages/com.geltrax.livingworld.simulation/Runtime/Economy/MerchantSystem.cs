@@ -136,10 +136,35 @@ namespace LivingWorld.Simulation.Economy
         public bool IsInitialized { get; }
         public long NextVisitDay { get; private set; }
 
+        /// <summary>
+        /// Total copper exchanged with traveling merchants this month, both directions
+        /// (village sales to the merchant and import purchases). P5-01 addition for the
+        /// trade stat; resets when the calendar month changes.
+        /// </summary>
+        public int CopperThisMonth { get; internal set; }
+
+        internal int TradeMonthIndex { get; private set; } = -1;
+
         internal void ScheduleNext(long day)
         {
             if (day < 1) throw new ArgumentOutOfRangeException(nameof(day));
             NextVisitDay = day;
+        }
+
+        /// <summary>
+        /// Records copper traded with the merchant in the given year-relative calendar
+        /// month, resetting the accumulator when the month changes. Deterministic:
+        /// the month comes from the caller's clock, never the wall clock.
+        /// </summary>
+        internal void RecordMerchantTrade(int copper, int monthIndex)
+        {
+            if (copper < 0) throw new ArgumentOutOfRangeException(nameof(copper));
+            if (monthIndex != TradeMonthIndex)
+            {
+                TradeMonthIndex = monthIndex;
+                CopperThisMonth = 0;
+            }
+            CopperThisMonth = checked(CopperThisMonth + copper);
         }
     }
 
@@ -212,6 +237,9 @@ namespace LivingWorld.Simulation.Economy
                 state.Events.Append(state.Clock, offer.Location, WorldEventType.Purchase,
                     ActorId.ForNpc(offer.Seller), visibility: configuration.Visibility,
                     itemType: offer.Item, quantity: units, copper: copper);
+                // P5-01: the trade stat reads this month's merchant copper from the schedule.
+                state.MerchantSchedule.RecordMerchantTrade(copper,
+                    VillageCalendar.MonthIndex(state.Clock));
                 if (!offer.Stock.TryRemove(offer.Item, units))
                     throw new InvalidOperationException("Preflighted stock removal unexpectedly failed.");
                 // The copper comes from outside the village: this is the merchant gate, where
@@ -242,6 +270,9 @@ namespace LivingWorld.Simulation.Economy
                 state.Events.Append(state.Clock, offer.Location, WorldEventType.Restocked,
                     ActorId.ForNpc(offer.Buyer), visibility: configuration.Visibility,
                     itemType: offer.Item, quantity: units, copper: copper);
+                // P5-01: import purchases count toward this month's merchant copper too.
+                state.MerchantSchedule.RecordMerchantTrade(copper,
+                    VillageCalendar.MonthIndex(state.Clock));
                 if (!offer.Till.TryDebit(copper))
                     throw new InvalidOperationException("Preflighted till debit unexpectedly failed.");
                 offer.Stock.Add(offer.Item, units);
