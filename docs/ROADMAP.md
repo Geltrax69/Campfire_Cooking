@@ -222,7 +222,21 @@ trade routes carrying goods and news between villages; level-of-detail simulatio
 | P6-02 | Trade routes: routes between villages (goods, prices, travel time); merchants carry goods; price differences drive trade | Economy | P6-01 | Tests: goods flow along routes; prices differ by village; merchant profit | done (2026-10-04) |
 | P6-03 | News travel: rumors and reputation spread between villages via travelers/merchants (delayed, distorted) | Knowledge | P6-01 | Tests: news from Millbrook reaches King's Rest after travel time; distortion | done (2026-10-04) |
 | P6-04 | Phase 6 acceptance: multi-village run; trade flows; news spreads; readable log | Test & Scenario | P6-01 … P6-03 | Tests: 30-day multi-village run; trade happened; news arrived; save/load preserves villages | done (2026-10-04) |
-| 7 | Reincarnation and generations (aging, families, inheritance) |
+| 7 | Reincarnation and generations (aging, families, inheritance) | next |
+
+## Phase 7: Reincarnation and generations (simulation only, no graphics)
+
+Planned 2026-10-04. Focus: NPC aging (birth → child → adult → elder → death);
+families (parent/child links, households); inheritance (money/items pass to heirs);
+reincarnation (player arrives as a stranger; the cycle continues). All new mutable
+state must be save/load-compatible.
+
+| Task | What | Area | Depends on | Pass condition | Status |
+|---|---|---|---|---|---|
+| P7-01 | Aging: NPC age advances yearly; life stages (child/adult/elder); death from old age (deterministic) | Agents | P6-04 | Tests: age advances; elders die; children become adults | done (2026-10-04) |
+| P7-02 | Families: parent/child links; households; children inherit household | Agents | P7-01 | Tests: parent/child links; household membership; children stay | done (2026-10-04) |
+| P7-03 | Inheritance: on death, money/items pass to heirs (spouse → children → village fund); wills (simple) | Economy, Agents | P7-02 | Tests: inheritance flows to heirs; money conserved; no orphans with wealth | done (2026-10-04) |
+| P7-04 | Phase 7 acceptance: multi-year run; generations turn over; inheritance works; readable log | Test & Scenario | P7-01 … P7-03 | Tests: 5-year run; deaths and births; inheritance; save/load preserves families | done (2026-10-04) |
 | 8 | AI dialogue from fact sheets (never changes game state) |
 
 ---
