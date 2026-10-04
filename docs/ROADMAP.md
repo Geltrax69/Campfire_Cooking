@@ -15,11 +15,15 @@ The orchestrator keeps this file current. Status values: `todo`, `doing`, `revie
 
 **Unity work does not start until the human says so.**
 
-**Verified checkpoint — 2026-10-04:** Design Phase complete; Phase 0 **4/4**;
-Phase 1 **19/21** (P1-01–P1-19). The integrated foundation has **278 passing
-tests** in both Debug and Release. This is not yet a playable game. Remaining:
-P1-20 (complete witness/no-witness Apple Test scenarios) and P1-21 (full save/load
-determinism). See `docs/tasks/completed/` for task evidence and
+**Checkpoint — 2026-10-04:** Design Phase and simulation Phases 0–8 have
+completed task evidence. The current full simulation suite passed **875/875** on this Mac
+using .NET 8.0.425 on 2026-10-04.
+The owner authorized the Unity Phase and selected an Apple shop and village
+slice. Unity project/package setup and the first bridge are implemented; the
+U-02 scene slice and U-07 shop UI slice passed 16 EditMode tests and one
+runtime interaction test, with iPad/small landscape captures visually checked. These slices do not complete the full village tasks. iOS Build Support is not installed. Known simulation limitations
+remain tracked in [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
+See `docs/tasks/completed/` for finished task evidence and
 [DEVELOPMENT.md](DEVELOPMENT.md) for local commands.
 
 ---
@@ -117,7 +121,7 @@ Run tasks in order unless marked parallel-safe. `Role` refers to `AGENTS.md` sec
 | P1-18 | Guard suspicion threshold + reputation by group | Knowledge | P1-15 | Test: guard acts only above threshold | done (2026-10-04; truth contracts and behavior PRs) |
 | P1-19 | Readable simulation log / daily report tool | Test & Scenario | P1-03 | Log reads like a story; CLI or test output | done (2026-10-03; foundation truth report) |
 | P1-20 | **Apple Test scenario tests** (witness and no-witness seeds, determinism) | Test & Scenario | P1-08 … P1-19 | All pass conditions above are automated | done (2026-10-04; harness + witness/no-witness acceptance and story report) |
-| P1-21 | Save/load full world state to JSON; determinism across save/load | Persistence | P1-20 | Test: run(1000) == save→load→run(1000) | doing (P1-21a/b/c restore contracts) |
+| P1-21 | Save/load full world state to JSON; determinism across save/load | Persistence | P1-20 | Test: run(1000) == save→load→run(1000) | done (P1-21a–f; later long-run animal drift remains in OPEN_QUESTIONS.md) |
 
 Parallel-safe groups once their dependencies are done: {P1-06, P1-09, P1-11}, {P1-16, P1-17, P1-19}.
 
@@ -259,24 +263,24 @@ mock with a clean contract an AI model could later implement.
 
 ## Unity Phase (last): see and play it
 
-**Starts only when the human says so.** Setup first:
+**Authorized by the owner on 2026-10-04.** First scope: Apple shop and village slice. Setup first:
 
 | ID | Task | Who |
 |---|---|---|
-| U-00a | Install Unity Hub + Unity 6 with iOS and Mac Build Support | Human |
-| U-00b | Add this folder as a project in Unity Hub; switch to URP | Human |
-| U-00c | Add packages: glTFast, Input System, AI Navigation, Cinemachine, Test Framework | Orchestrator |
-| U-00d | Git LFS for new large files (with human approval) | Orchestrator |
+| U-00a | Install Unity Hub + Unity 6 with iOS and Mac Build Support | Human — partial: Hub, Unity 6000.6.4f1 and Mac support installed; iOS missing |
+| U-00b | Add this folder as a project in Unity Hub; switch to URP | Orchestrator — done (Unity project initialized; URP scene generated) |
+| U-00c | Add packages: glTFast, Input System, AI Navigation, Cinemachine, Test Framework | Orchestrator — done |
+| U-00d | Git LFS for new large files (with human approval) | Orchestrator — deferred: no new large assets needed for slice |
 
 | ID | Task | Role |
 |---|---|---|
-| U-01 | `WorldRunner` bridge: tick at chosen time scale, publish state changes | Bridge |
-| U-02 | Village scene from Kenney kits (shop, farm, tavern, homes, square, forest edge, river); NavMesh | World |
+| U-01 | `WorldRunner` bridge: tick at chosen time scale, publish state changes | Bridge — implemented for Apple slice; tested clock/commands/snapshots |
+| U-02 | Village scene from Kenney kits (shop, farm, tavern, homes, square, forest edge, river); NavMesh | World — doing: static shop slice; full village/NavMesh remain |
 | U-03 | NPC prefabs (MiniCharacters) walking to their simulated locations with matching animations | World |
 | U-04 | Day/night lighting from game time | World |
 | U-05 | Player: virtual joystick + tap-to-move, third-person camera (rotate, pinch zoom) | Player & UI |
 | U-06 | Tap NPC/object → contextual radial menu (Talk, Trade, Steal, Inspect…) sending commands | Player & UI |
-| U-07 | Minimal HUD (time, weather, location) and shop/inventory panels | Player & UI |
+| U-07 | Minimal HUD (time, weather, location) and shop/inventory panels | Player & UI — doing: time/location + apple shop/inventory slice; no weather simulation |
 | U-08 | Template dialogue from NPC fact sheets (what they know, how they feel) | Player & UI |
 | U-09 | First iPad build via Xcode; human play-test of the Apple Test | Human + Orchestrator |
 | U-10 | iPad/iPhone/Mac optimization, polish, App Store release | All |

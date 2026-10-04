@@ -290,3 +290,6 @@ Add new entries at the bottom: date, decision, reason.
 | 2026-10-04 | P8-02: IPhrasingEngine interface (contract for future AI adapter); TemplatePhrasingEngine (seeded, deterministic); 6 DialogueIntents; templates vary by MoodBand and SourceKind (seen/told/inferred hedges) | Same (sheet, intent, seed) → same output; never invents facts |
 | 2026-10-04 | P8-03: DialogueSession holds only sheet + engine (no WorldState reference) — enforcement by construction; reflection test locks the design | Dialogue physically cannot reach mutable state |
 | 2026-10-04 | P8-04: Phase 8 acceptance (4 NPCs, distinct moods/beliefs/news); knowledge/truth split demonstrated; save/load doesn't change utterances | No runtime changes needed; P8-01/02/03 APIs sufficient |
+
+| 2026-10-04 | Owner authorized Unity; first slice is Apple shop and village | Establish the real simulation-to-Unity boundary before the full playable village. |
+| 2026-10-04 | Ship System.Text.Json 8.0.6 and its non-platform runtime dependencies with simulation package, retaining MIT licenses | Unity lacks the serializer used by existing simulation; preserve schema and behavior instead of rewriting persistence. Orchestrator approved; IL2CPP remains to verify. |
