@@ -86,7 +86,7 @@ Named NPCs open read-only conversation panels with identity, smalltalk,
 player knowledge, news, family, farewell and local apple-stall beliefs.
 Sunlight and ambient lighting follow simulation minutes.
 
-Validation: 875/875 simulation tests; 28/28 Unity EditMode tests; 3/3 PlayMode
+Validation: 877/877 simulation tests; 28/28 Unity EditMode tests; 3/3 PlayMode
 integration tests. Tests cover queued purchasing, controller movement,
 building/boundary blocking, dialogue modal movement blocking, actual topic
 button submission, known identity/occupation, day/night intensity, and shop
@@ -115,3 +115,5 @@ radial menus, the farm/river exterior, and iPad device testing remain unfinished
 Other visible businesses are exterior landmarks; only the apple stall trades.
 No weather or health facts were invented. This remains a prototype slice,
 not a claim that the complete game works or that there are no remaining issues.
+
+Final dialogue review corrected vowel-leading occupation articles (for example, “an apple-stall owner”). Two new regression cases first reproduced the mistake; the complete simulation suite then passed 877/877, and all three Unity PlayMode tests passed with the corrected phrasing visible in the captures.

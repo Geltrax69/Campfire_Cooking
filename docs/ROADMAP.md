@@ -16,13 +16,16 @@ The orchestrator keeps this file current. Status values: `todo`, `doing`, `revie
 **Unity work does not start until the human says so.**
 
 **Checkpoint — 2026-10-04:** Design Phase and simulation Phases 0–8 have
-completed task evidence. The current full simulation suite passed **875/875** on this Mac
-using .NET 8.0.425 on 2026-10-04.
-The owner authorized the Unity Phase and selected an Apple shop and village
-slice. Unity project/package setup and the first bridge are implemented; the
-U-02 scene slice and U-07 shop UI slice passed 17 EditMode tests and two
-runtime/configuration tests, with iPad/small landscape captures visually checked. These slices do not complete the full village tasks. iOS Build Support is not installed. Known simulation limitations
-remain tracked in [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
+completed task evidence. The current full simulation suite passed **877/877** on this Mac
+using .NET 8.0.425. Unity town-slice validation passed **28 EditMode and 3 PlayMode tests**;
+shop and NPC dialogue captures at iPad/small landscape sizes were visually checked.
+The owner authorized Unity and selected an Apple shop and village slice. The central
+village exterior now supports player walking, collisions, day/night visuals and
+fact-based NPC conversations. NPC workplace positions remain static previews;
+full NPC navigation and village simulation assembly are unfinished. The Mac build
+succeeds and starts; native mouse walkthrough of the new town is pending a Mac unlock.
+iOS Build Support is not installed. Known simulation limitations remain tracked in
+[OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
 See `docs/tasks/completed/` for finished task evidence and
 [DEVELOPMENT.md](DEVELOPMENT.md) for local commands.
 

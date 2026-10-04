@@ -132,27 +132,29 @@ namespace LivingWorld.Simulation.Knowledge
         private static string[] SmalltalkFor(FactSheet sheet)
         {
             string occupation = sheet.Occupation;
+            // Approved occupations include vowel-leading roles such as apple-stall owner.
+            string role = (!string.IsNullOrEmpty(occupation) && "aeiou".IndexOf(char.ToLowerInvariant(occupation[0])) >= 0 ? "an " : "a ") + occupation;
             switch (sheet.MoodBand)
             {
                 case "miserable": return new[]
                 {
                     "The " + occupation + " work is a grind.",
-                    "Being a " + occupation + " wears me down.",
+                    "Being " + role + " wears me down.",
                 };
                 case "low": return new[]
                 {
                     "The " + occupation + " work keeps me busy.",
-                    "Another day as a " + occupation + ".",
+                    "Another day as " + role + ".",
                 };
                 case "neutral": return new[]
                 {
                     "The " + occupation + " life keeps me busy.",
-                    "Business as usual for a " + occupation + ".",
+                    "Business as usual for " + role + ".",
                 };
                 case "content": return new[]
                 {
                     "I like the " + occupation + " life.",
-                    "Good days, being a " + occupation + ".",
+                    "Good days, being " + role + ".",
                 };
                 default: return new[]
                 {
