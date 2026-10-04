@@ -102,6 +102,14 @@ namespace LivingWorld.Simulation.Agents
         public IReadOnlyList<NpcId> ChildrenIds => _children.AsReadOnly();
         /// <summary>The household the NPC lives in (P7-02); null until assigned.</summary>
         public HouseholdId? HouseholdId { get; private set; }
+        /// <summary>
+        /// The NPC named in the will to receive the whole estate (P7-03).
+        /// Overrides the normal heir priority when set and the named heir is
+        /// alive; a real will can name anyone, not just family. Persistence
+        /// note: like the other P7 family fields, the JSON saver does not yet
+        /// write this — wire it when the saver learns the P7 fields.
+        /// </summary>
+        public NpcId? DesignatedHeirId { get; private set; }
 
         /// <summary>
         /// Links parents (P7-02). Either side may be null to fill in one parent at
@@ -163,6 +171,24 @@ namespace LivingWorld.Simulation.Agents
             if (householdId.HasValue && !householdId.Value.IsValid)
                 throw new ArgumentException("A household ID must be valid.", nameof(householdId));
             HouseholdId = householdId;
+        }
+
+        /// <summary>
+        /// Names (or clears, with null) the designated heir for the will (P7-03).
+        /// An NPC cannot name itself; naming a deceased or unknown NPC is allowed
+        /// at will-writing time — distribution skips dead heirs (falling through
+        /// to the normal priority) and rejects unknown IDs.
+        /// </summary>
+        internal void SetDesignatedHeir(NpcId? heirId)
+        {
+            if (heirId.HasValue)
+            {
+                if (!heirId.Value.IsValid)
+                    throw new ArgumentException("A designated heir must be valid.", nameof(heirId));
+                if (heirId.Value == Definition.Id)
+                    throw new ArgumentException("An NPC cannot designate itself as heir.", nameof(heirId));
+            }
+            DesignatedHeirId = heirId;
         }
         /// <summary>
         /// Mood on a 0-100 scale, 50 neutral. Good meals nudge it up, bad ones down
