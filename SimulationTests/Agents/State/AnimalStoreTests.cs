@@ -15,7 +15,7 @@ namespace LivingWorld.Simulation.Tests.Agents
         private static readonly LocationId ForestEdge = new LocationId("loc_forest_edge");
 
         private static AnimalState Make(string id, SpeciesId species, LocationId location,
-            int trust = 0, NpcId? owner = null, AnimalAge age = AnimalAge.Adult, int health = 100) =>
+            int trust = 0, ActorId? owner = null, AnimalAge age = AnimalAge.Adult, int health = 100) =>
             AnimalState.Create(new AnimalId(id), species, location, trust, owner, age, health);
 
         private static AnimalStore PopulatedStore()
@@ -24,7 +24,7 @@ namespace LivingWorld.Simulation.Tests.Agents
             store.Add(Make("animal_chicken_001", Chicken, Farm, trust: 25));
             store.Add(Make("animal_chicken_002", Chicken, Farm, trust: 0, age: AnimalAge.Young));
             store.Add(Make("animal_chicken_003", Chicken, ForestEdge, trust: 30));
-            store.Add(Make("animal_wolf_001", Wolf, ForestEdge, trust: 0, owner: new NpcId("npc_ralf")));
+            store.Add(Make("animal_wolf_001", Wolf, ForestEdge, trust: 0, owner: ActorId.ForNpc(new NpcId("npc_ralf"))));
             return store;
         }
 
@@ -53,7 +53,7 @@ namespace LivingWorld.Simulation.Tests.Agents
 
             var found = store.Get(new AnimalId("animal_wolf_001"));
             Assert.That((found.Species, found.Location, found.Owner), Is.EqualTo(
-                (Wolf, ForestEdge, (NpcId?)new NpcId("npc_ralf"))));
+                (Wolf, ForestEdge, (ActorId?)ActorId.ForNpc(new NpcId("npc_ralf")))));
             Assert.Throws<ArgumentException>(() => store.Get(new AnimalId("animal_wolf_999")));
             Assert.Throws<ArgumentException>(() => store.Get(default));
         }

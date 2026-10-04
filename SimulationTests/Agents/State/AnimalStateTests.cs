@@ -49,9 +49,12 @@ namespace LivingWorld.Simulation.Tests.Agents
         {
             var animal = Chicken("001");
             Assert.That(animal.Owner, Is.Null);
-            var owner = new NpcId("npc_lida");
+            var owner = ActorId.ForNpc(new NpcId("npc_lida"));
             animal.SetOwner(owner);
-            Assert.That(animal.Owner, Is.EqualTo(owner));
+            Assert.That(animal.Owner, Is.EqualTo((ActorId?)owner));
+            animal.SetOwner(ActorId.Player);
+            Assert.That(animal.Owner, Is.EqualTo((ActorId?)ActorId.Player),
+                "The player is a valid bonded owner too (P4-03).");
             animal.SetOwner(null);
             Assert.That(animal.Owner, Is.Null);
         }

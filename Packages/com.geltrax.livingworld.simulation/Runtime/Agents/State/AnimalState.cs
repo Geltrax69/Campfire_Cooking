@@ -19,6 +19,8 @@ namespace LivingWorld.Simulation.Agents
     /// category and health 0-100. Trust and health are clamped to their range —
     /// systems hand in raw deltas and the state keeps the invariant instead of
     /// throwing, while <see cref="Restore"/> rejects out-of-range save data.
+    /// The owner is a player-or-NPC actor because taming is the player's skill as
+    /// much as any NPC's (P4-03).
     /// </summary>
     public sealed class AnimalState
     {
@@ -32,7 +34,7 @@ namespace LivingWorld.Simulation.Agents
         public const int MaxHealth = 100;
 
         private AnimalState(AnimalId id, SpeciesId species, LocationId location,
-            int trust, NpcId? owner, AnimalAge age, int health)
+            int trust, ActorId? owner, AnimalAge age, int health, long lastInteractionDay)
         {
             Id = id;
             Species = species;
@@ -41,18 +43,20 @@ namespace LivingWorld.Simulation.Agents
             Owner = owner;
             Age = age;
             Health = Clamp(health, MinHealth, MaxHealth);
+            LastInteractionDay = lastInteractionDay;
         }
 
         /// <summary>
         /// Creates a live animal, clamping trust and health into range. Wild
         /// animals start at trust 0; domestic ones at 20-30 (see
-        /// <see cref="AnimalPopulationFactory"/>).
+        /// <see cref="AnimalPopulationFactory"/>). The last interaction day
+        /// starts at -1 (never handled).
         /// </summary>
         public static AnimalState Create(AnimalId id, SpeciesId species, LocationId location,
-            int trust, NpcId? owner, AnimalAge age, int health)
+            int trust, ActorId? owner, AnimalAge age, int health, long lastInteractionDay = -1)
         {
-            Validate(id, species, location);
-            return new AnimalState(id, species, location, trust, owner, age, health);
+            Validate(id, species, location, owner, lastInteractionDay);
+            return new AnimalState(id, species, location, trust, owner, age, health, lastInteractionDay);
         }
 
         /// <summary>
@@ -61,21 +65,27 @@ namespace LivingWorld.Simulation.Agents
         /// before anything is built, so a failed restore has no side effects.
         /// </summary>
         public static AnimalState Restore(AnimalId id, SpeciesId species, LocationId location,
-            int trust, NpcId? owner, AnimalAge age, int health)
+            int trust, ActorId? owner, AnimalAge age, int health, long lastInteractionDay = -1)
         {
-            Validate(id, species, location);
+            Validate(id, species, location, owner, lastInteractionDay);
             if (trust < MinTrust || trust > MaxTrust)
                 throw new ArgumentOutOfRangeException(nameof(trust), "Saved trust must be 0-100.");
             if (health < MinHealth || health > MaxHealth)
                 throw new ArgumentOutOfRangeException(nameof(health), "Saved health must be 0-100.");
-            return new AnimalState(id, species, location, trust, owner, age, health);
+            return new AnimalState(id, species, location, trust, owner, age, health, lastInteractionDay);
         }
 
-        private static void Validate(AnimalId id, SpeciesId species, LocationId location)
+        private static void Validate(AnimalId id, SpeciesId species, LocationId location,
+            ActorId? owner, long lastInteractionDay)
         {
             if (!id.IsValid) throw new ArgumentException("An animal needs a valid ID.", nameof(id));
             if (!species.IsValid) throw new ArgumentException("An animal needs a valid species.", nameof(species));
             if (!location.IsValid) throw new ArgumentException("An animal needs a valid location.", nameof(location));
+            if (owner.HasValue && !owner.Value.IsValid)
+                throw new ArgumentException("A bonded owner must be a valid actor.", nameof(owner));
+            if (lastInteractionDay < -1)
+                throw new ArgumentOutOfRangeException(nameof(lastInteractionDay),
+                    "The last interaction day is -1 before any interaction.");
         }
 
         private static int Clamp(int value, int min, int max) =>
@@ -87,11 +97,17 @@ namespace LivingWorld.Simulation.Agents
         public LocationId Location { get; private set; }
         /// <summary>Taming trust 0-100; clamped on every change.</summary>
         public int Trust { get; private set; }
-        /// <summary>Bonded owner; null = wild/unbonded.</summary>
-        public NpcId? Owner { get; private set; }
+        /// <summary>Bonded owner (player or NPC); null = wild/unbonded.</summary>
+        public ActorId? Owner { get; private set; }
         public AnimalAge Age { get; }
         /// <summary>0-100; clamped on every change.</summary>
         public int Health { get; private set; }
+        /// <summary>
+        /// Game day of the last taming interaction with this animal; -1 before
+        /// any. The taming system uses it to enforce one meaningful trust gain
+        /// per animal per day (docs/design/ANIMALS.md).
+        /// </summary>
+        public long LastInteractionDay { get; private set; }
 
         /// <summary>
         /// Moves trust by a delta; clamps at 0 and 100. (One meaningful gain per
@@ -102,8 +118,13 @@ namespace LivingWorld.Simulation.Agents
         /// <summary>Moves health by a delta (predation/injury); clamps at 0 and 100.</summary>
         public void AdjustHealth(int delta) => Health = Clamp(Health + delta, MinHealth, MaxHealth);
 
-        /// <summary>Bonds (or un-bonds, with null) the animal to an NPC.</summary>
-        public void SetOwner(NpcId? owner) => Owner = owner;
+        /// <summary>Bonds (or un-bonds, with null) the animal to a player or NPC.</summary>
+        public void SetOwner(ActorId? owner)
+        {
+            if (owner.HasValue && !owner.Value.IsValid)
+                throw new ArgumentException("A bonded owner must be a valid actor.", nameof(owner));
+            Owner = owner;
+        }
 
         /// <summary>
         /// Moves the animal to a new location (seasonal ranging). The herd keeps its
@@ -114,6 +135,16 @@ namespace LivingWorld.Simulation.Agents
             if (!location.IsValid)
                 throw new ArgumentException("An animal needs a valid location.", nameof(location));
             Location = location;
+        }
+
+        /// <summary>
+        /// Records that a taming interaction happened on the given game day.
+        /// </summary>
+        public void RecordInteraction(long day)
+        {
+            if (day < 0)
+                throw new ArgumentOutOfRangeException(nameof(day), "Game day must not be negative.");
+            LastInteractionDay = day;
         }
     }
 }
