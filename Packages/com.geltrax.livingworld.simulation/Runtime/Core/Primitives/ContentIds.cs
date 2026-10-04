@@ -78,6 +78,25 @@ namespace LivingWorld.Simulation.Core
         public static bool operator >=(ReputationGroupId left, ReputationGroupId right) => left.CompareTo(right) >= 0;
     }
 
+    /// <summary>Identifies a village by its ordinal content key; default is invalid.</summary>
+    public readonly struct VillageId : IEquatable<VillageId>, IComparable<VillageId>
+    {
+        public VillageId(string value) { Value = ContentIdValue.Validate(value); }
+        public string Value { get; }
+        public bool IsValid => Value != null;
+        public bool Equals(VillageId other) => string.Equals(Value, other.Value, StringComparison.Ordinal);
+        public override bool Equals(object obj) => obj is VillageId other && Equals(other);
+        public override int GetHashCode() => ContentIdValue.Hash(Value);
+        public int CompareTo(VillageId other) => string.CompareOrdinal(Value, other.Value);
+        public override string ToString() => Value ?? string.Empty;
+        public static bool operator ==(VillageId left, VillageId right) => left.Equals(right);
+        public static bool operator !=(VillageId left, VillageId right) => !left.Equals(right);
+        public static bool operator <(VillageId left, VillageId right) => left.CompareTo(right) < 0;
+        public static bool operator >(VillageId left, VillageId right) => left.CompareTo(right) > 0;
+        public static bool operator <=(VillageId left, VillageId right) => left.CompareTo(right) <= 0;
+        public static bool operator >=(VillageId left, VillageId right) => left.CompareTo(right) >= 0;
+    }
+
     internal static class ContentIdValue
     {
         internal static string Validate(string value)
