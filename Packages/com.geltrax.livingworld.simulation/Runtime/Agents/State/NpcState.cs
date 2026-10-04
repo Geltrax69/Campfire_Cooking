@@ -1,10 +1,14 @@
 using System;
+using System.Collections.Generic;
+using LivingWorld.Simulation.Core;
 
 namespace LivingWorld.Simulation.Agents
 {
     /// <summary>Holds one NPC's mutable simulation state separately from its definition.</summary>
     public sealed class NpcState
     {
+        private readonly List<NpcId> _children = new List<NpcId>();
+
         public NpcState(NpcDefinition definition, int initialHunger, int initialEnergy, int initialSocial)
             : this(definition ?? throw new ArgumentNullException(nameof(definition)),
                 new NeedState(initialHunger, initialEnergy, initialSocial), false, null)
@@ -85,6 +89,81 @@ namespace LivingWorld.Simulation.Agents
         /// <summary>Child (0-14), Adult (15-59), or Elder (60+), computed from age.</summary>
         public LifeStage LifeStage =>
             Age < 15 ? LifeStage.Child : Age < 60 ? LifeStage.Adult : LifeStage.Elder;
+        /// <summary>
+        /// The NPC's mother and father (P7-02). Set at birth (or from approved
+        /// Content by FamilySetup) and never changed to different parents; either
+        /// may be absent when the Content names only one.
+        /// </summary>
+        public NpcId? MotherId { get; private set; }
+        public NpcId? FatherId { get; private set; }
+        /// <summary>The NPC's spouse, if any (P7-02, from husband/wife Content).</summary>
+        public NpcId? PartnerId { get; private set; }
+        /// <summary>The NPC's children, in the order the links were made.</summary>
+        public IReadOnlyList<NpcId> ChildrenIds => _children.AsReadOnly();
+        /// <summary>The household the NPC lives in (P7-02); null until assigned.</summary>
+        public HouseholdId? HouseholdId { get; private set; }
+
+        /// <summary>
+        /// Links parents (P7-02). Either side may be null to fill in one parent at
+        /// a time; changing an already-set parent to a different NPC throws,
+        /// because parents are set at birth and never change.
+        /// </summary>
+        internal void SetParents(NpcId? motherId, NpcId? fatherId)
+        {
+            if (motherId.HasValue)
+            {
+                ValidateParent(motherId.Value, nameof(motherId));
+                if (MotherId.HasValue && MotherId.Value != motherId.Value)
+                    throw new InvalidOperationException("Parents are set at birth and never change.");
+                MotherId = motherId;
+            }
+            if (fatherId.HasValue)
+            {
+                ValidateParent(fatherId.Value, nameof(fatherId));
+                if (FatherId.HasValue && FatherId.Value != fatherId.Value)
+                    throw new InvalidOperationException("Parents are set at birth and never change.");
+                FatherId = fatherId;
+            }
+            if (MotherId.HasValue && FatherId.HasValue && MotherId.Value == FatherId.Value)
+                throw new ArgumentException("Mother and father must be different NPCs.");
+        }
+
+        private void ValidateParent(NpcId parentId, string parameterName)
+        {
+            if (!parentId.IsValid) throw new ArgumentException("A parent ID must be valid.", parameterName);
+            if (parentId == Definition.Id)
+                throw new ArgumentException("An NPC cannot be its own parent.", parameterName);
+        }
+
+        /// <summary>Sets (or clears, with null) the spouse link (P7-02).</summary>
+        internal void SetPartner(NpcId? partnerId)
+        {
+            if (partnerId.HasValue)
+            {
+                if (!partnerId.Value.IsValid)
+                    throw new ArgumentException("A partner ID must be valid.", nameof(partnerId));
+                if (partnerId.Value == Definition.Id)
+                    throw new ArgumentException("An NPC cannot partner itself.", nameof(partnerId));
+            }
+            PartnerId = partnerId;
+        }
+
+        /// <summary>Adds a child link; adding the same child twice is a no-op.</summary>
+        internal void AddChild(NpcId childId)
+        {
+            if (!childId.IsValid) throw new ArgumentException("A child ID is required.", nameof(childId));
+            if (childId == Definition.Id)
+                throw new ArgumentException("An NPC cannot be its own child.", nameof(childId));
+            if (!_children.Contains(childId)) _children.Add(childId);
+        }
+
+        /// <summary>Moves the NPC into a household (P7-02); null clears the link.</summary>
+        internal void SetHousehold(HouseholdId? householdId)
+        {
+            if (householdId.HasValue && !householdId.Value.IsValid)
+                throw new ArgumentException("A household ID must be valid.", nameof(householdId));
+            HouseholdId = householdId;
+        }
         /// <summary>
         /// Mood on a 0-100 scale, 50 neutral. Good meals nudge it up, bad ones down
         /// (P3-03, SKILLS.md: a small daily happiness that compounds). Clamped 0-100.
