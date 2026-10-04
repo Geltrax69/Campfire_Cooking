@@ -51,7 +51,9 @@ namespace LivingWorld.Simulation.Agents
             if (state == null) throw new ArgumentNullException(nameof(state));
             if (catalog == null) throw new ArgumentNullException(nameof(catalog));
 
-            int population = state.Npcs.Count + TownStatNumbers.BackgroundVillagers;
+            // P5-02: in-migration adds background villagers beyond the P5-01 base.
+            int population = state.Npcs.Count + TownStatNumbers.BackgroundVillagers
+                + state.Migration.AdditionalBackgroundVillagers;
             int crime = CountRecent(state, WorldEventType.Theft);
             int wolfIncidents = CountWolfIncidentsThisWinter(state);
 
@@ -89,7 +91,10 @@ namespace LivingWorld.Simulation.Agents
                 if (state.Housing.RoofConditionOrDefault(home) >= SoundRoofCondition)
                     sound++;
             sound += state.Housing.BackgroundSoundRoofs;
-            int total = homes.Count + state.Housing.BackgroundHouseholds;
+            // P5-02: arrived households are housed (sound roofs).
+            sound += state.Migration.AdditionalBackgroundSoundRoofs;
+            int total = homes.Count + state.Housing.BackgroundHouseholds
+                + state.Migration.AdditionalBackgroundHouseholds;
             if (total == 0) return 100;
             return (int)Math.Round(100.0 * sound / total, MidpointRounding.AwayFromZero);
         }

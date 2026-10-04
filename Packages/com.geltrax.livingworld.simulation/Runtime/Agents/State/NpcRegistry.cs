@@ -37,6 +37,17 @@ namespace LivingWorld.Simulation.Agents
             _npcs.Add(id, npc);
         }
 
+        /// <summary>
+        /// Removes an NPC from the village (P5-02 out-migration). The population stat
+        /// counts registered NPCs, so departure shrinks the village. Callers own the
+        /// consequences for beliefs, memories and relationships that referenced the NPC.
+        /// </summary>
+        public void Unregister(NpcId id)
+        {
+            ValidateId(id);
+            if (!_npcs.Remove(id)) throw new ArgumentException("Unknown NPC ID.", nameof(id));
+        }
+
         private static void ValidateId(NpcId id)
         {
             if (!id.IsValid) throw new ArgumentException("NPC ID must be valid.", nameof(id));
