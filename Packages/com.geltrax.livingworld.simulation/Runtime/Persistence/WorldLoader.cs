@@ -92,6 +92,14 @@ namespace LivingWorld.Simulation.Persistence
             private List<ActorSkillsPlan> Skills { get; } = new List<ActorSkillsPlan>();
             private TavernPopularityState TavernPopularity { get; set; }
             private IngredientDemandState IngredientDemand { get; set; }
+            // Phase 4 (formatVersion 4) sections; absent when loading an older
+            // document, in which case the world keeps its fresh defaults (an empty
+            // animal store and uninitialized ecosystem cursors).
+            private List<AnimalState> Animals { get; } = new List<AnimalState>();
+            private PredationState Predation { get; set; }
+            private BreedingState Breeding { get; set; }
+            private WinterPressureState WinterPressure { get; set; }
+            private EggProductionState EggProduction { get; set; }
 
             public static SavePlan Parse(string json, ContentBundle bundle)
             {
@@ -143,6 +151,14 @@ namespace LivingWorld.Simulation.Persistence
                         plan.ParseSkills(root, bundle);
                         plan.ParseTavernPopularity(root);
                         plan.ParseIngredientDemand(root, bundle);
+                    }
+                    if (version >= 4)
+                    {
+                        plan.ParseAnimals(root, bundle);
+                        plan.ParsePredation(root);
+                        plan.ParseBreeding(root);
+                        plan.ParseWinterPressure(root);
+                        plan.ParseEggProduction(root);
                     }
                     plan.CrossCheckCommands();
                     plan.CrossCheckLots();
@@ -345,6 +361,107 @@ namespace LivingWorld.Simulation.Persistence
                     state.AddDemand(item, row.Value.Int32(1));
                 }
                 IngredientDemand = state;
+            }
+
+            /// <summary>
+            /// Phase 4 animal state (formatVersion 4): every animal with its species,
+            /// location, trust, bonded owner, age, health and last interaction day.
+            /// Animal IDs must be unique; species and locations are approved;
+            /// trust/health ranges and the owner pass through AnimalState.Restore's
+            /// validation.
+            /// </summary>
+            private void ParseAnimals(Reader root, ContentBundle bundle)
+            {
+                var seen = new HashSet<AnimalId>();
+                foreach (Reader entry in root.Items("animals"))
+                {
+                    string path = entry.Path;
+                    var id = new AnimalId(entry.Property("id").Text());
+                    if (!seen.Add(id))
+                        throw new LoadException("Duplicate animal '" + id.Value + "' in " + path + ".");
+                    var species = new SpeciesId(entry.Property("species").Text());
+                    bundle.RequireSpecies(species, path);
+                    var location = new LocationId(entry.Property("location").Text());
+                    RequireLocation(bundle, location, path);
+                    int trust = entry.Property("trust").Int32(AnimalState.MinTrust, AnimalState.MaxTrust);
+                    ActorId? owner = ParseOptionalActor(entry.Property("owner"), bundle, path);
+                    AnimalAge age = entry.Property("age").EnumValue<AnimalAge>();
+                    int health = entry.Property("health").Int32(AnimalState.MinHealth, AnimalState.MaxHealth);
+                    long lastInteractionDay = entry.Property("lastInteractionDay").Int64(-1);
+                    try
+                    {
+                        Animals.Add(AnimalState.Restore(id, species, location, trust,
+                            owner, age, health, lastInteractionDay));
+                    }
+                    catch (Exception failure) { throw new LoadException("Invalid animal in " + path + ".", failure); }
+                }
+            }
+
+            /// <summary>
+            /// Phase 4 predation cursor (formatVersion 4): the initialization flag and
+            /// the last day hunts ran.
+            /// </summary>
+            private void ParsePredation(Reader root)
+            {
+                Reader section = root.Property("predation");
+                bool initialized = section.Property("initialized").Flag();
+                long lastHuntDay = section.Property("lastHuntDay").Int64(0);
+                Predation = new PredationState(initialized, lastHuntDay);
+            }
+
+            /// <summary>
+            /// Phase 4 breeding cursors (formatVersion 4): the initialization flag,
+            /// the last day processed, the last year bred and the next birth ordinal
+            /// (birth IDs must stay unique across save/load, so the counter round-trips).
+            /// </summary>
+            private void ParseBreeding(Reader root)
+            {
+                Reader section = root.Property("breeding");
+                bool initialized = section.Property("initialized").Flag();
+                long lastBreedingDay = section.Property("lastBreedingDay").Int64(0);
+                long lastBreedingYear = section.Property("lastBreedingYear").Int64(-1);
+                int nextBirthOrdinal = section.Property("nextBirthOrdinal").Int32(1);
+                Breeding = new BreedingState(initialized, lastBreedingDay, lastBreedingYear, nextBirthOrdinal);
+            }
+
+            /// <summary>
+            /// Phase 4 winter-pressure state (formatVersion 4): the initialization
+            /// flag, the last day processed, the last winter year rolled, the incident
+            /// days still outstanding this winter and whether the deer are currently
+            /// ranging at the farms. Incident days are written in day order, so a
+            /// document that is not strictly increasing is corrupt.
+            /// </summary>
+            private void ParseWinterPressure(Reader root)
+            {
+                Reader section = root.Property("winterPressure");
+                bool initialized = section.Property("initialized").Flag();
+                long lastLossDay = section.Property("lastLossDay").Int64(0);
+                long lastWinterYear = section.Property("lastWinterYear").Int64(-1);
+                var incidentDays = new List<long>();
+                long previous = 0;
+                foreach (Reader day in section.Items("incidentDays"))
+                {
+                    long value = day.Int64(1);
+                    if (value <= previous)
+                        throw new LoadException("Winter incident days must be strictly increasing in " + day.Path + ".");
+                    incidentDays.Add(value);
+                    previous = value;
+                }
+                bool deerAtFarms = section.Property("deerAtFarms").Flag();
+                WinterPressure = new WinterPressureState(initialized, lastLossDay,
+                    lastWinterYear, incidentDays, deerAtFarms);
+            }
+
+            /// <summary>
+            /// Phase 4 egg-production cursor (formatVersion 4): the initialization flag
+            /// and the last day laying ran.
+            /// </summary>
+            private void ParseEggProduction(Reader root)
+            {
+                Reader section = root.Property("eggProduction");
+                bool initialized = section.Property("initialized").Flag();
+                long lastLayDay = section.Property("lastLayDay").Int64(0);
+                EggProduction = new EggProductionState(initialized, lastLayDay);
             }
 
             private void ParseBeliefs(Reader root, ContentBundle bundle)
@@ -960,6 +1077,16 @@ namespace LivingWorld.Simulation.Persistence
                 }
                 if (TavernPopularity != null) state.RestoreTavernPopularity(TavernPopularity);
                 if (IngredientDemand != null) state.RestoreIngredientDemand(IngredientDemand);
+                // Phase 4 state (formatVersion 4): the full animal store and the four
+                // ecosystem cursors. Older documents keep the fresh defaults — an
+                // empty store and uninitialized cursors (systems stay quiet until a
+                // world-build step initializes them) — matching a world built without
+                // the animal-population step.
+                state.Animals.Restore(Animals);
+                if (Predation != null) state.RestorePredation(Predation);
+                if (Breeding != null) state.RestoreBreeding(Breeding);
+                if (WinterPressure != null) state.RestoreWinterPressure(WinterPressure);
+                if (EggProduction != null) state.RestoreEggProduction(EggProduction);
                 return state;
             }
 

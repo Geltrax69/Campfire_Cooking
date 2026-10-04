@@ -24,7 +24,7 @@ namespace LivingWorld.Simulation.Persistence
     public static class WorldSaver
     {
         /// <summary>The save format version written at the head of every document.</summary>
-        public const int FormatVersion = 3;
+        public const int FormatVersion = 4;
 
         /// <summary>Serializes the whole world state. Throws <see cref="SaveException"/> on failure.</summary>
         public static string Save(WorldState state)
@@ -88,6 +88,11 @@ namespace LivingWorld.Simulation.Persistence
             WriteSkills(writer, state);
             WriteTavernPopularity(writer, state);
             WriteIngredientDemand(writer, state);
+            WriteAnimals(writer, state);
+            WritePredation(writer, state);
+            WriteBreeding(writer, state);
+            WriteWinterPressure(writer, state);
+            WriteEggProduction(writer, state);
             writer.WriteEndObject();
         }
 
@@ -717,6 +722,95 @@ namespace LivingWorld.Simulation.Persistence
             foreach (KeyValuePair<ItemTypeId, int> pair in demand.All)
                 writer.WriteNumber(pair.Key.Value, pair.Value);
             writer.WriteEndObject();
+            writer.WriteEndObject();
+        }
+
+        /// <summary>
+        /// Phase 4 animal state (formatVersion 4): every animal in AnimalId order
+        /// (AnimalStore.Capture is deterministic), with its species, location,
+        /// trust, bonded owner, age, health and last interaction day. Always
+        /// written (possibly empty) so saves stay byte-identical for equal states.
+        /// </summary>
+        private static void WriteAnimals(Utf8JsonWriter writer, WorldState state)
+        {
+            writer.WriteStartArray("animals");
+            foreach (AnimalState animal in state.Animals.Capture())
+            {
+                writer.WriteStartObject();
+                writer.WriteString("id", animal.Id.Value);
+                writer.WriteString("species", animal.Species.Value);
+                writer.WriteString("location", animal.Location.Value);
+                writer.WriteNumber("trust", animal.Trust);
+                WriteActorValue(writer, "owner", animal.Owner);
+                writer.WriteString("age", animal.Age.ToString());
+                writer.WriteNumber("health", animal.Health);
+                writer.WriteNumber("lastInteractionDay", animal.LastInteractionDay);
+                writer.WriteEndObject();
+            }
+            writer.WriteEndArray();
+        }
+
+        /// <summary>
+        /// Phase 4 predation cursor (formatVersion 4): the initialization flag and
+        /// the last day hunts ran, so the system resumes exactly where it left off.
+        /// </summary>
+        private static void WritePredation(Utf8JsonWriter writer, WorldState state)
+        {
+            PredationState predation = state.Predation;
+            writer.WriteStartObject("predation");
+            writer.WriteBoolean("initialized", predation.IsInitialized);
+            writer.WriteNumber("lastHuntDay", predation.LastHuntDay);
+            writer.WriteEndObject();
+        }
+
+        /// <summary>
+        /// Phase 4 breeding cursors (formatVersion 4): the initialization flag, the
+        /// last day processed, the last year bred and the next birth ordinal. The
+        /// ordinal must be saved: birth IDs have to stay unique across save/load.
+        /// </summary>
+        private static void WriteBreeding(Utf8JsonWriter writer, WorldState state)
+        {
+            BreedingState breeding = state.Breeding;
+            writer.WriteStartObject("breeding");
+            writer.WriteBoolean("initialized", breeding.IsInitialized);
+            writer.WriteNumber("lastBreedingDay", breeding.LastBreedingDay);
+            writer.WriteNumber("lastBreedingYear", breeding.LastBreedingYear);
+            writer.WriteNumber("nextBirthOrdinal", breeding.NextBirthOrdinal);
+            writer.WriteEndObject();
+        }
+
+        /// <summary>
+        /// Phase 4 winter-pressure state (formatVersion 4): the initialization
+        /// flag, the last day processed, the last winter year rolled, the incident
+        /// days still outstanding this winter (in day order) and whether the deer
+        /// are currently ranging at the farms.
+        /// </summary>
+        private static void WriteWinterPressure(Utf8JsonWriter writer, WorldState state)
+        {
+            WinterPressureState pressure = state.WinterPressure;
+            writer.WriteStartObject("winterPressure");
+            writer.WriteBoolean("initialized", pressure.IsInitialized);
+            writer.WriteNumber("lastLossDay", pressure.LastLossDay);
+            writer.WriteNumber("lastWinterYear", pressure.LastWinterYear);
+            writer.WriteStartArray("incidentDays");
+            foreach (long day in pressure.IncidentDays) writer.WriteNumberValue(day);
+            writer.WriteEndArray();
+            writer.WriteBoolean("deerAtFarms", pressure.DeerAtFarms);
+            writer.WriteEndObject();
+        }
+
+        /// <summary>
+        /// Phase 4 egg-production cursor (formatVersion 4): the initialization flag
+        /// and the last day laying ran. (The coop inventories the eggs land in are
+        /// caller-owned configuration, not world state, so they are not saved —
+        /// see the P4-04 acceptance notes.)
+        /// </summary>
+        private static void WriteEggProduction(Utf8JsonWriter writer, WorldState state)
+        {
+            EggProductionState eggs = state.EggProduction;
+            writer.WriteStartObject("eggProduction");
+            writer.WriteBoolean("initialized", eggs.IsInitialized);
+            writer.WriteNumber("lastLayDay", eggs.LastLayDay);
             writer.WriteEndObject();
         }
 

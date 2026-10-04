@@ -11,23 +11,27 @@ namespace LivingWorld.Simulation.Persistence
 {
     /// <summary>
     /// Approved immutable definitions a save document references by ID: the item catalog,
-    /// the location map, every NPC definition, the reputation group IDs and the skill
-    /// IDs. The loader resolves every saved reference against this bundle, so an
-    /// unknown ID is rejected during validation, before any world state is built.
+    /// the location map, every NPC definition, the reputation group IDs, the skill IDs
+    /// and the animal species IDs. The loader resolves every saved reference against
+    /// this bundle, so an unknown ID is rejected during validation, before any world
+    /// state is built.
     /// </summary>
     internal sealed class ContentBundle
     {
         private ContentBundle(ItemCatalog catalog, LocationMap map,
             IReadOnlyDictionary<NpcId, NpcDefinition> npcDefinitions,
             IReadOnlyDictionary<ReputationGroupId, string> reputationGroups,
-            IReadOnlyCollection<SkillId> skillIds)
+            IReadOnlyCollection<SkillId> skillIds,
+            IReadOnlyCollection<SpeciesId> speciesIds)
         {
             Catalog = catalog;
             Map = map;
             NpcDefinitions = npcDefinitions;
             ReputationGroups = reputationGroups;
             SkillIds = skillIds;
+            SpeciesIds = speciesIds;
             _skillIdSet = new HashSet<SkillId>(skillIds);
+            _speciesIdSet = new HashSet<SpeciesId>(speciesIds);
         }
 
         public ItemCatalog Catalog { get; }
@@ -36,8 +40,11 @@ namespace LivingWorld.Simulation.Persistence
         public IReadOnlyDictionary<ReputationGroupId, string> ReputationGroups { get; }
         /// <summary>Every skill ID in the approved Content/skills/skills.json.</summary>
         public IReadOnlyCollection<SkillId> SkillIds { get; }
+        /// <summary>Every species ID in the approved Content/animals/species.json.</summary>
+        public IReadOnlyCollection<SpeciesId> SpeciesIds { get; }
 
         private readonly HashSet<SkillId> _skillIdSet;
+        private readonly HashSet<SpeciesId> _speciesIdSet;
 
         /// <summary>Loads every approved definition file under <paramref name="contentRoot"/>/Content.</summary>
         /// <param name="contentRoot">Directory containing the approved Content/ folder (usually the repo root).</param>
@@ -57,7 +64,9 @@ namespace LivingWorld.Simulation.Persistence
                 LoadReputationGroups(Path.Combine(content, "social", "social.json"));
             IReadOnlyCollection<SkillId> skills =
                 LoadSkillIds(Path.Combine(content, "skills", "skills.json"));
-            return new ContentBundle(catalog, map, npcs, groups, skills);
+            IReadOnlyCollection<SpeciesId> species =
+                LoadSpeciesIds(Path.Combine(content, "animals", "species.json"), map);
+            return new ContentBundle(catalog, map, npcs, groups, skills, species);
         }
 
         /// <summary>Rejects with <see cref="LoadException"/> when the item is not in the approved catalog.</summary>
@@ -75,6 +84,13 @@ namespace LivingWorld.Simulation.Persistence
         {
             if (!_skillIdSet.Contains(id))
                 throw new LoadException("Unknown skill '" + id.Value + "' in " + where + ".");
+        }
+
+        /// <summary>Rejects with <see cref="LoadException"/> when the species is not an approved species ID.</summary>
+        public void RequireSpecies(SpeciesId id, string where)
+        {
+            if (!id.IsValid || !_speciesIdSet.Contains(id))
+                throw new LoadException("Unknown species '" + id.Value + "' in " + where + ".");
         }
 
         private static IReadOnlyCollection<SkillId> LoadSkillIds(string path)
@@ -197,6 +213,23 @@ namespace LivingWorld.Simulation.Persistence
                 groups.Add(id, RequiredText(row, "name", path));
             }
             return groups;
+        }
+
+        private static IReadOnlyCollection<SpeciesId> LoadSpeciesIds(string path, LocationMap map)
+        {
+            if (!File.Exists(path)) throw new LoadException("Missing species definitions file: " + path + ".");
+            try
+            {
+                using (Stream stream = File.OpenRead(path))
+                {
+                    var ids = new List<SpeciesId>();
+                    foreach (SpeciesDefinition definition in SpeciesContentLoader.Load(stream, map))
+                        ids.Add(definition.Id);
+                    return ids;
+                }
+            }
+            catch (LoadException) { throw; }
+            catch (Exception failure) { throw new LoadException("Invalid species definitions in " + path + ".", failure); }
         }
 
         private static JsonDocument ReadJson(string path, string what)

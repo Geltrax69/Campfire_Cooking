@@ -1,4 +1,4 @@
-# Save format schema (formatVersion 3)
+# Save format schema (formatVersion 4)
 
 Written by `WorldSaver.Save(WorldState)` → indented JSON string.
 Read by the loader. Top-level properties always appear in this order.
@@ -7,7 +7,9 @@ Version 2 (P2-12) adds every Phase 2 state section: relationships,
 attributed memories, the eleven economy progress states, and per-lot
 inventory ages. Version 3 (P3-04) adds every Phase 3 state section: skill
 stores (player + NPCs), NPC happiness, tavern popularity and ingredient
-demand. Older documents still load (see Compatibility below).
+demand. Version 4 (P4-04) adds every Phase 4 state section: the animal
+store and the four ecosystem cursors (predation, breeding, winter pressure,
+egg production). Older documents still load (see Compatibility below).
 
 ## Conventions
 
@@ -33,7 +35,7 @@ demand. Older documents still load (see Compatibility below).
 
 ```jsonc
 {
-  "formatVersion": 3,
+  "formatVersion": 4,
   "clock": 1400,
   "rngState": 12345678901234567890,
   "eventLog": {
@@ -239,7 +241,44 @@ demand. Older documents still load (see Compatibility below).
   "ingredientDemand": {                     // v3: decay cursor + positive demand only
     "lastDecayDay": 6,
     "demand": { "item_firewood": 2, "item_fish": 2 }   // ordinal item order
+  },
+  "animals": [                            // v4: AnimalId order (AnimalStore.Capture)
+    {
+      "id": "animal_chicken_001",
+      "species": "species_chicken",        // approved Content/animals/species.json
+      "location": "loc_farm",
+      "trust": 77,                        // 0-100
+      "owner": "player",                  // actor string; null when wild/unbonded
+      "age": "Adult",                     // "Young" or "Adult"
+      "health": 100,                      // 0-100
+      "lastInteractionDay": 52            // -1 before any taming interaction
+    }
+  ],
+  "predation": {                           // v4: wolf-hunt cursor
+    "initialized": true,
+    "lastHuntDay": 90
+  },
+  "breeding": {                            // v4: spring-breeding cursors
+    "initialized": true,
+    "lastBreedingDay": 90,
+    "lastBreedingYear": -1,                // -1 before the first spring breeding
+    "nextBirthOrdinal": 1                  // birth IDs stay unique across save/load
+  },
+  "winterPressure": {                      // v4: winter livestock-loss state
+    "initialized": true,
+    "lastLossDay": 90,
+    "lastWinterYear": -1,                  // -1 before the first winter roll
+    "incidentDays": [104, 127],            // still outstanding, strictly increasing
+    "deerAtFarms": false
+  },
+  "eggProduction": {                       // v4: laying cursor
+    "initialized": true,
+    "lastLayDay": 90
   }
+  // NOTE: the coop inventories the eggs land in are caller-owned EggConfiguration
+  // state, not world state — laid eggs are not in the save document. A load
+  // resumes laying (the Produced truth events are in the event log) but the
+  // basket starts empty.
 }
 ```
 
@@ -295,7 +334,7 @@ shop stock or an actor's belongings, makes saving fail with `SaveException`
 
 ## Loader notes
 
-1. Validate `formatVersion` first; reject anything but `1`, `2` or `3`.
+1. Validate `formatVersion` first; reject anything but `1`, `2`, `3` or `4`.
 2. Build order suggestion: fresh `WorldState(savedRngState, new GameTime(savedClock))`
    (per the P1-21f brief, `SimRng(ulong)` resumes the stream exactly), load
    approved definitions by ID, restore event log (retained events + both
@@ -308,35 +347,49 @@ shop stock or an actor's belongings, makes saving fail with `SaveException`
    economy progress states via their `Restore*` methods (skip when null for v1);
    v3 then restores skill stores (`SkillStore.Restore` for the player and every
    listed NPC), tavern popularity and ingredient demand (skip when null for
-   v1/v2 — the fresh defaults apply).
+   v1/v2 — the fresh defaults apply); v4 then restores the animal store
+   (`AnimalStore.Restore`; species validated against Content/animals, trust and
+   health ranges enforced by `AnimalState.Restore`) and the four ecosystem
+   cursors via their `Restore*` methods (skip when null for v1/v2/v3 — the
+   fresh defaults apply: an empty store and uninitialized cursors).
 3. `AppleScenarioState` is harness-owned and intentionally not persisted.
-4. Wallet aliasing: a shop owner's wallet IS their personal wallet (one shared
-   object — `Shop.Purchase` has a `ReferenceEquals` fast path for self-purchase).
-   The save writes the copper value in both the shop and belongings sections;
-   the loader must validate they agree (contradiction → `LoadException`) and
-   restore a single shared `Wallet`. If a future phase ever wants them separate,
-   the schema needs an explicit aliasing marker.
+4. Wallet aliasing: the save records per shop whether the till is the owner's
+   personal wallet (one shared object) or a separate till
+   (`"ownerWalletShared"`); the loader restores the same sharing because
+   systems use `ReferenceEquals` to avoid double-counting. A shared till whose
+   saved balances contradict is a `LoadException`. Version 1 documents have no
+   marker and default to separate tills.
 
-## Compatibility (v1 → v2 → v3)
+## Compatibility (v1 → v2 → v3 → v4)
 
-Version 3 adds sections; it removes nothing. The loader accepts all three:
+Version 4 adds sections; it removes nothing. The loader accepts all four:
 
-- **v3 → v3**: every section restores via its `Capture`/`Restore` pair.
+- **v4 → v4**: every section restores via its `Capture`/`Restore` pair.
+- **v3 → v4**: the animal store restores empty and the four ecosystem cursors
+  restore uninitialized (systems stay quiet until a world-build step initializes
+  them). Rationale: a v3 save predates the systems that mutate animal state, so
+  "never started" is the truthful restore — matching a world built without the
+  animal-population step.
+- **v2 → v4**: as v3 → v4, plus the v2 → v3 rules below.
+- **v1 → v4**: as v2 → v4, plus the v1 → v2 rules below.
 - **v2 → v3**: skill stores restore empty, NPC happiness restores neutral (50),
   tavern popularity restores to its 50 baseline and ingredient demand to empty,
   all with cursors at -1 (never run). Rationale: every Phase 3 state has a
   safe uninitialized default — a v2 save predates the systems that mutate it,
   so "never started" is the truthful restore.
-- **v1 → v3**: as v2 → v3, plus the v1 → v2 rules below.
 - **v1 → v2**: the eleven economy states, relationships, and attributed memories
   keep their fresh-world defaults (uninitialized, empty, cursors at zero); shop
   and belongings lots are rebuilt as single age-0 lots from the saved counts.
   Rationale: every Phase 2 state has a safe uninitialized default — a v1 save
   predates the systems that mutate it, so "never started" is the truthful
   restore.
-- **v4+**: rejected with `LoadException`. Versions below 1 are rejected too.
+- **v5+**: rejected with `LoadException`. Versions below 1 are rejected too.
 
 Corruption checks new in v2: lot quantities must sum to the saved counts;
 attributed-memory recall deltas must satisfy |recalled| ≤ |original| per axis
 (the runtime invariant, enforced at load). Either violation is a `LoadException`
 and the world is discarded — the loader never returns a half-built world.
+
+Corruption checks new in v4: animal IDs must be unique; every animal species
+must be an approved species ID; trust and health must be 0-100 (enforced by
+`AnimalState.Restore`); winter incident days must be strictly increasing.
