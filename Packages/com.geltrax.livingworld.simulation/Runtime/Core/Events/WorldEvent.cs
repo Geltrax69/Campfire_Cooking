@@ -74,7 +74,23 @@ namespace LivingWorld.Simulation.Core
         /// the end condition was met and the event deactivated. Same payload
         /// convention as EmergentEventFired.
         /// </summary>
-        EmergentEventEnded
+        EmergentEventEnded,
+        /// <summary>
+        /// A trade merchant departed along a route (P6-02 addition, flagged for
+        /// orchestrator ratification: the Economy folder may not edit Core):
+        /// location is the origin village's anchor; quantity is total cargo
+        /// units; copper is total bought at the origin. Actor is null (the
+        /// merchant is abstract, not an NPC). The MerchantJourney is the primary
+        /// truth record.
+        /// </summary>
+        MerchantDeparted,
+        /// <summary>
+        /// A trade merchant arrived at a route destination (P6-02 addition,
+        /// flagged for orchestrator ratification: the Economy folder may not
+        /// edit Core): location is the destination village's anchor; quantity is
+        /// total cargo units; copper is total sold at the destination.
+        /// </summary>
+        MerchantArrived
     }
 
     /// <summary>Describes noticeability, not whether anybody actually perceived the event.</summary>
@@ -137,7 +153,7 @@ namespace LivingWorld.Simulation.Core
 
         internal static void ValidateType(WorldEventType type)
         {
-            if (type < WorldEventType.Purchase || type > WorldEventType.EmergentEventEnded)
+            if (type < WorldEventType.Purchase || type > WorldEventType.MerchantArrived)
                 throw new ArgumentOutOfRangeException(nameof(type));
         }
 
