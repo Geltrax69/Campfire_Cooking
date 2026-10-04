@@ -1,11 +1,13 @@
-# Save format schema (formatVersion 2)
+# Save format schema (formatVersion 3)
 
 Written by `WorldSaver.Save(WorldState)` → indented JSON string.
 Read by the loader. Top-level properties always appear in this order.
 
 Version 2 (P2-12) adds every Phase 2 state section: relationships,
 attributed memories, the eleven economy progress states, and per-lot
-inventory ages. Version 1 documents still load (see Compatibility below).
+inventory ages. Version 3 (P3-04) adds every Phase 3 state section: skill
+stores (player + NPCs), NPC happiness, tavern popularity and ingredient
+demand. Older documents still load (see Compatibility below).
 
 ## Conventions
 
@@ -31,7 +33,7 @@ inventory ages. Version 1 documents still load (see Compatibility below).
 
 ```jsonc
 {
-  "formatVersion": 2,
+  "formatVersion": 3,
   "clock": 1400,
   "rngState": 12345678901234567890,
   "eventLog": {
@@ -47,6 +49,7 @@ inventory ages. Version 1 documents still load (see Compatibility below).
       "definitionId": "npc_mira_holt",   // reload definition from Content/
       "needs": { "hungerSixtieths": 3061, "energySixtieths": 4200, "socialSixtieths": 5100 },
       "isSleeping": false,               // agrees with intention (Sleep ⇒ sleeping)
+      "happiness": 52,                   // v3: mood 0-100 (50 neutral); absent before v3
       "intention": { "kind": "Work", "destination": "loc_apple_stall", "chosenAt": 1380 }
         // or null when the NPC has no current intention
     }
@@ -213,6 +216,29 @@ inventory ages. Version 1 documents still load (see Compatibility below).
         }
       }
     ]
+  },
+  "skills": {                              // v3: one array per actor WITH skills
+    "player": [                            // "player" or "npc:<id>"; empty stores omitted
+      {
+        "skill": "skill_cooking",           // approved skill ID from Content/skills/
+        "level": 1,                        // 0-5, never below what the points grant
+        "practicePoints": 14,              // cumulative, never decreases
+        "dailyPoints": 2,                  // 0-20, accrued on lastPracticeDay
+        "lastPracticeDay": 6               // -1 before any practice
+      }
+    ],
+    "npc:npc_bessa_marlowe": [
+      { "skill": "skill_cooking", "level": 3, "practicePoints": 14, "dailyPoints": 2, "lastPracticeDay": 6 }
+    ]
+  },
+  "tavernPopularity": {                    // v3: 0-100 renown + decay cursors
+    "popularity": 64,
+    "lastSkilledCookDay": 6,               // -1 when no skilled cook ever worked
+    "lastDecayDay": 6                      // -1 before the decay system first ran
+  },
+  "ingredientDemand": {                     // v3: decay cursor + positive demand only
+    "lastDecayDay": 6,
+    "demand": { "item_firewood": 2, "item_fish": 2 }   // ordinal item order
   }
 }
 ```
@@ -269,16 +295,20 @@ shop stock or an actor's belongings, makes saving fail with `SaveException`
 
 ## Loader notes
 
-1. Validate `formatVersion` first; reject anything but `1` or `2`.
+1. Validate `formatVersion` first; reject anything but `1`, `2` or `3`.
 2. Build order suggestion: fresh `WorldState(savedRngState, new GameTime(savedClock))`
    (per the P1-21f brief, `SimRng(ulong)` resumes the stream exactly), load
    approved definitions by ID, restore event log (retained events + both
    high-water marks), command queue, NPCs (`NpcState.Restore` checks the
-   sleeping/intention agreement), beliefs, memories, perception cursor, shops,
+   sleeping/intention agreement; v3 also restores `happiness` via
+   `RestoreHappiness`), beliefs, memories, perception cursor, shops,
    belongings, production/restock/price states, reputation (skip when null),
    travel (re-register NPCs and re-apply journeys when non-null),
    relationships + baselines + cursors, attributed memories, and the eleven
-   economy progress states via their `Restore*` methods (skip when null for v1).
+   economy progress states via their `Restore*` methods (skip when null for v1);
+   v3 then restores skill stores (`SkillStore.Restore` for the player and every
+   listed NPC), tavern popularity and ingredient demand (skip when null for
+   v1/v2 — the fresh defaults apply).
 3. `AppleScenarioState` is harness-owned and intentionally not persisted.
 4. Wallet aliasing: a shop owner's wallet IS their personal wallet (one shared
    object — `Shop.Purchase` has a `ReferenceEquals` fast path for self-purchase).
@@ -287,18 +317,24 @@ shop stock or an actor's belongings, makes saving fail with `SaveException`
    restore a single shared `Wallet`. If a future phase ever wants them separate,
    the schema needs an explicit aliasing marker.
 
-## Compatibility (v1 → v2)
+## Compatibility (v1 → v2 → v3)
 
-Version 2 adds sections; it removes nothing. The loader accepts both:
+Version 3 adds sections; it removes nothing. The loader accepts all three:
 
-- **v2 → v2**: every section restores via its `Capture`/`Restore` pair.
+- **v3 → v3**: every section restores via its `Capture`/`Restore` pair.
+- **v2 → v3**: skill stores restore empty, NPC happiness restores neutral (50),
+  tavern popularity restores to its 50 baseline and ingredient demand to empty,
+  all with cursors at -1 (never run). Rationale: every Phase 3 state has a
+  safe uninitialized default — a v2 save predates the systems that mutate it,
+  so "never started" is the truthful restore.
+- **v1 → v3**: as v2 → v3, plus the v1 → v2 rules below.
 - **v1 → v2**: the eleven economy states, relationships, and attributed memories
   keep their fresh-world defaults (uninitialized, empty, cursors at zero); shop
   and belongings lots are rebuilt as single age-0 lots from the saved counts.
   Rationale: every Phase 2 state has a safe uninitialized default — a v1 save
   predates the systems that mutate it, so "never started" is the truthful
   restore.
-- **v3+**: rejected with `LoadException`. Versions below 1 are rejected too.
+- **v4+**: rejected with `LoadException`. Versions below 1 are rejected too.
 
 Corruption checks new in v2: lot quantities must sum to the saved counts;
 attributed-memory recall deltas must satisfy |recalled| ≤ |original| per axis

@@ -251,7 +251,7 @@ namespace LivingWorld.Simulation.Tests.Persistence
         {
             string root = RepositoryRoot();
             string json = WorldSaver.Save(RichWorld(ContentBundle.Load(root)));
-            string bad = json.Replace("\"formatVersion\": 2", "\"formatVersion\": 99");
+            string bad = json.Replace("\"formatVersion\": 3", "\"formatVersion\": 99");
             Assert.That(bad, Is.Not.EqualTo(json));
             Assert.Throws<LoadException>(() => WorldLoader.Load(bad, root));
         }
@@ -288,13 +288,23 @@ namespace LivingWorld.Simulation.Tests.Persistence
         }
 
         [Test]
-        public void RejectsContradictorySleepingFlag()
+        public void SleepingFlagAndIntentionRestoreIndependently()
         {
+            // The running world drives IsSleeping from the schedule while the
+            // intention driver is unwired, so a save that disagrees (sleeping
+            // with no Sleep intention) is honest, not corrupt — it must load,
+            // with both values restored exactly as saved.
             string root = RepositoryRoot();
             string json = WorldSaver.Save(RichWorld(ContentBundle.Load(root)));
-            string bad = json.Replace("\"isSleeping\": false", "\"isSleeping\": true");
-            Assert.That(bad, Is.Not.EqualTo(json));
-            Assert.Throws<LoadException>(() => WorldLoader.Load(bad, root));
+            string night = json.Replace("\"isSleeping\": false", "\"isSleeping\": true");
+            Assert.That(night, Is.Not.EqualTo(json));
+
+            WorldState loaded = WorldLoader.Load(night, root);
+
+            NpcState mira = loaded.Npcs[Mira];
+            Assert.That(mira.IsSleeping, Is.True);
+            Assert.That(mira.CurrentIntention.Kind, Is.EqualTo(ActivityKind.Work),
+                "The Work intention restores untouched alongside the flipped flag.");
         }
 
         [Test]
@@ -357,9 +367,9 @@ namespace LivingWorld.Simulation.Tests.Persistence
 
             Assert.Throws<LoadException>(() => WorldLoader.Load("{oops", root));
             Assert.Throws<LoadException>(() => WorldLoader.Load(
-                valid.Replace("\"formatVersion\": 2", "\"formatVersion\": 99"), root));
+                valid.Replace("\"formatVersion\": 3", "\"formatVersion\": 99"), root));
             Assert.Throws<LoadException>(() => WorldLoader.Load(
-                valid.Replace("\"isSleeping\": false", "\"isSleeping\": true"), root));
+                valid.Replace("\"happiness\": 50", "\"happiness\": 101"), root));
 
             // The loader either returns a complete world or throws: a valid document still loads.
             WorldState loaded = WorldLoader.Load(valid, root);

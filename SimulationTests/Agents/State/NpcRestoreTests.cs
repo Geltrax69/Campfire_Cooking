@@ -51,7 +51,7 @@ namespace LivingWorld.Simulation.Tests.Agents
         }
 
         [Test]
-        public void RestoreRejectsContradictoryStateWithoutMutatingSource()
+        public void RestoreRejectsNullsButAcceptsDisagreeingSleepAndIntention()
         {
             var definition = Definition(new NeedRates(1, 1, 1));
             var source = NeedState.FromSixtieths(2500, 4799, 60);
@@ -60,9 +60,18 @@ namespace LivingWorld.Simulation.Tests.Agents
 
             Assert.Throws<ArgumentNullException>(() => NpcState.Restore(null, source, false, null));
             Assert.Throws<ArgumentNullException>(() => NpcState.Restore(definition, null, false, null));
-            Assert.Throws<ArgumentException>(() => NpcState.Restore(definition, source, true, null));
-            Assert.Throws<ArgumentException>(() => NpcState.Restore(definition, source, true, eat));
-            Assert.Throws<ArgumentException>(() => NpcState.Restore(definition, source, false, sleep));
+
+            // The running world drives IsSleeping from the schedule while the
+            // intention driver is unwired, so a night-time save honestly carries
+            // IsSleeping=true with no Sleep intention (see NpcState.Restore's
+            // remarks): the flag and the intention restore independently.
+            NpcState nightSave = NpcState.Restore(definition, source, true, null);
+            Assert.That(nightSave.IsSleeping, Is.True);
+            Assert.That(nightSave.CurrentIntention, Is.Null);
+            NpcState staleIntention = NpcState.Restore(definition, source, true, eat);
+            Assert.That(staleIntention.CurrentIntention.Kind, Is.EqualTo(ActivityKind.Eat));
+            NpcState leftover = NpcState.Restore(definition, source, false, sleep);
+            Assert.That(leftover.IsSleeping, Is.False);
 
             Assert.That((source.HungerSixtieths, source.EnergySixtieths, source.SocialSixtieths),
                 Is.EqualTo((2500, 4799, 60)));

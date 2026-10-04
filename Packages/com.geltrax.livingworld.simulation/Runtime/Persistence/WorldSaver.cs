@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.Json;
@@ -23,7 +24,7 @@ namespace LivingWorld.Simulation.Persistence
     public static class WorldSaver
     {
         /// <summary>The save format version written at the head of every document.</summary>
-        public const int FormatVersion = 2;
+        public const int FormatVersion = 3;
 
         /// <summary>Serializes the whole world state. Throws <see cref="SaveException"/> on failure.</summary>
         public static string Save(WorldState state)
@@ -84,6 +85,9 @@ namespace LivingWorld.Simulation.Persistence
             WriteEconomyBaseline(writer, state);
             WriteSpoilage(writer, state);
             WriteDebtLedger(writer, state);
+            WriteSkills(writer, state);
+            WriteTavernPopularity(writer, state);
+            WriteIngredientDemand(writer, state);
             writer.WriteEndObject();
         }
 
@@ -197,6 +201,8 @@ namespace LivingWorld.Simulation.Persistence
                 writer.WriteNumber("socialSixtieths", npc.Needs.SocialSixtieths);
                 writer.WriteEndObject();
                 writer.WriteBoolean("isSleeping", npc.IsSleeping);
+                // Phase 3 (formatVersion 3): mood on the 0-100 happiness scale.
+                writer.WriteNumber("happiness", npc.Happiness);
                 NpcIntention intention = npc.CurrentIntention;
                 if (intention == null)
                 {
@@ -646,12 +652,78 @@ namespace LivingWorld.Simulation.Persistence
             writer.WriteEndObject();
         }
 
+        /// <summary>
+        /// Phase 3 skill state (formatVersion 3): every actor's captured skills, keyed
+        /// by actor ("player" or "npc:&lt;id&gt;"). Actors with no skills are omitted;
+        /// the loader restores them as empty stores. Skills inside each list are in
+        /// ordinal SkillId order (SkillStore.Capture), so the section is deterministic.
+        /// </summary>
+        private static void WriteSkills(Utf8JsonWriter writer, WorldState state)
+        {
+            writer.WriteStartObject("skills");
+            WriteSkillList(writer, "player", state.PlayerSkills.Capture());
+            foreach (NpcState npc in state.Npcs.Npcs)
+            {
+                IReadOnlyList<SkillState> skills = npc.Skills.Capture();
+                if (skills.Count == 0) continue;
+                WriteSkillList(writer, "npc:" + npc.Definition.Id.Value, skills);
+            }
+            writer.WriteEndObject();
+        }
+
+        private static void WriteSkillList(Utf8JsonWriter writer, string name,
+            IReadOnlyList<SkillState> skills)
+        {
+            if (skills.Count == 0) return;
+            writer.WriteStartArray(name);
+            foreach (SkillState skill in skills)
+            {
+                writer.WriteStartObject();
+                writer.WriteString("skill", skill.Skill.Value);
+                writer.WriteNumber("level", skill.Level);
+                writer.WriteNumber("practicePoints", skill.PracticePoints);
+                writer.WriteNumber("dailyPoints", skill.DailyPoints);
+                writer.WriteNumber("lastPracticeDay", skill.LastPracticeDay);
+                writer.WriteEndObject();
+            }
+            writer.WriteEndArray();
+        }
+
+        /// <summary>
+        /// Phase 3 tavern popularity (formatVersion 3): the 0-100 renown plus the two
+        /// day cursors the decay system needs to resume exactly where it left off.
+        /// </summary>
+        private static void WriteTavernPopularity(Utf8JsonWriter writer, WorldState state)
+        {
+            TavernPopularityState popularity = state.TavernPopularity;
+            writer.WriteStartObject("tavernPopularity");
+            writer.WriteNumber("popularity", popularity.Popularity);
+            writer.WriteNumber("lastSkilledCookDay", popularity.LastSkilledCookDay);
+            writer.WriteNumber("lastDecayDay", popularity.LastDecayDay);
+            writer.WriteEndObject();
+        }
+
+        /// <summary>
+        /// Phase 3 ingredient demand (formatVersion 3): the decay cursor plus every
+        /// item with outstanding demand, in ordinal item order. Only positive demand
+        /// is ever stored, so every written amount is at least 1.
+        /// </summary>
+        private static void WriteIngredientDemand(Utf8JsonWriter writer, WorldState state)
+        {
+            IngredientDemandState demand = state.IngredientDemand;
+            writer.WriteStartObject("ingredientDemand");
+            writer.WriteNumber("lastDecayDay", demand.LastDecayDay);
+            writer.WriteStartObject("demand");
+            foreach (KeyValuePair<ItemTypeId, int> pair in demand.All)
+                writer.WriteNumber(pair.Key.Value, pair.Value);
+            writer.WriteEndObject();
+            writer.WriteEndObject();
+        }
+
         private static void WriteActor(Utf8JsonWriter writer, string name, ActorId actor)
         {
             writer.WriteString(name, EncodeActor(actor));
-        }
-
-        private static void WriteActor(Utf8JsonWriter writer, ActorId actor)
+        }        private static void WriteActor(Utf8JsonWriter writer, ActorId actor)
         {
             writer.WriteStringValue(EncodeActor(actor));
         }

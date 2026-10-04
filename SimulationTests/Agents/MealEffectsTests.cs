@@ -159,6 +159,45 @@ namespace LivingWorld.Simulation.Tests.Agents
                 MealEffects.GiveMeal(state, TestCatalog(), giver, receiver, Stew, 80, Home));
         }
 
+        [Test]
+        public void AboveAverageMealLiftsHappiness()
+        {
+            // The reachable cooking band is quality 50-54 (level bonus on a 50
+            // base): a level-3 cook's stew (quality 52) must be the small daily
+            // happiness the design promises (WORLD.md section 8, SKILLS.md
+            // section 1), not a neutral meal.
+            Assert.That(MealEffects.HappinessDeltaForQuality(52), Is.EqualTo(1),
+                "Bessa's level-3 campfire stew lifts mood by 1.");
+            Assert.That(MealEffects.HappinessDeltaForQuality(54), Is.EqualTo(1),
+                "A level-5 cook's ordinary dish still lifts mood by 1.");
+            Assert.That(MealEffects.HappinessDeltaForQuality(51), Is.EqualTo(1));
+        }
+
+        [Test]
+        public void BelowAverageMealLowersHappiness()
+        {
+            Assert.That(MealEffects.HappinessDeltaForQuality(49), Is.EqualTo(-1));
+            Assert.That(MealEffects.HappinessDeltaForQuality(40), Is.EqualTo(-1),
+                "A poor meal is a small daily unhappiness, symmetric with the lift.");
+        }
+
+        [Test]
+        public void ExceptionalMealsMoveHappinessByTwo()
+        {
+            Assert.That(MealEffects.HappinessDeltaForQuality(90), Is.EqualTo(2),
+                "A masterpiece (quality 85+) is remembered longer.");
+            Assert.That(MealEffects.HappinessDeltaForQuality(100), Is.EqualTo(2));
+            Assert.That(MealEffects.HappinessDeltaForQuality(10), Is.EqualTo(-2));
+            Assert.That(MealEffects.HappinessDeltaForQuality(0), Is.EqualTo(-2));
+        }
+
+        [Test]
+        public void AverageMealLeavesHappinessAlone()
+        {
+            Assert.That(MealEffects.HappinessDeltaForQuality(50), Is.EqualTo(0),
+                "An exactly average meal is no event.");
+        }
+
         private static WorldEvent AssertSingleMealEvent(WorldState state)
         {
             var meals = state.Events.Query(type: WorldEventType.MealEaten);

@@ -87,6 +87,11 @@ namespace LivingWorld.Simulation.Persistence
             private EconomyBaselineState EconomyBaseline { get; set; }
             private SpoilageState Spoilage { get; set; }
             private DebtLedgerState DebtLedger { get; set; }
+            // Phase 3 (formatVersion 3) sections; null when loading an older document,
+            // in which case the world keeps its fresh defaults.
+            private List<ActorSkillsPlan> Skills { get; } = new List<ActorSkillsPlan>();
+            private TavernPopularityState TavernPopularity { get; set; }
+            private IngredientDemandState IngredientDemand { get; set; }
 
             public static SavePlan Parse(string json, ContentBundle bundle)
             {
@@ -106,7 +111,7 @@ namespace LivingWorld.Simulation.Persistence
                         new GameTime(root.Property("clock").Int64()));
                     plan.ParseEventLog(root, bundle);
                     plan.ParsePendingCommands(root, bundle);
-                    plan.ParseNpcs(root, bundle);
+                    plan.ParseNpcs(root, bundle, version);
                     plan.ParseBeliefs(root, bundle);
                     plan.ParseMemories(root, bundle);
                     plan.PerceptionCursor = root.Property("perceptionCursor").Int64();
@@ -133,8 +138,15 @@ namespace LivingWorld.Simulation.Persistence
                         plan.ParseSpoilage(root);
                         plan.ParseDebtLedger(root, bundle);
                     }
+                    if (version >= 3)
+                    {
+                        plan.ParseSkills(root, bundle);
+                        plan.ParseTavernPopularity(root);
+                        plan.ParseIngredientDemand(root, bundle);
+                    }
                     plan.CrossCheckCommands();
                     plan.CrossCheckLots();
+                    plan.CrossCheckSkills();
                     return plan;
                 }
             }
@@ -217,7 +229,7 @@ namespace LivingWorld.Simulation.Persistence
                 }
             }
 
-            private void ParseNpcs(Reader root, ContentBundle bundle)
+            private void ParseNpcs(Reader root, ContentBundle bundle, int version)
             {
                 var seen = new HashSet<NpcId>();
                 foreach (Reader entry in root.Items("npcs"))
@@ -248,14 +260,91 @@ namespace LivingWorld.Simulation.Persistence
                         intention = new NpcIntention(kind, destination,
                             new GameTime(intentReader.Property("chosenAt").Int64()));
                     }
-                    // NpcState.Restore enforces this again; reject here so the document is
-                    // fully validated before anything is built.
-                    bool sleepsByIntention = intention != null && intention.Kind == ActivityKind.Sleep;
-                    if (isSleeping != sleepsByIntention)
-                        throw new LoadException("Contradictory sleeping flag and intention in " + path +
-                            ": sleeping requires a Sleep intention.");
-                    Npcs.Add(new NpcPlan(definition, needState, isSleeping, intention));
+                    // The sleeping flag and the intention restore independently (see
+                    // NpcState.Restore): the running world drives IsSleeping from
+                    // the schedule while intentions are unwired, so a night-time
+                    // save honestly disagrees and must still load.
+                    // Phase 3 happiness: required in version 3 documents, neutral before.
+                    int happiness = version >= 3
+                        ? entry.Property("happiness").Int32(0, 100)
+                        : NpcState.NeutralHappiness;
+                    Npcs.Add(new NpcPlan(definition, needState, isSleeping, intention, happiness));
                 }
+            }
+
+            /// <summary>
+            /// Phase 3 skill state (formatVersion 3): per-actor skill lists keyed by
+            /// actor ("player" or "npc:&lt;id&gt;"). Every skill ID is approved, no
+            /// skill repeats within an actor, and every value passes through
+            /// SkillState.Restore's validation.
+            /// </summary>
+            private void ParseSkills(Reader root, ContentBundle bundle)
+            {
+                var seen = new HashSet<ActorId>();
+                foreach (KeyValuePair<string, Reader> store in root.Property("skills").Properties())
+                {
+                    string path = store.Value.Path;
+                    ActorId owner = ParseActor(store.Key, bundle, path);
+                    if (!seen.Add(owner))
+                        throw new LoadException("Duplicate skills owner in " + path + ".");
+                    var skills = new List<SkillState>();
+                    var seenSkills = new HashSet<SkillId>();
+                    foreach (Reader entry in store.Value.Items())
+                    {
+                        string entryPath = entry.Path;
+                        var skill = new SkillId(entry.Property("skill").Text());
+                        bundle.RequireSkill(skill, entryPath);
+                        if (!seenSkills.Add(skill))
+                            throw new LoadException("Duplicate skill '" + skill.Value +
+                                "' in " + entryPath + ".");
+                        int level = entry.Property("level").Int32(0, SkillState.MaxLevel);
+                        int practicePoints = entry.Property("practicePoints").Int32(0);
+                        int dailyPoints = entry.Property("dailyPoints").Int32(0, SkillState.DailyCap);
+                        long lastPracticeDay = entry.Property("lastPracticeDay").Int64(-1);
+                        try
+                        {
+                            skills.Add(SkillState.Restore(skill, level, practicePoints,
+                                dailyPoints, lastPracticeDay));
+                        }
+                        catch (Exception failure)
+                        {
+                            throw new LoadException("Invalid skill state in " + entryPath + ".", failure);
+                        }
+                    }
+                    Skills.Add(new ActorSkillsPlan(owner, skills));
+                }
+            }
+
+            /// <summary>
+            /// Phase 3 tavern popularity (formatVersion 3): the 0-100 renown and the
+            /// two day cursors the decay system needs to resume exactly.
+            /// </summary>
+            private void ParseTavernPopularity(Reader root)
+            {
+                Reader section = root.Property("tavernPopularity");
+                int popularity = section.Property("popularity").Int32(0, 100);
+                var state = new TavernPopularityState(popularity);
+                state.LastSkilledCookDay = section.Property("lastSkilledCookDay").Int64(-1);
+                state.LastDecayDay = section.Property("lastDecayDay").Int64(-1);
+                TavernPopularity = state;
+            }
+
+            /// <summary>
+            /// Phase 3 ingredient demand (formatVersion 3): the decay cursor and every
+            /// item with outstanding demand (amounts are at least 1 by construction).
+            /// </summary>
+            private void ParseIngredientDemand(Reader root, ContentBundle bundle)
+            {
+                Reader section = root.Property("ingredientDemand");
+                var state = new IngredientDemandState();
+                state.LastDecayDay = section.Property("lastDecayDay").Int64(-1);
+                foreach (KeyValuePair<string, Reader> row in section.Property("demand").Properties())
+                {
+                    var item = new ItemTypeId(row.Key);
+                    bundle.RequireItem(item, row.Value.Path);
+                    state.AddDemand(item, row.Value.Int32(1));
+                }
+                IngredientDemand = state;
             }
 
             private void ParseBeliefs(Reader root, ContentBundle bundle)
@@ -735,6 +824,24 @@ namespace LivingWorld.Simulation.Persistence
             }
 
             /// <summary>
+            /// Every skills entry must belong to the player or to an NPC saved in the
+            /// document's "npcs" array: skills for a stranger would be silently dropped.
+            /// </summary>
+            private void CrossCheckSkills()
+            {
+                var saved = new HashSet<NpcId>();
+                foreach (NpcPlan npc in Npcs) saved.Add(npc.Definition.Id);
+                foreach (ActorSkillsPlan plan in Skills)
+                {
+                    if (plan.Owner.IsPlayer) continue;
+                    if (!plan.Owner.Npc.HasValue || !saved.Contains(plan.Owner.Npc.Value))
+                        throw new LoadException("Skills for NPC '" +
+                            (plan.Owner.Npc.HasValue ? plan.Owner.Npc.Value.Value : "?") +
+                            "' but that NPC is not in the save's \"npcs\" array.");
+                }
+            }
+
+            /// <summary>
             /// Lot quantities must sum to the saved counts: a document that claims 9 apples
             /// in "stock" but lots totaling 7 is corrupt. Version 1 documents have no lots
             /// and skip this check.
@@ -784,7 +891,14 @@ namespace LivingWorld.Simulation.Persistence
                 state.Belongings.Restore(belongings);
                 state.RestorePendingCommands(new PendingCommandsState(BuildCommands(state)));
                 foreach (NpcPlan npc in Npcs)
-                    state.Npcs.Register(NpcState.Restore(npc.Definition, npc.Needs, npc.IsSleeping, npc.Intention));
+                {
+                    NpcState restored = NpcState.Restore(npc.Definition, npc.Needs,
+                        npc.IsSleeping, npc.Intention);
+                    // Phase 3 state: mood and skills ride on the NPC (neutral/empty
+                    // for older documents, matching a freshly built world).
+                    restored.RestoreHappiness(npc.Happiness);
+                    state.Npcs.Register(restored);
+                }
                 var known = new SortedSet<NpcId>();
                 foreach (KeyValuePair<NpcId, List<Belief>> pair in Beliefs) known.Add(pair.Key);
                 foreach (KeyValuePair<NpcId, List<Memory>> pair in Memories) known.Add(pair.Key);
@@ -834,6 +948,18 @@ namespace LivingWorld.Simulation.Persistence
                 if (EconomyBaseline != null) state.RestoreEconomyBaseline(EconomyBaseline);
                 if (Spoilage != null) state.RestoreSpoilage(Spoilage);
                 if (DebtLedger != null) state.RestoreDebtLedger(DebtLedger);
+                // Phase 3 state (formatVersion 3); older documents keep the fresh
+                // defaults: neutral moods, empty skill stores, baseline popularity
+                // and no ingredient demand.
+                foreach (ActorSkillsPlan plan in Skills)
+                {
+                    if (plan.Owner.IsPlayer)
+                        state.PlayerSkills.Restore(plan.Skills);
+                    else
+                        state.Npcs[plan.Owner.Npc.Value].Skills.Restore(plan.Skills);
+                }
+                if (TavernPopularity != null) state.RestoreTavernPopularity(TavernPopularity);
+                if (IngredientDemand != null) state.RestoreIngredientDemand(IngredientDemand);
                 return state;
             }
 
@@ -1128,14 +1254,29 @@ namespace LivingWorld.Simulation.Persistence
 
         private sealed class NpcPlan
         {
-            public NpcPlan(NpcDefinition definition, NeedState needs, bool isSleeping, NpcIntention intention)
+            public NpcPlan(NpcDefinition definition, NeedState needs, bool isSleeping,
+                NpcIntention intention, int happiness)
             {
-                Definition = definition; Needs = needs; IsSleeping = isSleeping; Intention = intention;
+                Definition = definition; Needs = needs; IsSleeping = isSleeping;
+                Intention = intention; Happiness = happiness;
             }
             public NpcDefinition Definition { get; }
             public NeedState Needs { get; }
             public bool IsSleeping { get; }
             public NpcIntention Intention { get; }
+            /// <summary>Mood 0-100 (formatVersion 3); neutral for older documents.</summary>
+            public int Happiness { get; }
+        }
+
+        /// <summary>One actor's saved skill states (formatVersion 3).</summary>
+        private sealed class ActorSkillsPlan
+        {
+            public ActorSkillsPlan(ActorId owner, List<SkillState> skills)
+            {
+                Owner = owner; Skills = skills;
+            }
+            public ActorId Owner { get; }
+            public List<SkillState> Skills { get; }
         }
 
         private sealed class ShopPlan

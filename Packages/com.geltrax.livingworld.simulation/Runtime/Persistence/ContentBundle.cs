@@ -11,26 +11,33 @@ namespace LivingWorld.Simulation.Persistence
 {
     /// <summary>
     /// Approved immutable definitions a save document references by ID: the item catalog,
-    /// the location map, every NPC definition and the reputation group IDs. The loader
-    /// resolves every saved reference against this bundle, so an unknown ID is rejected
-    /// during validation, before any world state is built.
+    /// the location map, every NPC definition, the reputation group IDs and the skill
+    /// IDs. The loader resolves every saved reference against this bundle, so an
+    /// unknown ID is rejected during validation, before any world state is built.
     /// </summary>
     internal sealed class ContentBundle
     {
         private ContentBundle(ItemCatalog catalog, LocationMap map,
             IReadOnlyDictionary<NpcId, NpcDefinition> npcDefinitions,
-            IReadOnlyDictionary<ReputationGroupId, string> reputationGroups)
+            IReadOnlyDictionary<ReputationGroupId, string> reputationGroups,
+            IReadOnlyCollection<SkillId> skillIds)
         {
             Catalog = catalog;
             Map = map;
             NpcDefinitions = npcDefinitions;
             ReputationGroups = reputationGroups;
+            SkillIds = skillIds;
+            _skillIdSet = new HashSet<SkillId>(skillIds);
         }
 
         public ItemCatalog Catalog { get; }
         public LocationMap Map { get; }
         public IReadOnlyDictionary<NpcId, NpcDefinition> NpcDefinitions { get; }
         public IReadOnlyDictionary<ReputationGroupId, string> ReputationGroups { get; }
+        /// <summary>Every skill ID in the approved Content/skills/skills.json.</summary>
+        public IReadOnlyCollection<SkillId> SkillIds { get; }
+
+        private readonly HashSet<SkillId> _skillIdSet;
 
         /// <summary>Loads every approved definition file under <paramref name="contentRoot"/>/Content.</summary>
         /// <param name="contentRoot">Directory containing the approved Content/ folder (usually the repo root).</param>
@@ -48,7 +55,9 @@ namespace LivingWorld.Simulation.Persistence
                 LoadNpcDefinitions(Path.Combine(content, "npcs", "npcs.json"), map);
             IReadOnlyDictionary<ReputationGroupId, string> groups =
                 LoadReputationGroups(Path.Combine(content, "social", "social.json"));
-            return new ContentBundle(catalog, map, npcs, groups);
+            IReadOnlyCollection<SkillId> skills =
+                LoadSkillIds(Path.Combine(content, "skills", "skills.json"));
+            return new ContentBundle(catalog, map, npcs, groups, skills);
         }
 
         /// <summary>Rejects with <see cref="LoadException"/> when the item is not in the approved catalog.</summary>
@@ -59,6 +68,27 @@ namespace LivingWorld.Simulation.Persistence
             {
                 throw new LoadException("Unknown item type '" + id.Value + "' in " + where + ".", failure);
             }
+        }
+
+        /// <summary>Rejects with <see cref="LoadException"/> when the skill is not an approved skill ID.</summary>
+        public void RequireSkill(SkillId id, string where)
+        {
+            if (!_skillIdSet.Contains(id))
+                throw new LoadException("Unknown skill '" + id.Value + "' in " + where + ".");
+        }
+
+        private static IReadOnlyCollection<SkillId> LoadSkillIds(string path)
+        {
+            JsonDocument document = ReadJson(path, "skill list");
+            var ids = new List<SkillId>();
+            var seen = new HashSet<SkillId>();
+            foreach (JsonElement row in Each(document, "skills", path))
+            {
+                var id = new SkillId(RequiredText(row, "id", path));
+                if (!seen.Add(id)) throw new LoadException("Duplicate skill ID '" + id.Value + "' in " + path + ".");
+                ids.Add(id);
+            }
+            return ids;
         }
 
         private static ItemCatalog LoadItemCatalog(string path)
