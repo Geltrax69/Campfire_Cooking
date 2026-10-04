@@ -41,7 +41,24 @@ namespace LivingWorld.Simulation.Core
         /// orchestrator ratification: the Agents folder may not edit Core): copper
         /// carries the recorded economic loss; the town-development phase reads it.
         /// </summary>
-        CropDamage
+        CropDamage,
+        /// <summary>
+        /// A taming bond formed between an actor and an animal. P4-04 addition
+        /// (flagged for orchestrator ratification: the Agents folder may not edit
+        /// Core): actor is the new owner; location is where the animal was bonded.
+        /// The bond itself (AnimalState.Owner) is the primary truth record; this
+        /// event lets perception, memory and rumor see it. Emission from
+        /// TamingSystem is future work.
+        /// </summary>
+        Bonded,
+        /// <summary>
+        /// A taming bond broke (cruelty, neglect or starvation). P4-04 addition
+        /// (flagged for orchestrator ratification: the Agents folder may not edit
+        /// Core): actor is the one whose handling broke it, when there is one;
+        /// location is where the animal was. Emission from TamingSystem is
+        /// future work.
+        /// </summary>
+        BondBroken
     }
 
     /// <summary>Describes noticeability, not whether anybody actually perceived the event.</summary>
@@ -104,7 +121,7 @@ namespace LivingWorld.Simulation.Core
 
         internal static void ValidateType(WorldEventType type)
         {
-            if (type < WorldEventType.Purchase || type > WorldEventType.CropDamage)
+            if (type < WorldEventType.Purchase || type > WorldEventType.BondBroken)
                 throw new ArgumentOutOfRangeException(nameof(type));
         }
 
