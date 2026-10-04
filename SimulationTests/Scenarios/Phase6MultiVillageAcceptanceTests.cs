@@ -249,8 +249,8 @@ namespace LivingWorld.Simulation.Tests.Scenarios
             for (long day = 1; day <= 5; day++) TickDay(fixture, day);
             string json = WorldSaver.Save(fixture.World);
 
-            // Current version is 6.
-            Assert.That(json, Does.Contain("\"formatVersion\": 6"));
+            // Current version is 7.
+            Assert.That(json, Does.Contain("\"formatVersion\": 7"));
 
             // v5 documents (without the Phase 6 sections) load with Phase 6 defaults.
             string v5 = RemoveSections(json, new[] { "villages", "tradeLedger", "news" }, 5);

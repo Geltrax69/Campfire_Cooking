@@ -56,6 +56,17 @@ below).
       "needs": { "hungerSixtieths": 3061, "energySixtieths": 4200, "socialSixtieths": 5100 },
       "isSleeping": false,               // agrees with intention (Sleep ⇒ sleeping)
       "happiness": 52,                   // v3: mood 0-100 (50 neutral); absent before v3
+      "age": 34,                         // v7: years lived; the Content age before v7
+      "isDeceased": false,               // v7: true once dead of old age; absent before v7
+      // "born": { ... }                 // v7: only for NPCs born during the simulation
+                                         // (no Content entry): name, gender, home,
+                                         // needRates {hungerPerHour, energyPerHour, socialPerHour}
+      "mother": "npc_sella_wren",        // v7: nullable NPC IDs; null/absent before v7
+      "father": null,                    // v7
+      "partner": "npc_bram_stone",        // v7
+      "children": ["npc_tansy_alder"],   // v7: in link order
+      "household": "household_loc_home_miller",  // v7: nullable; null/absent before v7
+      "designatedHeir": null,            // v7: the will's named heir
       "intention": { "kind": "Work", "destination": "loc_apple_stall", "chosenAt": 1380 }
         // or null when the NPC has no current intention
     }
@@ -368,6 +379,26 @@ below).
     "opinions": [                          // one per village pair, 0-100
       { "from": "village_kings_rest", "to": "village_millbrook", "opinion": 48 }
     ]
+  },
+  "aging": {                               // v7: aging cursor
+    "initialized": true,
+    "lastAgingDay": 720                    // >= 0
+  },
+  "family": {                              // v7: family cursor
+    "initialized": true,
+    "lastFamilyDay": 720,                  // >= 0
+    "birthsSoFar": 3                       // keeps "npc_born_<n>" IDs unique; >= 0
+  },
+  "households": [                          // v7: ordinal HouseholdId order
+    {
+      "id": "household_loc_home_miller",
+      "home": "loc_home_miller",
+      "members": ["npc_garrick_alder", "npc_tansy_alder"]  // ordinal NpcId order
+    }
+  ],
+  "inheritance": {                         // v7: inheritance cursor
+    "initialized": true,
+    "distributed": ["npc_bram_stone"]      // deceased NPCs already settled; ordinal order
   }
 }
 ```
@@ -454,9 +485,22 @@ shop stock or an actor's belongings, makes saving fail with `SaveException`
    saved balances contradict is a `LoadException`. Version 1 documents have no
    marker and default to separate tills.
 
-## Compatibility (v1 → v2 → v3 → v4 → v5 → v6)
+## Compatibility (v1 → v2 → v3 → v4 → v5 → v6 → v7)
 
-Version 6 adds sections; it removes nothing. The loader accepts all six:
+Version 7 adds sections; it removes nothing. The loader accepts all seven:
+
+- **v7 → v7**: every section restores via its `Capture`/`Restore` pair.
+- **v6 → v7**: NPCs restore the Content age, alive, with no family links or
+  households; aging, family and inheritance cursors restore uninitialized
+  (systems stay quiet until a world-build step initializes them) and no
+  estates are marked distributed. Rationale: a v6 save predates the systems
+  that mutate generation state, so "never started" is the truthful restore —
+  matching a world built before the generations phase.
+- **v5 → v7**: as v6 → v7, plus the v5 → v6 rules below.
+- **v4 → v7**: as v5 → v7, plus the v4 → v5 rules below.
+- **v3 → v7**: as v4 → v7, plus the v3 → v4 rules below.
+- **v2 → v7**: as v3 → v7, plus the v2 → v3 rules below.
+- **v1 → v7**: as v2 → v7, plus the v1 → v2 rules below.
 
 - **v6 → v6**: every section restores via its `Capture`/`Restore` pair.
 - **v5 → v6**: the village registry restores empty (no villages), the trade

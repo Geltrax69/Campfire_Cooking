@@ -115,6 +115,7 @@ namespace LivingWorld.Simulation.Agents
                 new Dictionary<string, int>(), mother.Definition.NeedRates,
                 new NpcSchedule(Array.Empty<ScheduleEntry>(), Array.Empty<ScheduleEntry>()));
             var baby = new NpcState(definition, 30, 80, 50);
+            baby.BornInSimulation = true;
             baby.SetParents(motherId, fatherId);
             baby.SetHousehold(household.Id);
             state.Npcs.Register(baby);

@@ -59,4 +59,4 @@ Seed 20261005; day 1 (early autumn) through day 270 (spring). Minute-by-minute t
 
 - Population stat: 120.
 - Active emergent events: event_food_shortage.
-- WorldDigest: 118c93e6f40ca9b28dae3bfa18f7852f9d54400910439dd342c5756e47345b06.
+- WorldDigest: 46bcdfd55f8c3f76d1fee6a3df98068776d7856444bfe3b546aa5edf7eab00e3.

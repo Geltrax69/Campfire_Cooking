@@ -24,7 +24,7 @@ namespace LivingWorld.Simulation.Persistence
     public static class WorldSaver
     {
         /// <summary>The save format version written at the head of every document.</summary>
-        public const int FormatVersion = 6;
+        public const int FormatVersion = 7;
 
         /// <summary>Serializes the whole world state. Throws <see cref="SaveException"/> on failure.</summary>
         public static string Save(WorldState state)
@@ -99,6 +99,10 @@ namespace LivingWorld.Simulation.Persistence
             WriteVillages(writer, state);
             WriteTradeLedger(writer, state);
             WriteNews(writer, state);
+            WriteAging(writer, state);
+            WriteFamily(writer, state);
+            WriteHouseholds(writer, state);
+            WriteInheritance(writer, state);
             writer.WriteEndObject();
         }
 
@@ -214,6 +218,25 @@ namespace LivingWorld.Simulation.Persistence
                 writer.WriteBoolean("isSleeping", npc.IsSleeping);
                 // Phase 3 (formatVersion 3): mood on the 0-100 happiness scale.
                 writer.WriteNumber("happiness", npc.Happiness);
+                // Phase 7 (formatVersion 7): age, death, and family. The loader
+                // reads these only from version 7 documents; older documents
+                // restore the Content age with the NPC alive and no family links.
+                writer.WriteNumber("age", npc.Age);
+                writer.WriteBoolean("isDeceased", npc.IsDeceased);
+                if (npc.BornInSimulation)
+                    WriteBornDetail(writer, npc);
+                WriteNpcIdValue(writer, "mother", npc.MotherId);
+                WriteNpcIdValue(writer, "father", npc.FatherId);
+                WriteNpcIdValue(writer, "partner", npc.PartnerId);
+                writer.WriteStartArray("children");
+                foreach (NpcId child in npc.ChildrenIds)
+                    writer.WriteStringValue(child.Value);
+                writer.WriteEndArray();
+                if (npc.HouseholdId.HasValue)
+                    writer.WriteString("household", npc.HouseholdId.Value.Value);
+                else
+                    writer.WriteNull("household");
+                WriteNpcIdValue(writer, "designatedHeir", npc.DesignatedHeirId);
                 NpcIntention intention = npc.CurrentIntention;
                 if (intention == null)
                 {
@@ -1019,6 +1042,106 @@ namespace LivingWorld.Simulation.Persistence
             writer.WriteNumber("dayCreated", news.DayCreated);
             writer.WriteNumber("severity", news.Severity);
             writer.WriteEndObject();
+        }
+
+        /// <summary>
+        /// Phase 7 aging cursor (formatVersion 7): the initialization flag and the
+        /// last day birthdays were processed, so the system resumes exactly.
+        /// </summary>
+        private static void WriteAging(Utf8JsonWriter writer, WorldState state)
+        {
+            AgingState aging = state.Aging;
+            writer.WriteStartObject("aging");
+            writer.WriteBoolean("initialized", aging.IsInitialized);
+            writer.WriteNumber("lastAgingDay", aging.LastAgingDay);
+            writer.WriteEndObject();
+        }
+
+        /// <summary>
+        /// Phase 7 family cursor (formatVersion 7): the initialization flag, the
+        /// last day births were processed, and the birth counter that keeps
+        /// "npc_born_&lt;n&gt;" IDs unique across save/load.
+        /// </summary>
+        private static void WriteFamily(Utf8JsonWriter writer, WorldState state)
+        {
+            FamilyState family = state.Family;
+            writer.WriteStartObject("family");
+            writer.WriteBoolean("initialized", family.IsInitialized);
+            writer.WriteNumber("lastFamilyDay", family.LastFamilyDay);
+            writer.WriteNumber("birthsSoFar", family.BirthsSoFar);
+            writer.WriteEndObject();
+        }
+
+        /// <summary>
+        /// Phase 7 households (formatVersion 7): every household with its home
+        /// location and members. Written in ordinal HouseholdId order; members in
+        /// ordinal NpcId order for determinism.
+        /// </summary>
+        private static void WriteHouseholds(Utf8JsonWriter writer, WorldState state)
+        {
+            writer.WriteStartArray("households");
+            foreach (Household household in state.Households.Households)
+            {
+                writer.WriteStartObject();
+                writer.WriteString("id", household.Id.Value);
+                writer.WriteString("home", household.Home.Value);
+                writer.WriteStartArray("members");
+                var members = new List<NpcId>(household.Members);
+                members.Sort((left, right) => string.CompareOrdinal(left.Value, right.Value));
+                foreach (NpcId member in members)
+                    writer.WriteStringValue(member.Value);
+                writer.WriteEndArray();
+                writer.WriteEndObject();
+            }
+            writer.WriteEndArray();
+        }
+
+        /// <summary>
+        /// Phase 7 inheritance cursor (formatVersion 7): the initialization flag
+        /// and the deceased NPCs whose estates are already distributed, in ordinal
+        /// order for determinism.
+        /// </summary>
+        private static void WriteInheritance(Utf8JsonWriter writer, WorldState state)
+        {
+            InheritanceState inheritance = state.Inheritance;
+            writer.WriteStartObject("inheritance");
+            writer.WriteBoolean("initialized", inheritance.IsInitialized);
+            writer.WriteStartArray("distributed");
+            var distributed = new List<NpcId>(inheritance.Distributed);
+            distributed.Sort((left, right) => string.CompareOrdinal(left.Value, right.Value));
+            foreach (NpcId id in distributed)
+                writer.WriteStringValue(id.Value);
+            writer.WriteEndArray();
+            writer.WriteEndObject();
+        }
+
+        /// <summary>
+        /// Phase 7 born-NPC definition (formatVersion 7): NPCs born during the
+        /// simulation have no Content entry, so the fields needed to rebuild
+        /// their definition are written inline. Everything else is fixed by
+        /// construction (occupation "child", no money, no traits, no schedule).
+        /// </summary>
+        private static void WriteBornDetail(Utf8JsonWriter writer, NpcState npc)
+        {
+            NpcDefinition definition = npc.Definition;
+            writer.WriteStartObject("born");
+            writer.WriteString("name", definition.Name);
+            writer.WriteString("gender", definition.Gender);
+            writer.WriteString("home", definition.Home.Value);
+            writer.WriteStartObject("needRates");
+            writer.WriteNumber("hungerPerHour", definition.NeedRates.HungerPerHour);
+            writer.WriteNumber("energyPerHour", definition.NeedRates.EnergyPerHour);
+            writer.WriteNumber("socialPerHour", definition.NeedRates.SocialPerHour);
+            writer.WriteEndObject();
+            writer.WriteEndObject();
+        }
+
+        private static void WriteNpcIdValue(Utf8JsonWriter writer, string name, NpcId? id)
+        {
+            if (id.HasValue)
+                writer.WriteString(name, id.Value.Value);
+            else
+                writer.WriteNull(name);
         }
 
         private static void WriteActor(Utf8JsonWriter writer, string name, ActorId actor)
