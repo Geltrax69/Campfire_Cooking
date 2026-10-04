@@ -135,3 +135,32 @@ the ZCode Computer Use session had no permission broker wired up (no
 terminal `screencapture` lacks Screen Recording permission. The automated
 Game View captures above are the current visual evidence; a human can click
 through the rebuilt app directly.
+
+## Village tour follow-up — 2026-10-05
+
+Added `VillageTourTests` (PlayMode): a scripted visit to every placed NPC. For
+each of the ten slice NPCs it teleports the player up to them, verifies the
+floating label shows the approved identity, opens the conversation, submits
+every one of the seven topics and requires a spoken reply for each, then
+captures a screenshot per NPC. It then buys one apple (stock −1, copper −3),
+steals six (stock −6 more, no money moved), advances to the next morning and
+requires Mira's "The count suggests 6 apples are missing. I don't know who
+took them." — the Apple Test beat running inside the real scene. Dusk, night,
+dawn and mid-walk captures close the tour. Assertions use deltas because
+scenario buyers empty the stall during the morning; the frozen world is a tour
+choice, not a claim that the game pauses.
+
+Result: 4/4 PlayMode passed (17 tour captures inspected: town overview, NPC
+conversations, theft notice, night and walking). Full suite now 877 simulation
+/ 28 EditMode / 4 PlayMode.
+
+Known tour-time observations, not fixed here: the "Apple stall" topic reads as
+generic stall news for villagers who do not run the stall (acceptable for a
+guard, slightly odd from the owner before any belief exists); captures can catch
+a one-frame T-pose right after a teleport; a stale Pause caption can appear in
+the same frame as a pause change. None affect normal play.
+
+Native mouse walkthrough still pending: Computer Use remains unavailable in the
+agent session (the plugin's composer entry is disabled in the ZCode app, so no
+permission broker starts). The owner should enable Computer Use in the app
+settings; the macOS permission grant alone does not wire the bridge.
