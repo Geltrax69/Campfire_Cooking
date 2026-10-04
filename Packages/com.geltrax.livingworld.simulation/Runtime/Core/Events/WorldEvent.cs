@@ -15,7 +15,33 @@ namespace LivingWorld.Simulation.Core
         /// quantity carries the meal quality 0-100 (one meal is one event, so no
         /// count is needed), actor is the eater.
         /// </summary>
-        MealEaten
+        MealEaten,
+        /// <summary>
+        /// A predator killed an animal. P4-02 addition (flagged for orchestrator
+        /// ratification: the Agents folder may not edit Core): the wolf pack took a
+        /// deer, or took livestock in winter. Actor is null for wild kills (there is
+        /// no NPC or player actor to blame); quantity is 1; copper carries the
+        /// livestock's economic value when the victim was livestock.
+        /// </summary>
+        Predation,
+        /// <summary>
+        /// Young animals were born/hatched in spring. P4-02 addition (flagged for
+        /// orchestrator ratification: the Agents folder may not edit Core):
+        /// quantity is the litter size; one event per species per breeding.
+        /// </summary>
+        AnimalBirth,
+        /// <summary>
+        /// Excess young were removed by the population cap ("eaten or traded").
+        /// P4-02 addition (flagged for orchestrator ratification: the Agents folder
+        /// may not edit Core): quantity is the number removed.
+        /// </summary>
+        AnimalCulled,
+        /// <summary>
+        /// Wintering deer damaged farm crops. P4-02 addition (flagged for
+        /// orchestrator ratification: the Agents folder may not edit Core): copper
+        /// carries the recorded economic loss; the town-development phase reads it.
+        /// </summary>
+        CropDamage
     }
 
     /// <summary>Describes noticeability, not whether anybody actually perceived the event.</summary>
@@ -78,7 +104,7 @@ namespace LivingWorld.Simulation.Core
 
         internal static void ValidateType(WorldEventType type)
         {
-            if (type < WorldEventType.Purchase || type > WorldEventType.MealEaten)
+            if (type < WorldEventType.Purchase || type > WorldEventType.CropDamage)
                 throw new ArgumentOutOfRangeException(nameof(type));
         }
 

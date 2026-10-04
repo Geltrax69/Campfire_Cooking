@@ -62,6 +62,12 @@ namespace LivingWorld.Simulation.Economy
     /// The coin comes from the crown, outside the village — the third named gate. Each
     /// winter's incident days are drawn once from the shared seeded RNG, so the run is
     /// deterministic.
+    ///
+    /// Pelt economics (P4-02): a wolf pelt is worth 10 copper base (Content/items/items.json);
+    /// the crown's 50-copper winter bounty makes wolf work pay. When a villager kills a wolf
+    /// they get the pelt's value — 10 copper, or 50 in winter with the bounty. Actual wolf
+    /// hunting by villagers is future work (it needs the hunting system); this system only
+    /// pays the scheduled winter bounties.
     /// </summary>
     public sealed class WolfBountySystem : IWorldSystem
     {

@@ -83,8 +83,8 @@ namespace LivingWorld.Simulation.Agents
 
         public AnimalId Id { get; }
         public SpeciesId Species { get; }
-        /// <summary>Where the animal lives/ranges.</summary>
-        public LocationId Location { get; }
+        /// <summary>Where the animal lives/ranges. Mutable: winter pressure moves herds.</summary>
+        public LocationId Location { get; private set; }
         /// <summary>Taming trust 0-100; clamped on every change.</summary>
         public int Trust { get; private set; }
         /// <summary>Bonded owner; null = wild/unbonded.</summary>
@@ -104,5 +104,16 @@ namespace LivingWorld.Simulation.Agents
 
         /// <summary>Bonds (or un-bonds, with null) the animal to an NPC.</summary>
         public void SetOwner(NpcId? owner) => Owner = owner;
+
+        /// <summary>
+        /// Moves the animal to a new location (seasonal ranging). The herd keeps its
+        /// identity: ID, species, trust, owner, age and health are untouched.
+        /// </summary>
+        public void MoveTo(LocationId location)
+        {
+            if (!location.IsValid)
+                throw new ArgumentException("An animal needs a valid location.", nameof(location));
+            Location = location;
+        }
     }
 }
