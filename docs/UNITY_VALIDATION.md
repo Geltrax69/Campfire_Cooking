@@ -117,3 +117,21 @@ No weather or health facts were invented. This remains a prototype slice,
 not a claim that the complete game works or that there are no remaining issues.
 
 Final dialogue review corrected vowel-leading occupation articles (for example, “an apple-stall owner”). Two new regression cases first reproduced the mistake; the complete simulation suite then passed 877/877, and all three Unity PlayMode tests passed with the corrected phrasing visible in the captures.
+
+## Stale-build follow-up — 2026-10-04 (late)
+
+The previously launched Mac app predated the dialogue-article fix (bundle built
+20:30, fix committed 21:34), so the running game still showed the old phrasing.
+All suites were re-run from source on this machine: 877/877 simulation
+(required `DOTNET_ROLL_FORWARD=LatestMajor` because the installed SDK is now
+.NET 10 only; the net8.0 test host rolls forward), 28/28 EditMode, 3/3
+PlayMode. The Mac development build was regenerated at 23:44 including the
+corrected dialogue and relaunched; the fresh Player.log shows a normal startup
+with zero exceptions.
+
+The native mouse walkthrough remains pending for a tooling reason this time:
+the ZCode Computer Use session had no permission broker wired up (no
+`~/.zcode/cua-broker` socket), so screen control could not start at all, and
+terminal `screencapture` lacks Screen Recording permission. The automated
+Game View captures above are the current visual evidence; a human can click
+through the rebuilt app directly.
