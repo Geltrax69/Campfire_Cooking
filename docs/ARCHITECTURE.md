@@ -248,3 +248,11 @@ Add new entries at the bottom: date, decision, reason.
 | 2026-10-04 | P1-20: the Apple Test uses fixed scenario inputs with a seeded 50% witness branch, zero rumor mutation, caller-owned progress and a separate human story report | Prove both witnessed and unwitnessed emergent outcomes without putting scenario narration or hard-coded consequences into runtime systems |
 | 2026-10-04 | Content fix: add item_cloth_local to general store sells in locations.json | Match approved economy.json and design (Tilda retails local cloth); human-approved |
 | 2026-10-04 | Content fix: flip 7 cooked-food hunger values to negative; add NoFoodItemHasPositiveHungerEffect test | ITEMS.md convention: eating lowers hunger (negative restores); positive values restored nothing due to runtime clamp |
+| 2026-10-04 | P3-01: skill levels 1-5, thresholds 20/100/300/700/1500, daily cap 20, teaching x2, qualityBonus 0-4, no decay | Per SKILLS.md: practice and teaching only, never XP-from-killing; cozy pacing |
+| 2026-10-04 | P3-02: recipe failure = clamp((difficulty - level + 1) x 10, 0, 40)%; quality = clamp(50 + bonus); permission = trust >= 40 | Per RECIPES.md formulas; trust>=40 is a simplification, real persuasion is future work |
+| 2026-10-04 | P3-02: waste is all-or-nothing (failure loses 100%, success wastes 0%) not partial 30% | Simplification; inventories don't track per-unit waste yet |
+| 2026-10-04 | P3-03: meal happiness = round((Q-50)/25); tavern popularity 0-100 starts 50; ingredient demand +1 per input, halves daily | Per SKILLS.md "small daily happiness that compounds"; popularity decays toward 50 |
+| 2026-10-04 | P3-03: added WorldEventType.MealEaten (one enum line in Core) | No existing event type fit; persistence unaffected |
+| 2026-10-04 | P3-04: save format v3 (skills, happiness, tavern popularity, ingredient demand); v2/v1 load with defaults | All Phase 3 state must survive save/load |
+| 2026-10-04 | P3-04: meal happiness recalibrated (51+ -> +1, 85+ -> +2) because ordinary cooking maxes at quality 54 | Old formula made happiness unreachable; WORLD.md promises "small daily happiness" |
+| 2026-10-04 | P3-04: NpcState.Restore no longer requires sleeping-flag/intention agreement | NeedsSystem drives IsSleeping from schedule; intentions unwired; flag recomputed each tick |

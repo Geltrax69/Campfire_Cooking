@@ -161,8 +161,10 @@ All new mutable state must be save/load-compatible.
 |---|---|---|---|---|---|
 | P3-01 | Skill state: SkillState with levels 1-5, practice points, thresholds (100/300/700/1500), daily cap 20, teaching x2, qualityBonus 0-4; NPC and player skill stores | Agents | P2-12 | Tests: practice grants points; level thresholds; daily cap enforced; teaching doubles; quality bonus by level | done (2026-10-04) |
 | P3-02 | Recipe execution: RecipeDefinition from Content/recipes; cooking/crafting sessions consume inputs + fuel, roll failure by (difficulty - level), output items with quality = clamp(avg input + bonus); level gates hard; permission from relationships | Economy | P3-01 | Tests: at-level recipe succeeds ~90%; 2-above fails 30%; failure loses inputs; quality scales with skill | done (2026-10-04) |
-| P3-03 | Cooking effects: meal quality -> NPC happiness/health; tavern popularity from cook skill; ingredient demand shifts prices; better cooks waste less | Agents, Economy | P3-02 | Tests: quality-80 stew raises happiness more than quality-50; tavern revenue rises with skilled cook | todo |
-| P3-04 | Phase 3 acceptance: NPC cooks daily meals; player practices cooking; skill improves; effects visible in week-long run | Test & Scenario | P3-01 … P3-03 | Tests: 7-day run: meals cooked, skill points accrue, no errors; readable log | todo |
+| P3-03 | Cooking effects: meal quality -> NPC happiness/health; tavern popularity from cook skill; ingredient demand shifts prices; better cooks waste less | Agents, Economy | P3-02 | Tests: quality-80 stew raises happiness more than quality-50; tavern revenue rises with skilled cook | done (2026-10-04) |
+| P3-04 | Phase 3 acceptance: NPC cooks daily meals; player practices cooking; skill improves; effects visible in week-long run | Test & Scenario | P3-01 … P3-03 | Tests: 7-day run: meals cooked, skill points accrue, no errors; readable log | done (2026-10-04) |
+
+**Phase 3 DONE (2026-10-04).** All 4 tasks complete. 639 tests green. Skills (levels 1-5, practice, teaching, daily cap), recipe execution (21 recipes, quality, failure, fuel, permission), cooking effects (happiness, tavern popularity, ingredient demand, waste reduction), 7-day acceptance with save/load determinism (save format v3).
 
 ## Later simulation phases (plan in detail when the previous phase is done)
 
