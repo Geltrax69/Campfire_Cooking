@@ -17,6 +17,7 @@ namespace LivingWorld.Simulation.Agents
             Needs = needs;
             IsSleeping = isSleeping;
             CurrentIntention = intention;
+            Skills = new SkillStore();
         }
 
         /// <summary>
@@ -47,6 +48,8 @@ namespace LivingWorld.Simulation.Agents
         public NeedState Needs { get; }
         public bool IsSleeping { get; set; }
         public NpcIntention CurrentIntention { get; private set; }
+        /// <summary>This NPC's skill states (levels earned through practice and teaching).</summary>
+        public SkillStore Skills { get; }
 
         public void AdvanceNeedsOneMinute()
         {
