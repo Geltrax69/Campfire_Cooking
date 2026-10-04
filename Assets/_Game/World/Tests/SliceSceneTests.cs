@@ -2,6 +2,7 @@ using System.Collections;
 using System.IO;
 using LivingWorld.Game.Bridge;
 using LivingWorld.Game.UI;
+using LivingWorld.Game.Player;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -69,6 +70,97 @@ namespace LivingWorld.Game.World.Tests
             ScreenCapture.CaptureScreenshot("TestResults/apple-shop-small-landscape.png");
             yield return null;
         }
+        [UnityTest]
+        public IEnumerator WalkthroughMovesAndStopsAtBoundsAndTalksToNamedNpc()
+        {
+            yield return SceneManager.LoadSceneAsync("AppleShopSlice");
+            yield return null;
+            var walker = Object.FindFirstObjectByType<TownWalker>();
+            var hud = Object.FindFirstObjectByType<ShopHud>();
+            Assert.That(walker, Is.Not.Null);
+            Assert.That(walker.IdleClip, Is.Not.Null);
+            Assert.That(walker.WalkClip, Is.Not.Null);
+            Assert.That(walker.GetComponentInChildren<SkinnedMeshRenderer>(), Is.Not.Null, "The walker needs a visible character.");
+            var start = walker.transform.position;
+            for (var i = 0; i < 10; i++) walker.MoveInput(Vector2.right, 0.02f);
+            Assert.That(Vector3.Distance(start, walker.transform.position), Is.GreaterThan(0.3f));
+            var controller = walker.GetComponent<CharacterController>();
+            controller.enabled = false;
+            walker.transform.position = new Vector3(29.8f, 0.2f, 20);
+            controller.enabled = true;
+            Physics.SyncTransforms();
+            for (var i = 0; i < 50; i++) controller.Move(Vector3.right * 0.1f);
+            Assert.That(walker.transform.position.x, Is.LessThan(30.3f), "Bounds must stop escape from the town ground.");
+            var tavern = GameObject.Find("The Hearthside").GetComponent<BoxCollider>();
+            controller.enabled = false;
+            walker.transform.position = new Vector3(tavern.bounds.center.x, 0.2f, tavern.bounds.min.z - 1);
+            controller.enabled = true;
+            Physics.SyncTransforms();
+            for (var i = 0; i < 40; i++) controller.Move(Vector3.forward * 0.1f);
+            Assert.That(walker.transform.position.z, Is.LessThan(tavern.bounds.min.z), "The tavern wall must block walking through the building.");
+            var runner = Object.FindFirstObjectByType<WorldRunner>();
+            var lighting = Object.FindFirstObjectByType<VillageLighting>();
+            runner.SetPaused(false);
+            runner.AdvanceMinutes((int)(720 - runner.Snapshot.Minute % 1440));
+            runner.SetPaused(true);
+            yield return null;
+            var noonIntensity = lighting.Sun.intensity;
+            runner.SetPaused(false);
+            runner.AdvanceMinutes(720);
+            runner.SetPaused(true);
+            yield return null;
+            Assert.That(lighting.Sun.intensity, Is.LessThan(noonIntensity), "Light must follow simulation time at midnight.");
+            runner.SetPaused(false);
+            runner.AdvanceMinutes(720); // Return to noon for readable dialogue captures.
+            runner.SetPaused(true);
+            controller.enabled = false;
+            walker.transform.position = new Vector3(4, 0.15f, -7);
+            controller.enabled = true;
+            yield return null;
+            var npc = Object.FindObjectsByType<NpcInteraction>(FindObjectsSortMode.None).Single(item => item.NpcId == "npc_mira_holt");
+            npc.OpenConversation();
+            yield return null;
+            Assert.That(hud.IsModalOpen, Is.True);
+            var dialogue = hud.GetComponent<UIDocument>().rootVisualElement.Q("npc-dialogue");
+            Assert.That(dialogue.resolvedStyle.display, Is.EqualTo(DisplayStyle.Flex));
+            Assert.That(dialogue.Query<Label>().ToList().Any(label => label.text.Contains("Mira Holt")), Is.True);
+            var talkingPosition = walker.transform.position;
+            walker.MoveInput(Vector2.up, 0.1f);
+            Assert.That(Vector2.Distance(new Vector2(talkingPosition.x, talkingPosition.z),
+                new Vector2(walker.transform.position.x, walker.transform.position.z)), Is.LessThan(0.001f));
+            var smalltalk = dialogue.Query<Button>().ToList().Single(button => button.text == "Smalltalk");
+            Assert.That(smalltalk.enabledInHierarchy, Is.True);
+            using (var submit = NavigationSubmitEvent.GetPooled())
+            {
+                submit.target = smalltalk;
+                smalltalk.SendEvent(submit);
+            }
+            yield return null;
+            Assert.That(dialogue.Query<Label>().ToList().Any(label => label.text.Contains("apple-stall owner")), Is.True,
+                "The selected topic must return Mira's approved occupation through the bridge.");
+            Directory.CreateDirectory("TestResults");
+            SetCaptureSize(1366, 1024);
+            yield return null;
+            yield return null;
+            Assert.That(Screen.width, Is.EqualTo(1366));
+            Assert.That(Screen.height, Is.EqualTo(1024));
+            var close = dialogue.Query<Button>().ToList().Single(button => button.text == "Close");
+            Assert.That(close.worldBound.Overlaps(dialogue.worldBound), Is.True, "Close must remain inside the visible dialogue panel.");
+            ScreenCapture.CaptureScreenshot("TestResults/npc-dialogue-ipad.png");
+            yield return null;
+            SetCaptureSize(844, 390);
+            yield return null;
+            yield return null;
+            Assert.That(Screen.width, Is.EqualTo(844));
+            Assert.That(Screen.height, Is.EqualTo(390));
+            Assert.That(close.worldBound.Overlaps(dialogue.worldBound), Is.True);
+            Assert.That(dialogue.Q<ScrollView>(), Is.Not.Null, "Dialogue choices must scroll on short screens.");
+            ScreenCapture.CaptureScreenshot("TestResults/npc-dialogue-small-landscape.png");
+            yield return null;
+            hud.HideNpc();
+            Assert.That(hud.IsModalOpen, Is.False);
+        }
+
 #if UNITY_EDITOR
         [Test]
         public void ProjectSettingsEnableInputSystem()

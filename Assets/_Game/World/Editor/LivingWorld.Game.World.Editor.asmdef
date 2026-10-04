@@ -1,1 +1,1 @@
-{"name":"LivingWorld.Game.World.Editor","references":["LivingWorld.Game.World","LivingWorld.Game.Bridge","LivingWorld.Game.UI","Unity.RenderPipelines.Universal.Runtime","Unity.RenderPipelines.Core.Runtime"],"includePlatforms":["Editor"],"autoReferenced":true}
+{"name": "LivingWorld.Game.World.Editor", "references": ["LivingWorld.Game.World", "LivingWorld.Game.Bridge", "LivingWorld.Game.UI", "Unity.RenderPipelines.Universal.Runtime", "Unity.RenderPipelines.Core.Runtime", "LivingWorld.Game.Player"], "includePlatforms": ["Editor"], "autoReferenced": true}
