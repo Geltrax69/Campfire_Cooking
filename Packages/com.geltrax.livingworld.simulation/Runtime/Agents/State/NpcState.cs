@@ -112,6 +112,12 @@ namespace LivingWorld.Simulation.Agents
         public NpcId? DesignatedHeirId { get; private set; }
 
         /// <summary>
+        /// True for NPCs born during the simulation (P7-02, set by FamilySystem).
+        /// The saver persists their definition inline, since they have no Content entry.
+        /// </summary>
+        internal bool BornInSimulation { get; set; }
+
+        /// <summary>
         /// Links parents (P7-02). Either side may be null to fill in one parent at
         /// a time; changing an already-set parent to a different NPC throws,
         /// because parents are set at birth and never change.

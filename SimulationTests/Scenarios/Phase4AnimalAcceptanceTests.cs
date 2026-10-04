@@ -370,13 +370,13 @@ namespace LivingWorld.Simulation.Tests.Scenarios
                 Farm, 30, null, AnimalAge.Adult, 100));
             state.RestorePredation(new PredationState(initialized: true, lastHuntDay: 12));
 
-            string v6 = WorldSaver.Save(state);
-            Assert.That(v6, Does.Contain("\"formatVersion\": 6"));
-            WorldState loadedV6 = WorldLoader.Load(v6, root);
-            Assert.That(loadedV6.Animals.Count, Is.EqualTo(1));
-            Assert.That(loadedV6.Predation.LastHuntDay, Is.EqualTo(12));
+            string v7 = WorldSaver.Save(state);
+            Assert.That(v7, Does.Contain("\"formatVersion\": 7"));
+            WorldState loadedV7 = WorldLoader.Load(v7, root);
+            Assert.That(loadedV7.Animals.Count, Is.EqualTo(1));
+            Assert.That(loadedV7.Predation.LastHuntDay, Is.EqualTo(12));
 
-            WorldState loadedV4 = WorldLoader.Load(StripToVersion4(v6), root);
+            WorldState loadedV4 = WorldLoader.Load(StripToVersion4(v7), root);
             Assert.That(loadedV4.Animals.Count, Is.EqualTo(1),
                 "A v4 document keeps its animals.");
             Assert.That(loadedV4.TownStats.IsComputed, Is.False,

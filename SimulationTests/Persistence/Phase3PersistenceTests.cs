@@ -198,9 +198,9 @@ namespace LivingWorld.Simulation.Tests.Persistence
             ContentBundle bundle = ContentBundle.Load(root);
             WorldState state = Phase3RichWorld(bundle);
             string json = WorldSaver.Save(state);
-            string v7 = json.Replace("\"formatVersion\": 6", "\"formatVersion\": 7");
+            string v8 = json.Replace("\"formatVersion\": 7", "\"formatVersion\": 8");
 
-            Assert.Throws<LoadException>(() => WorldLoader.Load(v7, root));
+            Assert.Throws<LoadException>(() => WorldLoader.Load(v8, root));
         }
 
         [Test]

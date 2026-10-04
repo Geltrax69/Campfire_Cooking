@@ -112,6 +112,15 @@ namespace LivingWorld.Simulation.Persistence
             private VillageRegistrySnapshot Villages { get; set; }
             private TradeRouteLedgerSnapshot TradeLedger { get; set; }
             private NewsStoreSnapshot News { get; set; }
+            // Phase 7 (formatVersion 7) sections; absent when loading an older
+            // document, in which case the world keeps its fresh defaults (the
+            // Content age with every NPC alive, no family links or households,
+            // and uninitialized generation cursors — matching a world built
+            // before the generations phase).
+            private AgingState Aging { get; set; }
+            private FamilyState Family { get; set; }
+            private List<HouseholdPlan> Households { get; } = new List<HouseholdPlan>();
+            private InheritanceState Inheritance { get; set; }
 
             public static SavePlan Parse(string json, ContentBundle bundle)
             {
@@ -129,9 +138,12 @@ namespace LivingWorld.Simulation.Persistence
                             "; this loader reads versions 1 through " + WorldSaver.FormatVersion + ".");
                     var plan = new SavePlan(root.Property("rngState").UInt64(),
                         new GameTime(root.Property("clock").Int64()));
+                    // NPCs parse before the event log: event actors and targets are
+                    // validated against the save's NPC set (Phase 7: NPCs born
+                    // during the simulation appear in events but have no Content entry).
+                    plan.ParseNpcs(root, bundle, version);
                     plan.ParseEventLog(root, bundle);
                     plan.ParsePendingCommands(root, bundle);
-                    plan.ParseNpcs(root, bundle, version);
                     plan.ParseBeliefs(root, bundle);
                     plan.ParseMemories(root, bundle);
                     plan.PerceptionCursor = root.Property("perceptionCursor").Int64();
@@ -184,9 +196,17 @@ namespace LivingWorld.Simulation.Persistence
                         plan.ParseTradeLedger(root, bundle);
                         plan.ParseNews(root);
                     }
+                    if (version >= 7)
+                    {
+                        plan.ParseAging(root);
+                        plan.ParseFamily(root);
+                        plan.ParseHouseholds(root, bundle);
+                        plan.ParseInheritance(root);
+                    }
                     plan.CrossCheckCommands();
                     plan.CrossCheckLots();
                     plan.CrossCheckSkills();
+                    if (version >= 7) plan.CrossCheckFamily();
                     return plan;
                 }
             }
@@ -199,6 +219,11 @@ namespace LivingWorld.Simulation.Persistence
                 var events = new List<WorldEvent>();
                 long previousId = 0;
                 var previousTime = new GameTime(0);
+                // Event actors/targets are validated against the save's NPC set,
+                // not Content: NPCs born during the simulation (Phase 7) appear
+                // in birth/death/inheritance events but have no Content entry.
+                var savedNpcs = new HashSet<NpcId>();
+                foreach (NpcPlan npc in Npcs) savedNpcs.Add(npc.Definition.Id);
                 foreach (Reader entry in log.Items("events"))
                 {
                     string path = entry.Path;
@@ -211,10 +236,10 @@ namespace LivingWorld.Simulation.Persistence
                     var location = new LocationId(entry.Property("location").Text());
                     RequireLocation(bundle, location, path);
                     WorldEventType type = entry.Property("type").EnumValue<WorldEventType>();
-                    ActorId? actor = ParseOptionalActor(entry.Property("actor"), bundle, path);
+                    ActorId? actor = ParseEventActor(entry.Property("actor"), bundle, savedNpcs);
                     var targets = new List<ActorId>();
                     foreach (Reader target in entry.Items("targets"))
-                        targets.Add(ParseActor(target.Text(), bundle, target.Path));
+                        targets.Add(RequireEventActor(target.Text(), bundle, savedNpcs, target.Path));
                     EventVisibility visibility = entry.Property("visibility").EnumValue<EventVisibility>();
                     ItemTypeId? itemType = ParseOptionalItem(entry.Property("itemType"), bundle, path);
                     int? quantity = ParseOptionalInt(entry.Property("quantity"));
@@ -275,10 +300,28 @@ namespace LivingWorld.Simulation.Persistence
                 foreach (Reader entry in root.Items("npcs"))
                 {
                     string path = entry.Path;
-                    NpcId id = ParseKnownNpc(entry.Property("definitionId").Text(), bundle, path);
+                    string idText = entry.Property("definitionId").Text();
+                    var id = new NpcId(idText ?? string.Empty);
+                    if (!id.IsValid)
+                        throw new LoadException("Invalid NPC ID '" + idText + "' in " + path + ".");
                     if (!seen.Add(id))
                         throw new LoadException("Duplicate NPC '" + id.Value + "' in " + path + ".");
-                    NpcDefinition definition = bundle.NpcDefinitions[id];
+                    NpcDefinition definition;
+                    bool bornInSimulation = false;
+                    NpcDefinition contentDefinition;
+                    if (bundle.NpcDefinitions.TryGetValue(id, out contentDefinition))
+                    {
+                        definition = contentDefinition;
+                    }
+                    else
+                    {
+                        // Phase 7 (formatVersion 7): NPCs born during the simulation
+                        // have no Content entry; their definition is rebuilt from
+                        // the inline "born" detail. Older documents cannot contain
+                        // such NPCs, so the detail is required here.
+                        bornInSimulation = true;
+                        definition = ParseBornDefinition(id, entry.Property("born"), bundle, path);
+                    }
                     Reader needs = entry.Property("needs");
                     NeedState needState;
                     try
@@ -308,8 +351,128 @@ namespace LivingWorld.Simulation.Persistence
                     int happiness = version >= 3
                         ? entry.Property("happiness").Int32(0, 100)
                         : NpcState.NeutralHappiness;
-                    Npcs.Add(new NpcPlan(definition, needState, isSleeping, intention, happiness));
+                    // Phase 7 generations: required in version 7 documents; older
+                    // documents restore the Content age with the NPC alive and no
+                    // family links, matching a world built before the generations phase.
+                    int age = definition.Age;
+                    bool isDeceased = false;
+                    NpcId? motherId = null;
+                    NpcId? fatherId = null;
+                    NpcId? partnerId = null;
+                    var childrenIds = new List<NpcId>();
+                    HouseholdId? householdId = null;
+                    NpcId? designatedHeirId = null;
+                    if (version >= 7)
+                    {
+                        age = entry.Property("age").Int32(0, 1000);
+                        isDeceased = entry.Property("isDeceased").Flag();
+                        motherId = ParseOptionalNpcId(entry.Property("mother"), path);
+                        fatherId = ParseOptionalNpcId(entry.Property("father"), path);
+                        partnerId = ParseOptionalNpcId(entry.Property("partner"), path);
+                        var seenChildren = new HashSet<NpcId>();
+                        foreach (Reader child in entry.Property("children").Items())
+                        {
+                            NpcId childId = ParseNpcId(child.Text(), child.Path);
+                            if (!seenChildren.Add(childId))
+                                throw new LoadException("Duplicate child '" + childId.Value +
+                                    "' in " + child.Path + ".");
+                            childrenIds.Add(childId);
+                        }
+                        Reader householdReader = entry.Property("household");
+                        if (!householdReader.IsNull)
+                        {
+                            var household = new HouseholdId(householdReader.Text() ?? string.Empty);
+                            if (!household.IsValid)
+                                throw new LoadException("Invalid household ID in " + householdReader.Path + ".");
+                            householdId = household;
+                        }
+                        designatedHeirId = ParseOptionalNpcId(entry.Property("designatedHeir"), path);
+                    }
+                    var plan = new NpcPlan(definition, needState, isSleeping, intention, happiness,
+                        age, isDeceased, bornInSimulation, motherId, fatherId, partnerId,
+                        childrenIds, householdId, designatedHeirId);
+                    Npcs.Add(plan);
                 }
+            }
+
+            /// <summary>
+            /// Phase 7 born-NPC definition (formatVersion 7): rebuilds the definition
+            /// of an NPC born during the simulation from the inline "born" detail.
+            /// Everything the detail omits is fixed by FamilySystem's construction:
+            /// occupation "child", no money, no traits, no schedule.
+            /// </summary>
+            private static NpcDefinition ParseBornDefinition(NpcId id, Reader born,
+                ContentBundle bundle, string path)
+            {
+                string bornPath = born.Path;
+                string name = born.Property("name").Text();
+                string gender = born.Property("gender").Text();
+                var home = new LocationId(born.Property("home").Text() ?? string.Empty);
+                RequireLocation(bundle, home, bornPath);
+                Reader rates = born.Property("needRates");
+                NeedRates needRates;
+                try
+                {
+                    needRates = new NeedRates(
+                        rates.Property("hungerPerHour").Int32(0, int.MaxValue),
+                        rates.Property("energyPerHour").Int32(0, int.MaxValue),
+                        rates.Property("socialPerHour").Int32(0, int.MaxValue));
+                }
+                catch (Exception failure)
+                {
+                    throw new LoadException("Invalid need rates for born NPC in " + bornPath + ".", failure);
+                }
+                try
+                {
+                    return new NpcDefinition(id, name ?? string.Empty, 0,
+                        gender ?? string.Empty, "child", home, home, 0,
+                        new Dictionary<string, int>(), needRates,
+                        new NpcSchedule(Array.Empty<ScheduleEntry>(), Array.Empty<ScheduleEntry>()));
+                }
+                catch (Exception failure)
+                {
+                    throw new LoadException("Invalid born NPC definition in " + bornPath + ".", failure);
+                }
+            }
+
+            private static NpcId ParseNpcId(string text, string path)
+            {
+                var id = new NpcId(text ?? string.Empty);
+                if (!id.IsValid)
+                    throw new LoadException("Invalid NPC ID '" + text + "' in " + path + ".");
+                return id;
+            }
+
+            private static NpcId? ParseOptionalNpcId(Reader reader, string path)
+            {
+                if (reader.IsNull) return null;
+                return ParseNpcId(reader.Text(), path);
+            }
+
+            /// <summary>
+            /// Parses an event-log actor ("player", "npc:&lt;id&gt;", or null) against the
+            /// union of Content and the save's NPC set. Phase 7 NPCs born during the
+            /// simulation appear as event actors/targets (birth, death, inheritance)
+            /// but have no Content entry; the log may also mention Content NPCs that
+            /// were never registered as world NPCs.
+            /// </summary>
+            private static ActorId? ParseEventActor(Reader reader, ContentBundle bundle, HashSet<NpcId> savedNpcs)
+            {
+                if (reader.IsNull) return null;
+                return RequireEventActor(reader.Text(), bundle, savedNpcs, reader.Path);
+            }
+
+            private static ActorId RequireEventActor(string text, ContentBundle bundle, HashSet<NpcId> savedNpcs, string path)
+            {
+                if (text == "player") return ActorId.Player;
+                if (text != null && text.StartsWith("npc:", StringComparison.Ordinal))
+                {
+                    NpcId npc = ParseNpcId(text.Substring(4), path);
+                    if (!savedNpcs.Contains(npc) && !bundle.NpcDefinitions.ContainsKey(npc))
+                        throw new LoadException("Event references unknown NPC '" + npc.Value + "' (" + path + ").");
+                    return ActorId.ForNpc(npc);
+                }
+                throw new LoadException("Invalid actor '" + text + "' in " + path + "; expected 'player' or 'npc:<id>'.");
             }
 
             /// <summary>
@@ -731,6 +894,131 @@ namespace LivingWorld.Simulation.Persistence
                 {
                     throw new LoadException("Invalid news store: " + failure.Message, failure);
                 }
+            }
+
+            /// <summary>
+            /// Phase 7 aging cursor (formatVersion 7): the initialization flag and
+            /// the last day birthdays were processed.
+            /// </summary>
+            private void ParseAging(Reader root)
+            {
+                Reader section = root.Property("aging");
+                Aging = new AgingState(
+                    initialized: section.Property("initialized").Flag(),
+                    lastAgingDay: section.Property("lastAgingDay").Int64(0));
+            }
+
+            /// <summary>
+            /// Phase 7 family cursor (formatVersion 7): the initialization flag,
+            /// the last day births were processed, and the birth counter that keeps
+            /// "npc_born_&lt;n&gt;" IDs unique.
+            /// </summary>
+            private void ParseFamily(Reader root)
+            {
+                Reader section = root.Property("family");
+                Family = new FamilyState(
+                    initialized: section.Property("initialized").Flag(),
+                    lastFamilyDay: section.Property("lastFamilyDay").Int64(0),
+                    birthsSoFar: section.Property("birthsSoFar").Int64(0));
+            }
+
+            /// <summary>
+            /// Phase 7 households (formatVersion 7): every household with its home
+            /// location and members. Member NPCs are validated against the save's
+            /// "npcs" array in CrossCheckFamily.
+            /// </summary>
+            private void ParseHouseholds(Reader root, ContentBundle bundle)
+            {
+                var seen = new HashSet<HouseholdId>();
+                foreach (Reader entry in root.Items("households"))
+                {
+                    string path = entry.Path;
+                    var id = new HouseholdId(entry.Property("id").Text() ?? string.Empty);
+                    if (!id.IsValid)
+                        throw new LoadException("Invalid household ID in " + path + ".");
+                    if (!seen.Add(id))
+                        throw new LoadException("Duplicate household '" + id.Value + "' in " + path + ".");
+                    var home = new LocationId(entry.Property("home").Text() ?? string.Empty);
+                    RequireLocation(bundle, home, path);
+                    var members = new List<NpcId>();
+                    var seenMembers = new HashSet<NpcId>();
+                    foreach (Reader member in entry.Property("members").Items())
+                    {
+                        NpcId memberId = ParseNpcId(member.Text(), member.Path);
+                        if (!seenMembers.Add(memberId))
+                            throw new LoadException("Duplicate member '" + memberId.Value +
+                                "' in " + member.Path + ".");
+                        members.Add(memberId);
+                    }
+                    Households.Add(new HouseholdPlan(id, home, members));
+                }
+            }
+
+            /// <summary>
+            /// Phase 7 inheritance cursor (formatVersion 7): the initialization flag
+            /// and the deceased NPCs whose estates are already distributed. IDs are
+            /// validated against the save's "npcs" array in CrossCheckFamily.
+            /// </summary>
+            private void ParseInheritance(Reader root)
+            {
+                Reader section = root.Property("inheritance");
+                var distributed = new List<NpcId>();
+                var seen = new HashSet<NpcId>();
+                foreach (Reader entry in section.Property("distributed").Items())
+                {
+                    NpcId id = ParseNpcId(entry.Text(), entry.Path);
+                    if (!seen.Add(id))
+                        throw new LoadException("Duplicate distributed ID '" + id.Value +
+                            "' in " + entry.Path + ".");
+                    distributed.Add(id);
+                }
+                Inheritance = new InheritanceState(
+                    initialized: section.Property("initialized").Flag(),
+                    distributed: distributed);
+            }
+
+            /// <summary>
+            /// Every family reference (parents, partner, children, household members,
+            /// designated heir, distributed estates) must name an NPC saved in the
+            /// document's "npcs" array: links to a stranger would silently dangle.
+            /// </summary>
+            private void CrossCheckFamily()
+            {
+                var saved = new HashSet<NpcId>();
+                foreach (NpcPlan npc in Npcs) saved.Add(npc.Definition.Id);
+                foreach (NpcPlan npc in Npcs)
+                {
+                    string who = "NPC '" + npc.Definition.Id.Value + "'";
+                    CheckFamilyRef(npc.MotherId, saved, who, "mother");
+                    CheckFamilyRef(npc.FatherId, saved, who, "father");
+                    CheckFamilyRef(npc.PartnerId, saved, who, "partner");
+                    CheckFamilyRef(npc.DesignatedHeirId, saved, who, "designated heir");
+                    foreach (NpcId child in npc.ChildrenIds)
+                        CheckFamilyRef(child, saved, who, "child");
+                }
+                foreach (HouseholdPlan household in Households)
+                {
+                    foreach (NpcId member in household.Members)
+                        if (!saved.Contains(member))
+                            throw new LoadException("Household '" + household.Id.Value +
+                                "' names NPC '" + member.Value +
+                                "' but that NPC is not in the save's \"npcs\" array.");
+                }
+                if (Inheritance != null)
+                {
+                    foreach (NpcId id in Inheritance.Distributed)
+                        if (!saved.Contains(id))
+                            throw new LoadException("Inheritance marks NPC '" + id.Value +
+                                "' as distributed but that NPC is not in the save's \"npcs\" array.");
+                }
+            }
+
+            private static void CheckFamilyRef(NpcId? reference, HashSet<NpcId> saved,
+                string who, string role)
+            {
+                if (reference.HasValue && !saved.Contains(reference.Value))
+                    throw new LoadException(who + " names " + role + " '" +
+                        reference.Value.Value + "' but that NPC is not in the save's \"npcs\" array.");
             }
 
             private static VillageNews ParseVillageNews(Reader entry, string path)
@@ -1308,12 +1596,36 @@ namespace LivingWorld.Simulation.Persistence
                 state.RestorePendingCommands(new PendingCommandsState(BuildCommands(state)));
                 foreach (NpcPlan npc in Npcs)
                 {
+                    // Phase 7 (formatVersion 7): exact age and the deceased flag;
+                    // older documents restore the Content age with the NPC alive.
                     NpcState restored = NpcState.Restore(npc.Definition, npc.Needs,
-                        npc.IsSleeping, npc.Intention);
+                        npc.IsSleeping, npc.Intention, npc.Age, npc.IsDeceased);
                     // Phase 3 state: mood and skills ride on the NPC (neutral/empty
                     // for older documents, matching a freshly built world).
                     restored.RestoreHappiness(npc.Happiness);
+                    // Phase 7: mark NPCs born during the simulation so the next
+                    // save writes their definition inline.
+                    restored.BornInSimulation = npc.BornInSimulation;
                     state.Npcs.Register(restored);
+                }
+                // Phase 7 households (formatVersion 7); older documents keep the
+                // empty registry, matching a world built before the generations phase.
+                foreach (HouseholdPlan plan in Households)
+                {
+                    var household = new Household(plan.Id, plan.Home);
+                    foreach (NpcId member in plan.Members) household.AddMember(member);
+                    state.Households.Register(household);
+                }
+                // Phase 7 family links (formatVersion 7): every NPC is registered,
+                // so references resolve. Older documents carry no links.
+                foreach (NpcPlan npc in Npcs)
+                {
+                    NpcState restored = state.Npcs[npc.Definition.Id];
+                    restored.SetParents(npc.MotherId, npc.FatherId);
+                    restored.SetPartner(npc.PartnerId);
+                    foreach (NpcId child in npc.ChildrenIds) restored.AddChild(child);
+                    restored.SetHousehold(npc.HouseholdId);
+                    restored.SetDesignatedHeir(npc.DesignatedHeirId);
                 }
                 var known = new SortedSet<NpcId>();
                 foreach (KeyValuePair<NpcId, List<Belief>> pair in Beliefs) known.Add(pair.Key);
@@ -1400,6 +1712,13 @@ namespace LivingWorld.Simulation.Persistence
                 if (Villages != null) state.RestoreVillages(Villages);
                 if (TradeLedger != null) state.RestoreTradeLedger(TradeLedger);
                 if (News != null) state.RestoreNews(News);
+                // Phase 7 state (formatVersion 7). Older documents keep the fresh
+                // defaults — uninitialized generation cursors, an empty household
+                // registry and no distributed estates — matching a world built
+                // before the generations phase.
+                if (Aging != null) state.RestoreAging(Aging);
+                if (Family != null) state.RestoreFamily(Family);
+                if (Inheritance != null) state.RestoreInheritance(Inheritance);
                 return state;
             }
 
@@ -1695,10 +2014,16 @@ namespace LivingWorld.Simulation.Persistence
         private sealed class NpcPlan
         {
             public NpcPlan(NpcDefinition definition, NeedState needs, bool isSleeping,
-                NpcIntention intention, int happiness)
+                NpcIntention intention, int happiness, int age, bool isDeceased,
+                bool bornInSimulation, NpcId? motherId, NpcId? fatherId, NpcId? partnerId,
+                List<NpcId> childrenIds, HouseholdId? householdId, NpcId? designatedHeirId)
             {
                 Definition = definition; Needs = needs; IsSleeping = isSleeping;
                 Intention = intention; Happiness = happiness;
+                Age = age; IsDeceased = isDeceased; BornInSimulation = bornInSimulation;
+                MotherId = motherId; FatherId = fatherId; PartnerId = partnerId;
+                ChildrenIds = childrenIds; HouseholdId = householdId;
+                DesignatedHeirId = designatedHeirId;
             }
             public NpcDefinition Definition { get; }
             public NeedState Needs { get; }
@@ -1706,6 +2031,19 @@ namespace LivingWorld.Simulation.Persistence
             public NpcIntention Intention { get; }
             /// <summary>Mood 0-100 (formatVersion 3); neutral for older documents.</summary>
             public int Happiness { get; }
+            /// <summary>Age in years (formatVersion 7); the Content age for older documents.</summary>
+            public int Age { get; }
+            /// <summary>True once dead of old age (formatVersion 7); false for older documents.</summary>
+            public bool IsDeceased { get; }
+            /// <summary>True for NPCs born during the simulation (formatVersion 7).</summary>
+            public bool BornInSimulation { get; }
+            /// <summary>Family links (formatVersion 7); all null/empty for older documents.</summary>
+            public NpcId? MotherId { get; }
+            public NpcId? FatherId { get; }
+            public NpcId? PartnerId { get; }
+            public List<NpcId> ChildrenIds { get; }
+            public HouseholdId? HouseholdId { get; }
+            public NpcId? DesignatedHeirId { get; }
         }
 
         /// <summary>One actor's saved skill states (formatVersion 3).</summary>
@@ -1717,6 +2055,18 @@ namespace LivingWorld.Simulation.Persistence
             }
             public ActorId Owner { get; }
             public List<SkillState> Skills { get; }
+        }
+
+        /// <summary>One saved household (formatVersion 7).</summary>
+        private sealed class HouseholdPlan
+        {
+            public HouseholdPlan(HouseholdId id, LocationId home, List<NpcId> members)
+            {
+                Id = id; Home = home; Members = members;
+            }
+            public HouseholdId Id { get; }
+            public LocationId Home { get; }
+            public List<NpcId> Members { get; }
         }
 
         private sealed class ShopPlan

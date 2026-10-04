@@ -416,11 +416,11 @@ namespace LivingWorld.Simulation.Tests.Scenarios
         {
             string root = ContentRoot();
             var state = new WorldState(4242, new GameTime(9000));
-            string v6 = WorldSaver.Save(state);
-            Assert.That(v6, Does.Contain("\"formatVersion\": 6"));
+            string v7 = WorldSaver.Save(state);
+            Assert.That(v7, Does.Contain("\"formatVersion\": 7"));
 
             // v4 loads with town defaults.
-            WorldState loaded = WorldLoader.Load(StripToVersion4(v6), root);
+            WorldState loaded = WorldLoader.Load(StripToVersion4(v7), root);
             Assert.That(loaded.TownStats.IsComputed, Is.False);
             Assert.That(loaded.Migration.AdditionalBackgroundVillagers, Is.EqualTo(0));
             Assert.That(loaded.EmergentEvents.ActiveEvents, Is.Empty);
