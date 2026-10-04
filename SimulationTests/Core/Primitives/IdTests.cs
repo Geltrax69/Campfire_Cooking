@@ -16,6 +16,7 @@ namespace LivingWorld.Simulation.Tests.Core.Primitives
             CheckId(value => new LocationId(value), id => id.Value, id => id.IsValid);
             CheckId(value => new ItemTypeId(value), id => id.Value, id => id.IsValid);
             CheckId(value => new ReputationGroupId(value), id => id.Value, id => id.IsValid);
+            CheckId(value => new VillageId(value), id => id.Value, id => id.IsValid);
         }
 
         private static void CheckId<T>(Func<string, T> create, Func<T, string> value, Func<T, bool> valid)
@@ -54,6 +55,7 @@ namespace LivingWorld.Simulation.Tests.Core.Primitives
             Assert.That(() => new LocationId(value), Throws.ArgumentException);
             Assert.That(() => new ItemTypeId(value), Throws.ArgumentException);
             Assert.That(() => new ReputationGroupId(value), Throws.ArgumentException);
+            Assert.That(() => new VillageId(value), Throws.ArgumentException);
         }
 
         [Test]
@@ -68,6 +70,9 @@ namespace LivingWorld.Simulation.Tests.Core.Primitives
             Assert.That(new ItemTypeId("a") == new ItemTypeId("a") && new ItemTypeId("a") != new ItemTypeId("A"), Is.True);
             Assert.That(new ReputationGroupId("a") == new ReputationGroupId("a")
                 && new ReputationGroupId("a") != new ReputationGroupId("A"), Is.True);
+            Assert.That(new VillageId("a") == new VillageId("a")
+                && new VillageId("a") != new VillageId("A"), Is.True);
+            Assert.That(new VillageId("same").Equals((object)new NpcId("same")), Is.False);
         }
     }
 }
