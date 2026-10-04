@@ -90,7 +90,15 @@ namespace LivingWorld.Simulation.Core
         /// edit Core): location is the destination village's anchor; quantity is
         /// total cargo units; copper is total sold at the destination.
         /// </summary>
-        MerchantArrived
+        MerchantArrived,
+        /// <summary>
+        /// An NPC died of old age (P7-01 addition, flagged for orchestrator
+        /// ratification: the Agents folder may not edit Core): actor is the
+        /// deceased NPC; location is the NPC's home. The NpcState.IsDeceased flag
+        /// is the primary truth record; this event lets perception, memory and
+        /// rumor see it. ValidateType's upper bound was extended to cover it.
+        /// </summary>
+        Death
     }
 
     /// <summary>Describes noticeability, not whether anybody actually perceived the event.</summary>
@@ -153,7 +161,7 @@ namespace LivingWorld.Simulation.Core
 
         internal static void ValidateType(WorldEventType type)
         {
-            if (type < WorldEventType.Purchase || type > WorldEventType.MerchantArrived)
+            if (type < WorldEventType.Purchase || type > WorldEventType.Death)
                 throw new ArgumentOutOfRangeException(nameof(type));
         }
 
