@@ -44,3 +44,7 @@ crashlytics-build.properties
 SimulationTests/**/bin/
 SimulationTests/**/obj/
 TestResults/
+
+# Generated build copy of authoritative Content/ (Bridge StageContent)
+/Assets/StreamingAssets/Content/
+/Assets/StreamingAssets/Content.meta
