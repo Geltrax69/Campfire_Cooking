@@ -239,6 +239,22 @@ state must be save/load-compatible.
 | P7-04 | Phase 7 acceptance: multi-year run; generations turn over; inheritance works; readable log | Test & Scenario | P7-01 … P7-03 | Tests: 5-year run; deaths and births; inheritance; save/load preserves families | done (2026-10-04) |
 | 8 | AI dialogue from fact sheets (never changes game state) |
 
+## Phase 8: Dialogue from fact sheets (simulation only, no graphics, no Unity)
+
+Planned 2026-10-04. Focus: pure-simulation dialogue foundation. A **fact sheet**
+is built from simulation truth (NPC identity, mood, beliefs/memories about the
+player, known news); deterministic template phrasing turns it into speech.
+Dialogue may phrase facts only — it cannot add facts, reveal unknown facts, or
+change game state. No paid AI services; the phrasing engine is a deterministic
+mock with a clean contract an AI model could later implement.
+
+| Task | What | Area | Depends on | Pass condition | Status |
+|---|---|---|---|---|---|
+| P8-01 | FactSheet builder: identity, mood, beliefs/memories about player, known news; only NPC-known facts | Knowledge, Agents | P7-04 | Tests: fact sheet contains only known facts; excludes unknown; deterministic | done (2026-10-04) |
+| P8-02 | Template phrasing: deterministic templates filled from fact sheet; seeded variation; mock AI contract | Knowledge | P8-01 | Tests: same input → same output; phrasing never adds facts | done (2026-10-04) |
+| P8-03 | Dialogue contract: enforcement that dialogue never changes state; no secret leakage; read-only API | Knowledge | P8-02 | Tests: state unchanged after dialogue; secrets never appear | done (2026-10-04) |
+| P8-04 | Phase 8 acceptance: dialogue sessions across NPCs; readable log; save/load of dialogue-relevant state | Test & Scenario | P8-03 | Tests: acceptance log; determinism proof | done (2026-10-04) |
+
 ---
 
 ## Unity Phase (last): see and play it
