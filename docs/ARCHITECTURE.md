@@ -275,3 +275,18 @@ Add new entries at the bottom: date, decision, reason.
 | 2026-10-04 | P6-02: trade routes with goods, prices, travel time; merchants buy low/sell high | Price differences drive trade; abstract-to-abstract proven |
 | 2026-10-04 | P6-03: news travels between villages (delayed by travel time, 20% distortion ±20 severity) | News from EmergentEventFired; mood ±(1+severity/25), opinion shifts |
 | 2026-10-04 | P6-04: save format v6 (villages, trade ledger, news); v1-v5 load with village defaults | Trade routes are static config (not persisted); only mutable ledger is saved |
+| 2026-10-04 | P7-01: LifeStage (Child 0-14, Adult 15-59, Elder 60+); mutable NPC age, IsDeceased; deterministic birthday from NPC ID (day 1-360, 360-day year); old-age death 5%/15%/40% | Deceased NPCs remain registered for inheritance |
+| 2026-10-04 | P7-01: added WorldEventType.Death | P3-03 precedent; ratification needed |
+| 2026-10-04 | P7-02: parent/child links (MotherId/FatherId set-once), PartnerId, ChildrenIds, HouseholdId; HouseholdRegistry; FamilyState (LastFamilyDay, BirthsSoFar); baby IDs npc_born_<n> | Children inherit parents' household; 15-year-olds may leave (50% seeded roll) |
+| 2026-10-04 | P7-02: one birth roll per household per year (10% seeded); eligible couple = first childbearing-age woman (18-45) with eligible partner; opposite-gender couples only | Simplification; documented in code |
+| 2026-10-04 | P7-02: added WorldEventType.Birth | P3-03 precedent; ratification needed |
+| 2026-10-04 | P7-03: inheritance priority designated-heir → living spouse → living children (eldest first, split equally, remainder to eldest) → living parents (mother, father) → village fund | Items go to primary heir as one bundle; under-15 shares held by guardian |
+| 2026-10-04 | P7-03: no-heir money to fund, items to household eldest or unclaimed (never destroyed/sold — selling would invent money) | Money conservation is the invariant |
+| 2026-10-04 | P7-03: added WorldEventType.Inheritance; InheritanceSystem (agents.inheritance, Actions phase, after AgingSystem) | P3-03 precedent; ratification needed |
+| 2026-10-04 | P7-04: save format v7 (all Phase 7 state: aging, family, households, inheritance, NPC age/deceased/family fields); v1-v6 load with generation defaults | Born NPCs get inline detail block in save (no Content entry) |
+| 2026-10-04 | P7-04: event-log actor validation now Content ∪ save-NPCs (was Content-only) | Birth events list newborns as actors; required for save/load |
+| 2026-10-04 | P7-04: 5-year acceptance (1800 days, seed 42): 1 birth (day 720), 1 death (day 771, Elswith at 74), 1 inheritance, money conserved (1800 copper); save-at-day-720 → load → continue byte-identical | Proves generations turn over deterministically |
+| 2026-10-04 | P8-01: FactSheet (plain data: identity, MoodBand, beliefs with SourceKind, memories, news, household members); FactSheetBuilder (static, pure, reads only knowledge stores, never world truth) | Dialogue phrases beliefs, not truth; degrades gracefully |
+| 2026-10-04 | P8-02: IPhrasingEngine interface (contract for future AI adapter); TemplatePhrasingEngine (seeded, deterministic); 6 DialogueIntents; templates vary by MoodBand and SourceKind (seen/told/inferred hedges) | Same (sheet, intent, seed) → same output; never invents facts |
+| 2026-10-04 | P8-03: DialogueSession holds only sheet + engine (no WorldState reference) — enforcement by construction; reflection test locks the design | Dialogue physically cannot reach mutable state |
+| 2026-10-04 | P8-04: Phase 8 acceptance (4 NPCs, distinct moods/beliefs/news); knowledge/truth split demonstrated; save/load doesn't change utterances | No runtime changes needed; P8-01/02/03 APIs sufficient |

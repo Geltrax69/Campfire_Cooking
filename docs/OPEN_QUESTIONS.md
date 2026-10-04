@@ -83,3 +83,51 @@ These were approved by the human before implementation:
 ### News arrival truth
 **Decision:** News arrival lives in NewsStore (arrived records); no NewsArrived event type added (abstract villages have no perceivers).
 **Question:** Should news arrival be in the event log for consistency, or is the store sufficient?
+
+## Phase 7 (2026-10-04)
+
+### Core event type additions
+**Decision:** Added `WorldEventType.Death` (P7-01), `Birth` (P7-02), `Inheritance` (P7-03) — one enum line each, following the P3-03 MealEaten precedent.
+**Question:** Ratify these additions.
+
+### Birthday year
+**Decision:** Birthdays are day 1–360 (the world calendar is 360 days, not 365).
+**Question:** Confirm the 360-day year is the intended calendar.
+
+### Deceased NPC handling
+**Decision:** Deceased NPCs remain registered (for inheritance). How needs/schedule systems treat them is not yet specified.
+**Question:** Should deceased NPCs be excluded from needs/schedules, or is the current behavior acceptable?
+
+### Birth simplifications
+**Decision:** One birth roll per household per year (10%); opposite-gender couples only; leavers settle at the same home location; babies copy the mother's need rates and get empty schedules/traits; Content `family` arrays must list both directions.
+**Question:** Are these simplifications acceptable, or should any be revisited?
+
+### Inheritance simplifications
+**Decision:** A will names one heir for everything; a dead designee falls through to normal priority (doesn't disinherit); items go to the primary heir only (not split); orphan shares mingle in the guardian's wallet; no-heir items are absorbed by the household or left unclaimed (never destroyed/sold).
+**Question:** Are these simplifications acceptable?
+
+### Born NPC knowledge limits
+**Decision:** Beliefs, memories, relationships, debts, and pending-command NPC references are still Content-strict in the loader. A born NPC can currently only appear in the event log, skills, and family sections.
+**Question:** If a future phase lets newborns hold beliefs or debts, those sections need the same Content ∪ save-NPC treatment. Is this deferred correctly?
+
+## Phase 8 (2026-10-04)
+
+### News source for fact sheets
+**Decision:** The fact sheet uses news arrived at the full-LOD village (Millbrook) as "what goes around town." All individual NPCs currently live in Millbrook; abstract villages have no residents.
+**Question:** If NPCs ever live in abstract villages, this needs a per-NPC village mapping. Acceptable as-is?
+
+### ShareNews phrasing
+**Decision:** `ShareNews` phrases the most recent known news item and ignores `IsGoodNews`/`Severity` in wording (valence-neutral phrasing).
+**Question:** Should phrasing reflect news severity/valence?
+
+### Deceased NPC dialogue
+**Decision:** `DialogueSession.Say` on a deceased NPC's sheet phrases what's there (no-throw); who may be talked to is the caller's decision.
+**Question:** Should `Say` on a deceased NPC's sheet eventually return a special "they're gone" line instead?
+
+### Template grammar
+**Decision:** Pluralization is deliberately crude (`fish` → `fishes`); templates never need perfect grammar, only sheet-faithful nouns. A future AI adapter would handle this naturally.
+**Question:** Acceptable for the simulation phase?
+
+### Shared test runner
+**Decision:** `~/workspace/run-sim-tests.sh` currently reports `Discovered 0 test cases` (FrameworkController.LoadTests returns a shallow suite node in this environment). Tests were verified green via a throwaway runner using the same FrameworkController pattern.
+**Question:** Should fixing the shared test runner be its own task before further work?
