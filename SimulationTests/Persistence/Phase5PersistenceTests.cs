@@ -135,11 +135,11 @@ namespace LivingWorld.Simulation.Tests.Persistence
             ContentBundle bundle = ContentBundle.Load(root);
             WorldState state = Phase5RichWorld(bundle);
 
-            string v5 = WorldSaver.Save(state);
-            Assert.That(v5, Does.Contain("\"formatVersion\": 5"));
+            string v6 = WorldSaver.Save(state);
+            Assert.That(v6, Does.Contain("\"formatVersion\": 6"));
 
             // A v4 document loads with town defaults.
-            WorldState loadedV4 = WorldLoader.Load(StripToVersion4(v5), root);
+            WorldState loadedV4 = WorldLoader.Load(StripToVersion4(v6), root);
             Assert.That(loadedV4.TownStats.IsComputed, Is.False,
                 "A v4 document has no town stats: uncomputed.");
             Assert.That(loadedV4.Migration.AdditionalBackgroundVillagers, Is.EqualTo(0),
@@ -156,9 +156,9 @@ namespace LivingWorld.Simulation.Tests.Persistence
             ContentBundle bundle = ContentBundle.Load(root);
             WorldState state = Phase5RichWorld(bundle);
             string json = WorldSaver.Save(state);
-            string v6 = json.Replace("\"formatVersion\": 5", "\"formatVersion\": 6");
+            string v7 = json.Replace("\"formatVersion\": 6", "\"formatVersion\": 7");
 
-            Assert.Throws<LoadException>(() => WorldLoader.Load(v6, root));
+            Assert.Throws<LoadException>(() => WorldLoader.Load(v7, root));
         }
 
         [Test]

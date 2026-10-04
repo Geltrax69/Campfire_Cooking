@@ -102,4 +102,4 @@ campfire, taught by Bessa. Seed: 20261004.
 - Brynn Oakes happiness: 57.
 - Village copper: 9265 -> 9690.
 - MealEaten truth events: 14.
-- World digest: 42a0b904eb6a29755ffb878118e76f9dd2597f07a09c65f94bccc33031f5d7ea
+- World digest: ff37e482bd87200a658c5a67da19a59c98326b53616813ce673c0f870b7ba7db
