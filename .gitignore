@@ -22,6 +22,7 @@ crashlytics-build.properties
 # Unity-generated IDE project files (Unity recreates these)
 /*.csproj
 /*.sln
+/*.slnx
 *.unityproj
 *.suo
 *.user
