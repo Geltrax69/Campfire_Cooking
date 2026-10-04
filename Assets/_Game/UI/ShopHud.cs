@@ -11,7 +11,11 @@ namespace LivingWorld.Game.UI
         private ShopPresenter _presenter;
         private UIDocument _document;
         private PanelSettings _ownedSettings;
-        private VisualElement _root, _shop, _header, _actions;
+        private VisualElement _root, _shop, _header, _actions, _dialogue;
+        private Label _npcName, _npcOccupation, _npcLine;
+        private DialoguePresenter _dialoguePresenter;
+        private bool _npcOpen;
+        public bool IsModalOpen => _open || _npcOpen;
         private ScrollView _support;
         private bool _compact;
         private Label _status, _stock, _wallet, _message;
@@ -29,12 +33,36 @@ namespace LivingWorld.Game.UI
             if (isActiveAndEnabled && _runner != null) _runner.SnapshotChanged += OnSnapshot;
             Refresh();
         }
-        public void ShowShop() { _open = true; if (_shop != null) _shop.style.display = DisplayStyle.Flex; Refresh(); }
+        public void ShowShop() { HideNpc(); _open = true; if (_shop != null) _shop.style.display = DisplayStyle.Flex; Refresh(); }
         public void HideShop() { _open = false; if (_shop != null) _shop.style.display = DisplayStyle.None; }
+        public void ShowNpc(string npcId)
+        {
+            HideShop(); _npcOpen = true;
+            if (_dialogue == null) return;
+            _dialogue.style.display = DisplayStyle.Flex;
+            _dialoguePresenter.Open(npcId);
+            _npcName.text = "Conversation"; _npcOccupation.text = "";
+            var snapshot = _runner == null ? null : _runner.Snapshot;
+            if (snapshot != null)
+                foreach (var npc in snapshot.Npcs)
+                    if (npc.Id == npcId) { _npcName.text = npc.Name; _npcOccupation.text = npc.Occupation; break; }
+            _npcLine.text = _dialoguePresenter.Line;
+        }
+        public void HideNpc() { _npcOpen = false; if (_dialogue != null) _dialogue.style.display = DisplayStyle.None; }
+        private void Say(ConversationTopic topic)
+        {
+            _dialoguePresenter.Say(topic); _npcLine.text = _dialoguePresenter.Line;
+        }
         private void OnEnable()
         {
             _lastSnapshot = null;
             _presenter = new ShopPresenter(this);
+            _dialoguePresenter = new DialoguePresenter((id, topic) =>
+            {
+                if (_runner == null || _runner.Snapshot == null) return "Village unavailable. Try again when it has loaded.";
+                if (_runner.Failure != null) return "Village stopped: " + _runner.Failure;
+                return _runner.TalkToNpc(id, topic);
+            });
             Build();
             if (_runner != null) _runner.SnapshotChanged += OnSnapshot;
             Refresh();
@@ -94,9 +122,35 @@ namespace LivingWorld.Game.UI
             _message = new Label(); _message.style.whiteSpace = WhiteSpace.Normal;
             _message.style.marginTop = 12; _message.style.marginBottom = 12; _support.Add(_message);
             _wait = Button("Prototype: wait one hour", () => { _presenter.Wait(); Render(); }); _support.Add(_wait);
-            var scope = new Label("Shop interaction prototype. Movement and NPC navigation are still being built.");
+            var scope = new Label("Shop interaction prototype. Village preview: villagers stay at their workplaces.");
             scope.style.fontSize = 14; scope.style.whiteSpace = WhiteSpace.Normal; scope.style.marginTop = 12; _support.Add(scope);
+            BuildDialogue();
             _root.Add(_shop); _shop.style.display = _open ? DisplayStyle.Flex : DisplayStyle.None; ApplySafeArea();
+        }
+        private void BuildDialogue()
+        {
+            _dialogue = new VisualElement(); _dialogue.name = "npc-dialogue";
+            _dialogue.style.position = Position.Absolute; _dialogue.style.right = 24;
+            _dialogue.style.top = 88; _dialogue.style.width = 420;
+            _dialogue.style.maxWidth = Length.Percent(80); _dialogue.style.maxHeight = Length.Percent(72);
+            _dialogue.style.backgroundColor = Brown; _dialogue.style.paddingLeft = 20;
+            _dialogue.style.paddingRight = 20; _dialogue.style.paddingTop = 12; _dialogue.style.paddingBottom = 12;
+            var header = new VisualElement(); header.style.flexDirection = FlexDirection.Row; header.style.alignItems = Align.Center;
+            _npcName = new Label("Conversation"); _npcName.style.fontSize = 26; _npcName.style.flexGrow = 1;
+            header.Add(_npcName); header.Add(Button("Close", HideNpc)); _dialogue.Add(header);
+            var scroll = new ScrollView(ScrollViewMode.Vertical); scroll.style.flexShrink = 1; scroll.style.minHeight = 0; _dialogue.Add(scroll);
+            _npcOccupation = new Label(); scroll.Add(_npcOccupation);
+            _npcLine = new Label(); _npcLine.style.whiteSpace = WhiteSpace.Normal;
+            _npcLine.style.marginTop = 12; _npcLine.style.marginBottom = 12; scroll.Add(_npcLine);
+            var topics = new VisualElement(); topics.style.flexDirection = FlexDirection.Row; topics.style.flexWrap = Wrap.Wrap;
+            scroll.Add(topics);
+            foreach (ConversationTopic topic in System.Enum.GetValues(typeof(ConversationTopic)))
+            {
+                var selected = topic;
+                var choice = Button(topic == ConversationTopic.AboutPlayer ? "About me" : topic.ToString() == "ShopStock" ? "Apple stall" : topic.ToString(), () => Say(selected));
+                choice.style.marginRight = 6; topics.Add(choice);
+            }
+            _root.Add(_dialogue); _dialogue.style.display = _npcOpen ? DisplayStyle.Flex : DisplayStyle.None;
         }
         private static Button Button(string text, System.Action action)
         {
@@ -119,6 +173,12 @@ namespace LivingWorld.Game.UI
             _root.style.paddingTop = (_screenHeight - _safeArea.yMax) * scale + 16;
             _root.style.paddingBottom = _safeArea.yMin * scale + 24;
             _compact = _screenHeight < 500;
+            if (_dialogue != null)
+            {
+                _dialogue.style.right = (_screenWidth - _safeArea.xMax) * scale + 24;
+                _dialogue.style.top = (_screenHeight - _safeArea.yMax) * scale + 88;
+                _dialogue.style.width = _compact ? Length.Percent(68) : new Length(420);
+            }
             _shop.style.width = _compact ? Length.Percent(68) : new Length(380);
             _shop.style.marginTop = _compact ? 8 : 24;
             _shop.style.paddingTop = _compact ? 4 : 12;
@@ -148,7 +208,7 @@ namespace LivingWorld.Game.UI
         {
             if (_status == null) return;
             var snapshot = _runner == null ? null : _runner.Snapshot;
-            _status.text = _runner != null && _runner.Failure != null ? "Village stopped: " + _runner.Failure : snapshot == null ? "Village unavailable" : $"Day {snapshot.Minute / 1440 + 1} · {snapshot.Minute % 1440 / 60:00}:{snapshot.Minute % 60:00} · Apple shop";
+            _status.text = _runner != null && _runner.Failure != null ? "Village stopped: " + _runner.Failure : snapshot == null ? "Village unavailable" : $"Day {snapshot.Minute / 1440 + 1} · {snapshot.Minute % 1440 / 60:00}:{snapshot.Minute % 60:00} · Millbrook";
             _pause.text = _presenter.Paused ? "Resume" : "Pause";
             _pause.SetEnabled(_presenter.Ready);
             _stock.text = snapshot == null ? "Stock unavailable" : $"{snapshot.ShopApples} apples in stock · {snapshot.ApplePriceCopper} copper each";
