@@ -1193,7 +1193,7 @@
       "category": "food",
       "effects": {
         "health": 1,
-        "hunger": 25
+        "hunger": -25
       },
       "id": "item_roasted_fish",
       "name": "Roast Fish",
@@ -1222,7 +1222,7 @@
       "baseValue": 3,
       "category": "food",
       "effects": {
-        "hunger": 28
+        "hunger": -28
       },
       "id": "item_porridge",
       "name": "Grain Porridge",
@@ -1252,7 +1252,7 @@
       "category": "food",
       "effects": {
         "health": 2,
-        "hunger": 20
+        "hunger": -20
       },
       "id": "item_broth",
       "name": "Thin Broth",
@@ -1282,7 +1282,7 @@
       "category": "food",
       "effects": {
         "health": 1,
-        "hunger": 30
+        "hunger": -30
       },
       "id": "item_apple_pie",
       "name": "Apple Pie",
@@ -1312,7 +1312,7 @@
       "category": "food",
       "effects": {
         "health": 2,
-        "hunger": 40
+        "hunger": -40
       },
       "id": "item_roast_pork",
       "name": "Roast Pork",
@@ -1341,7 +1341,7 @@
       "baseValue": 3,
       "category": "food",
       "effects": {
-        "hunger": 15
+        "hunger": -15
       },
       "id": "item_seed_cake",
       "name": "Festival Seed-Cake",
@@ -1370,7 +1370,7 @@
       "baseValue": 10,
       "category": "food",
       "effects": {
-        "hunger": 35
+        "hunger": -35
       },
       "id": "item_meat_pie",
       "name": "Meat Pie",

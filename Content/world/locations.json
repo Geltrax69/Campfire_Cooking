@@ -53,6 +53,7 @@
       },
       "sells": [
         "item_salt",
+        "item_cloth_local",
         "item_cloth_imported",
         "item_lamp_oil",
         "item_nails",

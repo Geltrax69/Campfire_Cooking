@@ -90,5 +90,28 @@ namespace LivingWorld.Simulation.Tests.Economy
 
         private static int? Effect(JsonElement item, string name) =>
             item.GetProperty("effects").TryGetProperty(name, out var effect) ? effect.GetInt32() : (int?)null;
+
+        /// <summary>
+        /// ITEMS.md convention: eating lowers hunger, so food hunger effects must be
+        /// negative (restorative) or absent. A positive value would increase hunger.
+        /// </summary>
+        [Test]
+        public void NoFoodItemHasPositiveHungerEffect()
+        {
+            DirectoryInfo root = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
+            while (root != null && !File.Exists(Path.Combine(root.FullName, "Content/items/items.json"))) root = root.Parent;
+            Assert.That(root, Is.Not.Null, "Find repository content above test output.");
+            using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(root.FullName, "Content/items/items.json")));
+            var offenders = new List<string>();
+            foreach (var item in json.RootElement.GetProperty("items").EnumerateArray())
+            {
+                int? hunger = Effect(item, "hunger");
+                if (hunger.HasValue && hunger.Value > 0)
+                    offenders.Add(item.GetProperty("id").GetString() + " (hunger=+" + hunger.Value + ")");
+            }
+            Assert.That(offenders, Is.Empty,
+                "Food items with positive hunger effects (eating must lower hunger): " +
+                string.Join(", ", offenders));
+        }
     }
 }
