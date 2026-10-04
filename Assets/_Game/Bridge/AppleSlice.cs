@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using LivingWorld.Simulation.Core;
+using LivingWorld.Simulation.Agents;
 using LivingWorld.Simulation.Economy;
 using LivingWorld.Simulation.Knowledge;
 namespace LivingWorld.Game.Bridge
@@ -31,6 +32,15 @@ namespace LivingWorld.Game.Bridge
             var catalog = new ItemCatalog(new[] { new ItemDefinition(Apple, apple.Name, apple.Category, apple.BaseValue, apple.Phase) });
             var state = new WorldState(seed, new GameTime(6 * 60 + 30));
             _world = new World(state);
+            var locations = Read<LocationFile>(Path.Combine(contentDirectory, "world/locations.json"));
+            var map = new LocationMap(locations.Locations.Select(x => new LocationDefinition(new LocationId(x.Id), x.Name, x.Type, x.Position.X, x.Position.Y, x.Owner == "village" ? (NpcId?)null : new NpcId(x.Owner))),
+                locations.Links.Select(x => new TravelLink(new LocationId(x.From), new LocationId(x.To), x.Minutes)));
+            using (var stream = File.OpenRead(Path.Combine(contentDirectory, "npcs/npcs.json")))
+                foreach (NpcDefinition definition in NpcContentLoader.Load(stream, map))
+                    // Same bounded initial need inputs as SimulationTests/Tools/VillageAssembly.
+                    state.Npcs.Register(new NpcState(definition, 30, 80, 50));
+            using (var stream = File.OpenRead(Path.Combine(contentDirectory, "npcs/npcs.json")))
+                FamilySetup.AssignInitialFamilies(state, FamilyContentLoader.Load(stream));
             var stock = new Inventory(catalog); stock.Add(Apple, economy.AppleTest.StartStock);
             _shop = new Shop(Stall, Mira, stock, new Wallet(_npcs.Single(x => x.Id == Mira.Value).Money), new[] { new KeyValuePair<ItemTypeId, int>(Apple, economy.AppleTest.BasePrice) });
             state.Shops.Register(_shop);
@@ -54,6 +64,24 @@ namespace LivingWorld.Game.Bridge
             _world.RegisterSystem(new RestockSystem(new[] { new RestockConfiguration("farm-to-stall", _shop, farmLocation, farmer, farm.Inventory, farm.Wallet, Apple, 10, 45, 1, RestockFulfillmentPolicy.FullOnly, EventVisibility.Normal) }, state));
         }
         public void Tick() => _world.Tick();
+        public string TalkToNpc(string npcId, ConversationTopic topic)
+        {
+            if (string.IsNullOrWhiteSpace(npcId) || !_npcs.Any(x => x.Id == npcId)) return "That villager is not available.";
+            DialogueIntent intent;
+            switch (topic)
+            {
+                case ConversationTopic.ShopStock: return Capture().Npcs.Single(x => x.Id == npcId).Dialogue;
+                case ConversationTopic.Greeting: intent = DialogueIntent.Greeting; break;
+                case ConversationTopic.Smalltalk: intent = DialogueIntent.Smalltalk; break;
+                case ConversationTopic.AboutPlayer: intent = DialogueIntent.AskAboutPlayer; break;
+                case ConversationTopic.News: intent = DialogueIntent.ShareNews; break;
+                case ConversationTopic.Family: intent = DialogueIntent.AskAboutFamily; break;
+                case ConversationTopic.Farewell: intent = DialogueIntent.Farewell; break;
+                default: return "That conversation topic is not available.";
+            }
+            var sheet = FactSheetBuilder.Build(_world.State, new NpcId(npcId));
+            return new DialogueSession(sheet, new TemplatePhrasingEngine(42)).Say(intent);
+        }
         public void QueueBuyApples(int quantity)
         { _world.State.EnqueueCommand(new SlicePurchase(_shop, new PurchaseRequest(ActorId.Player, _player, _wallet, Apple, quantity, false), _activity)); }
         public void QueueStealApples(int quantity)
@@ -70,7 +98,7 @@ namespace LivingWorld.Game.Bridge
                     if (belief.Claim.Kind == BeliefClaimKind.StockMissing) dialogue = "The count suggests " + belief.Claim.Quantity + " apples are missing. I don't know who took them.";
                     if (belief.Claim.Kind == BeliefClaimKind.TheftObserved) dialogue = "I saw someone taking apples from the stall.";
                 }
-                displays.Add(new NpcDisplay(npc.Id, npc.Name, npc.Id == Mira.Value ? Stall.Value : npc.Workplace, "Prototype presence", dialogue));
+                displays.Add(new NpcDisplay(npc.Id, npc.Name, npc.Id == Mira.Value ? Stall.Value : npc.Workplace, "Workplace preview", dialogue, npc.Model, _world.State.Npcs[new NpcId(npc.Id)].Definition.Occupation));
             }
             return new DisplaySnapshot(_world.State.Clock.TotalMinutes, _shop.Stock.Count(Apple), _shop.UnitPrice(Apple), _player.Count(Apple), _wallet.Balance, displays);
         }
@@ -82,8 +110,12 @@ namespace LivingWorld.Game.Bridge
         [DataContract] private sealed class PlayerRow { [DataMember(Name="money")] public int Money; }
         [DataContract] private sealed class ItemFile { [DataMember(Name="items")] public ItemRow[] Items; }
         [DataContract] private sealed class ItemRow { [DataMember(Name="id")] public string Id; [DataMember(Name="name")] public string Name; [DataMember(Name="category")] public string Category; [DataMember(Name="baseValue")] public int BaseValue; [DataMember(Name="phase")] public int Phase; }
+        [DataContract] private sealed class LocationFile { [DataMember(Name="locations")] public LocationRow[] Locations; [DataMember(Name="travelMinutes")] public LinkRow[] Links; }
+        [DataContract] private sealed class LocationRow { [DataMember(Name="id")] public string Id; [DataMember(Name="name")] public string Name; [DataMember(Name="type")] public string Type; [DataMember(Name="owner")] public string Owner; [DataMember(Name="position")] public PositionRow Position; }
+        [DataContract] private sealed class PositionRow { [DataMember(Name="x")] public int X; [DataMember(Name="y")] public int Y; }
+        [DataContract] private sealed class LinkRow { [DataMember(Name="from")] public string From; [DataMember(Name="to")] public string To; [DataMember(Name="minutes")] public int Minutes; }
         [DataContract] private sealed class NpcFile { [DataMember(Name="npcs")] public NpcRow[] Npcs; }
-        [DataContract] private sealed class NpcRow { [DataMember(Name="id")] public string Id; [DataMember(Name="name")] public string Name; [DataMember(Name="money")] public int Money; [DataMember(Name="workplace")] public string Workplace; }
+        [DataContract] private sealed class NpcRow { [DataMember(Name="id")] public string Id; [DataMember(Name="name")] public string Name; [DataMember(Name="money")] public int Money; [DataMember(Name="workplace")] public string Workplace; [DataMember(Name="model")] public string Model; }
     }
     internal sealed class SlicePurchase : IWorldCommand
     {

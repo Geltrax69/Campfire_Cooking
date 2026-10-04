@@ -33,6 +33,8 @@ namespace LivingWorld.Game.Bridge
             AdvanceMinutes(ticks);
         }
         public void SetPaused(bool paused) { if (Failure == null) _clock.Paused = paused; }
+        public string TalkToNpc(string npcId, ConversationTopic topic)
+        { if (_slice == null || Failure != null) return "The village is not available."; return _slice.TalkToNpc(npcId, topic); }
         public void QueueBuyApples(int quantity) { RequireReady(); _slice.QueueBuyApples(quantity); }
         public void QueueStealApples(int quantity) { RequireReady(); _slice.QueueStealApples(quantity); }
         public void AdvanceMinutes(int minutes)

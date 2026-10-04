@@ -22,7 +22,9 @@ namespace LivingWorld.Game.Bridge
         public string LocationId { get; }
         public string Activity { get; }
         public string Dialogue { get; }
-        internal NpcDisplay(string id, string name, string location, string activity, string dialogue)
-        { Id = id; Name = name; LocationId = location; Activity = activity; Dialogue = dialogue; }
+        public string ModelPath { get; }
+        public string Occupation { get; }
+        internal NpcDisplay(string id, string name, string location, string activity, string dialogue, string modelPath, string occupation)
+        { Id = id; Name = name; LocationId = location; Activity = activity; Dialogue = dialogue; ModelPath = modelPath; Occupation = occupation; }
     }
 }
