@@ -69,3 +69,17 @@ These were approved by the human before implementation:
 ### 270-day determinism split
 **Decision:** Save/load determinism proven on 60-day run (byte-identical); 270-day run proves integration. Divergence at winter/spring boundary isolated to animal-system interaction.
 **Question:** Should the animal-system divergence be investigated, or is the 60-day proof sufficient?
+
+## Phase 6 (2026-10-04)
+
+### Oakhollow name
+**Decision:** Invented "Oakhollow" for the second neighboring hamlet (King's Rest is from WORLD.md).
+**Question:** Is "Oakhollow" acceptable, or should it have a different name?
+
+### Trade route persistence
+**Decision:** Trade routes are static config (not persisted); only the mutable TradeRouteLedger (journeys, cursors) is saved.
+**Question:** Should trade routes be content (JSON) so they can change, or is static config sufficient?
+
+### News arrival truth
+**Decision:** News arrival lives in NewsStore (arrived records); no NewsArrived event type added (abstract villages have no perceivers).
+**Question:** Should news arrival be in the event log for consistency, or is the store sufficient?

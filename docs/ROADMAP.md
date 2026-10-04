@@ -170,6 +170,8 @@ All new mutable state must be save/load-compatible.
 
 **Phase 5 DONE (2026-10-04).** All 4 tasks complete. 742 tests green. Town stats (11 computed monthly), growth/decline (in-migration, out-migration, decline spiral), 10 emergent events (conditions only, chaining emergent), 270-day acceptance with save/load determinism (save format v5).
 
+**Phase 6 DONE (2026-10-04).** All 4 tasks complete. 787 tests green. Village LOD (Millbrook full, King's Rest/Oakhollow abstract), trade routes (goods flow, price differences, merchants), news travel (delayed, distorted, mood/opinion effects), 30-day multi-village acceptance with save/load determinism (save format v6).
+
 ## Later simulation phases (plan in detail when the previous phase is done)
 
 | Phase | Focus | Status |
@@ -206,7 +208,20 @@ must be save/load-compatible.
 | P5-02 | Growth/decline: in-migration (seasonal, conditions), out-migration (spring, per-NPC), decline spiral (low food → hunger → out-migration) | Agents | P5-01 | Tests: high stats → in-migration; low food in winter → happiness falls | done (2026-10-04) |
 | P5-03 | Emergent events: 10 events (food_shortage, wolf_attack, festival, fire, theft_wave, merchant_arrival, fever, drought, wheel_failure, bridge_project) with conditions; chaining | Agents, Economy | P5-01 | Tests: food shortage fires when supply < 25 in winter; wolf attack fires in winter; events chain | done (2026-10-04) |
 | P5-04 | Phase 5 acceptance: year-long run; stats move with seasons; events fire; readable log | Test & Scenario | P5-01 … P5-03 | Tests: year run completes; events fired; stats changed; save/load preserves town state | done (2026-10-04) |
-| 6 | Expanded world: more villages, trade routes, level-of-detail simulation |
+| 6 | Expanded world: more villages, trade routes, level-of-detail simulation | next |
+
+## Phase 6: Expanded world (simulation only, no graphics)
+
+Planned 2026-10-04. Focus: neighboring villages (King's Rest, etc.) as LOD entities;
+trade routes carrying goods and news between villages; level-of-detail simulation
+(near = full, far = abstract). Millbrook remains the fully-simulated home village.
+
+| Task | What | Area | Depends on | Pass condition | Status |
+|---|---|---|---|---|---|
+| P6-01 | Village LOD: neighboring villages as abstract entities (population, wealth, food, mood); LOD levels (full/abstract); village registry | Core, Agents | P5-04 | Tests: villages register; LOD levels; abstract villages tick without full NPC sim | done (2026-10-04) |
+| P6-02 | Trade routes: routes between villages (goods, prices, travel time); merchants carry goods; price differences drive trade | Economy | P6-01 | Tests: goods flow along routes; prices differ by village; merchant profit | done (2026-10-04) |
+| P6-03 | News travel: rumors and reputation spread between villages via travelers/merchants (delayed, distorted) | Knowledge | P6-01 | Tests: news from Millbrook reaches King's Rest after travel time; distortion | done (2026-10-04) |
+| P6-04 | Phase 6 acceptance: multi-village run; trade flows; news spreads; readable log | Test & Scenario | P6-01 … P6-03 | Tests: 30-day multi-village run; trade happened; news arrived; save/load preserves villages | done (2026-10-04) |
 | 7 | Reincarnation and generations (aging, families, inheritance) |
 | 8 | AI dialogue from fact sheets (never changes game state) |
 

@@ -270,3 +270,8 @@ Add new entries at the bottom: date, decision, reason.
 | 2026-10-04 | P5-03: added WorldEventType.EmergentEventFired/Ended | P3-03 precedent; enables perception/memory/rumor of events |
 | 2026-10-04 | P5-04: save format v5 (town stats, migration, emergent events); v1-v4 load with town defaults | All Phase 5 state must survive save/load |
 | 2026-10-04 | P5-04: 270-day acceptance (not 365) due to runtime; 60-day save/load determinism split from full run | Winter/spring boundary divergence isolated to animal-system interaction (out of scope) |
+| 2026-10-04 | P6-01: Village LOD (Full/Abstract); Millbrook full, King's Rest (2 days) and Oakhollow (1 day, invented) abstract | King's Rest from WORLD.md; Oakhollow is an invented hamlet name |
+| 2026-10-04 | P6-01: abstract villages drift daily (population ±1, wealth ±10, seasonal food, mood toward 50) | Placeholder until P6-02 wires real trade |
+| 2026-10-04 | P6-02: trade routes with goods, prices, travel time; merchants buy low/sell high | Price differences drive trade; abstract-to-abstract proven |
+| 2026-10-04 | P6-03: news travels between villages (delayed by travel time, 20% distortion ±20 severity) | News from EmergentEventFired; mood ±(1+severity/25), opinion shifts |
+| 2026-10-04 | P6-04: save format v6 (villages, trade ledger, news); v1-v5 load with village defaults | Trade routes are static config (not persisted); only mutable ledger is saved |
