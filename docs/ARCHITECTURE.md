@@ -264,3 +264,9 @@ Add new entries at the bottom: date, decision, reason.
 | 2026-10-04 | P4-03: taming skill multiplies trust gains (L2 x1.5, L3 x2) | Per SKILLS.md |
 | 2026-10-04 | P4-04: save format v4 (animals + ecosystem cursors); v1-v3 load with empty animal store | Matches world built without animal-population step |
 | 2026-10-04 | P4-04: added WorldEventType.Bonded/BondBroken (not yet emitted by TamingSystem) | P3-03 MealEaten precedent; payload design deferred |
+| 2026-10-04 | P5-01: 11 town stats computed monthly from world state (never set by hand) | Per TOWN.md; stat interactions emerge from formulas, not hardcoded rules |
+| 2026-10-04 | P5-02: in-migration (happiness>=65, employment>=80, food>=50, housing>=70; 3-5/season); out-migration (spring, age 15-25, ambition>=70, 30% chance) | Per TOWN.md; decline spiral emerges from stat formulas |
+| 2026-10-04 | P5-03: 10 emergent events fire only when conditions met; chaining is emergent (conditions, not hardcoded) | Per TOWN.md; weather not tracked so wolf attack/fire/drought use seasonal proxies |
+| 2026-10-04 | P5-03: added WorldEventType.EmergentEventFired/Ended | P3-03 precedent; enables perception/memory/rumor of events |
+| 2026-10-04 | P5-04: save format v5 (town stats, migration, emergent events); v1-v4 load with town defaults | All Phase 5 state must survive save/load |
+| 2026-10-04 | P5-04: 270-day acceptance (not 365) due to runtime; 60-day save/load determinism split from full run | Winter/spring boundary divergence isolated to animal-system interaction (out of scope) |

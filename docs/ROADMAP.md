@@ -168,6 +168,8 @@ All new mutable state must be save/load-compatible.
 
 **Phase 4 DONE (2026-10-04).** All 4 tasks complete. 697 tests green. Animal state (5 species, trust 0-100), ecosystem dynamics (predation, breeding, winter pressure, 2-4 livestock losses/winter), taming through trust (bond thresholds, council approval for wolves), 90-day acceptance with save/load determinism (save format v4).
 
+**Phase 5 DONE (2026-10-04).** All 4 tasks complete. 742 tests green. Town stats (11 computed monthly), growth/decline (in-migration, out-migration, decline spiral), 10 emergent events (conditions only, chaining emergent), 270-day acceptance with save/load determinism (save format v5).
+
 ## Later simulation phases (plan in detail when the previous phase is done)
 
 | Phase | Focus | Status |
@@ -189,7 +191,21 @@ All new mutable state must be save/load-compatible.
 | P4-02 | Ecosystem dynamics: predation (wolves→deer/livestock), breeding (spring), winter pressure (deer→farms, wolves→livestock), livestock losses 2-4 per winter | Agents, Economy | P4-01 | Tests: winter increases livestock losses; wolf predation reduces deer; spring breeding increases populations | done (2026-10-04) |
 | P4-03 | Taming: trust gains/losses per interaction type; one meaningful gain per day; bonded thresholds (chicken 60, pig 70, deer 80, wolf 85); wolf needs council approval; bonded services | Agents | P4-01 | Tests: chicken bonds in ~7 days; cruelty breaks trust; wolf pup takes ~60 days; council approval required | done (2026-10-04) |
 | P4-04 | Phase 4 acceptance: season-long run; populations shift with winter; player tames a chicken; wolf incident occurs; readable log | Test & Scenario | P4-01 … P4-03 | Tests: winter→livestock losses; taming works; incident logged; save/load preserves animals | done (2026-10-04) |
-| 5 | Town development emerging from population, food, housing, trade and safety; emergent events | |
+| 5 | Town development emerging from population, food, housing, trade and safety; emergent events | next |
+
+## Phase 5: Town development and emergent events (simulation only, no graphics)
+
+Planned 2026-10-04. Focus: 11 town stats computed from world state (never set by hand);
+growth/decline through conditions (in-migration, out-migration, decline spiral); 10 emergent
+events that fire only when world conditions are met and can chain. All new mutable state
+must be save/load-compatible.
+
+| Task | What | Area | Depends on | Pass condition | Status |
+|---|---|---|---|---|---|
+| P5-01 | Town stats: 11 stats (population, wealth, food_supply, safety, housing, employment, trade, happiness, crime, infrastructure, reputation) computed from world state monthly | Agents, Economy | P4-04 | Tests: stats compute from world state; food_supply reflects granary; safety reflects wolf incidents | done (2026-10-04) |
+| P5-02 | Growth/decline: in-migration (seasonal, conditions), out-migration (spring, per-NPC), decline spiral (low food → hunger → out-migration) | Agents | P5-01 | Tests: high stats → in-migration; low food in winter → happiness falls | done (2026-10-04) |
+| P5-03 | Emergent events: 10 events (food_shortage, wolf_attack, festival, fire, theft_wave, merchant_arrival, fever, drought, wheel_failure, bridge_project) with conditions; chaining | Agents, Economy | P5-01 | Tests: food shortage fires when supply < 25 in winter; wolf attack fires in winter; events chain | done (2026-10-04) |
+| P5-04 | Phase 5 acceptance: year-long run; stats move with seasons; events fire; readable log | Test & Scenario | P5-01 … P5-03 | Tests: year run completes; events fired; stats changed; save/load preserves town state | done (2026-10-04) |
 | 6 | Expanded world: more villages, trade routes, level-of-detail simulation |
 | 7 | Reincarnation and generations (aging, families, inheritance) |
 | 8 | AI dialogue from fact sheets (never changes game state) |

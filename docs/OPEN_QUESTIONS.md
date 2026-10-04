@@ -55,3 +55,17 @@ These were approved by the human before implementation:
 ### Core event type additions
 **Decision:** Added `WorldEventType.Predation`, `AnimalBirth`, `AnimalCulled`, `CropDamage`, `Bonded`, `BondBroken` (one line each).
 **Question:** Ratify these additions (P3-03 MealEaten precedent).
+
+## Phase 5 (2026-10-04)
+
+### Weather system
+**Decision:** daysSinceSnow/daysSinceRain not tracked (no weather system). Wolf attack uses 10% daily chance in winter; fire 2% in summer; drought fires in late summer.
+**Question:** Should a weather system be built, or are the seasonal proxies sufficient?
+
+### Event effects minimal
+**Decision:** Firing mainly marks the event active; consequences emerge from stat formulas. Direct effects (fire damaging buildings, merchant bringing goods) are future work.
+**Question:** Which direct event effects are most important for the prototype?
+
+### 270-day determinism split
+**Decision:** Save/load determinism proven on 60-day run (byte-identical); 270-day run proves integration. Divergence at winter/spring boundary isolated to animal-system interaction.
+**Question:** Should the animal-system divergence be investigated, or is the 60-day proof sufficient?
