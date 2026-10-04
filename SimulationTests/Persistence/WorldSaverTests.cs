@@ -129,7 +129,9 @@ namespace LivingWorld.Simulation.Tests.Persistence
                     "relationships", "attributedMemories", "smithy", "merchantSchedule",
                     "travelerSpend", "wolfBounty", "villageFund", "harvest", "tax",
                     "communityFund", "economyBaseline", "spoilage", "debtLedger",
-                    "skills", "tavernPopularity", "ingredientDemand"
+                    "skills", "tavernPopularity", "ingredientDemand",
+                    "animals", "predation", "breeding", "winterPressure", "eggProduction",
+                    "townStats", "migration", "emergentEvents"
                 };
                 foreach (string section in sections)
                     Assert.That(root.TryGetProperty(section, out _), Is.True, section);
@@ -149,12 +151,12 @@ namespace LivingWorld.Simulation.Tests.Persistence
         }
 
         [Test]
-        public void FormatVersionIsFour()
+        public void FormatVersionIsFive()
         {
             using (JsonDocument document = JsonDocument.Parse(WorldSaver.Save(RichWorld())))
             {
-                Assert.That(document.RootElement.GetProperty("formatVersion").GetInt32(), Is.EqualTo(4));
-                Assert.That(WorldSaver.FormatVersion, Is.EqualTo(4));
+                Assert.That(document.RootElement.GetProperty("formatVersion").GetInt32(), Is.EqualTo(5));
+                Assert.That(WorldSaver.FormatVersion, Is.EqualTo(5));
             }
         }
 

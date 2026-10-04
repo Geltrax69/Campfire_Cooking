@@ -100,6 +100,12 @@ namespace LivingWorld.Simulation.Persistence
             private BreedingState Breeding { get; set; }
             private WinterPressureState WinterPressure { get; set; }
             private EggProductionState EggProduction { get; set; }
+            // Phase 5 (formatVersion 5) sections; absent when loading an older
+            // document, in which case the world keeps its fresh defaults (no
+            // computed stats, no migration, no active events).
+            private TownStatsState TownStats { get; set; }
+            private MigrationState Migration { get; set; }
+            private EmergentEventState EmergentEvents { get; set; }
 
             public static SavePlan Parse(string json, ContentBundle bundle)
             {
@@ -159,6 +165,12 @@ namespace LivingWorld.Simulation.Persistence
                         plan.ParseBreeding(root);
                         plan.ParseWinterPressure(root);
                         plan.ParseEggProduction(root);
+                    }
+                    if (version >= 5)
+                    {
+                        plan.ParseTownStats(root);
+                        plan.ParseMigration(root);
+                        plan.ParseEmergentEvents(root);
                     }
                     plan.CrossCheckCommands();
                     plan.CrossCheckLots();
@@ -462,6 +474,84 @@ namespace LivingWorld.Simulation.Persistence
                 bool initialized = section.Property("initialized").Flag();
                 long lastLayDay = section.Property("lastLayDay").Int64(0);
                 EggProduction = new EggProductionState(initialized, lastLayDay);
+            }
+
+            /// <summary>
+            /// Phase 5 town stats (formatVersion 5). The values may be null when
+            /// the TownStatsSystem had not run yet; the state then keeps its fresh
+            /// default (computed month -1, no values).
+            /// </summary>
+            private void ParseTownStats(Reader root)
+            {
+                Reader section = root.Property("townStats");
+                long computedMonth = section.Property("computedMonth").Int64(-1);
+                Reader values = section.Property("values");
+                if (values.IsNull)
+                {
+                    if (computedMonth != -1)
+                        throw new LoadException("townStats: null values require computedMonth -1.");
+                    TownStats = new TownStatsState();
+                    return;
+                }
+                var stats = new TownStats(
+                    values.Property("population").Int32(0, int.MaxValue),
+                    values.Property("wealthCopper").Int32(0, int.MaxValue),
+                    values.Property("foodSupply").Int32(0, 100),
+                    values.Property("safety").Int32(0, 100),
+                    values.Property("housing").Int32(0, 100),
+                    values.Property("employment").Int32(0, 100),
+                    values.Property("trade").Int32(0, 100),
+                    values.Property("happiness").Int32(0, 100),
+                    values.Property("crime").Int32(0, int.MaxValue),
+                    values.Property("infrastructure").Int32(0, 100),
+                    values.Property("reputation").Int32(0, 100));
+                TownStats = new TownStatsState(computedMonth, stats);
+            }
+
+            /// <summary>
+            /// Phase 5 migration state (formatVersion 5). Validates through the
+            /// MigrationSnapshot constructor, then restores into a fresh state.
+            /// </summary>
+            private void ParseMigration(Reader root)
+            {
+                Reader section = root.Property("migration");
+                var snapshot = new MigrationSnapshot(
+                    section.Property("additionalVillagers").Int32(0, int.MaxValue),
+                    section.Property("additionalHouseholds").Int32(0, int.MaxValue),
+                    section.Property("additionalSoundRoofs").Int32(0, int.MaxValue),
+                    section.Property("lastInMigrationSeason").Int64(-1),
+                    section.Property("lastOutMigrationYear").Int64(-1));
+                var state = new MigrationState();
+                state.Restore(snapshot);
+                Migration = state;
+            }
+
+            /// <summary>
+            /// Phase 5 emergent events (formatVersion 5). Active events are stored
+            /// as id/startedDay pairs in ordinal ID order; validation happens in
+            /// EmergentEventState.Restore.
+            /// </summary>
+            private void ParseEmergentEvents(Reader root)
+            {
+                Reader section = root.Property("emergentEvents");
+                var active = new List<KeyValuePair<string, long>>();
+                foreach (Reader entry in section.Property("activeEvents").Items())
+                {
+                    string id = entry.Property("id").Text();
+                    long startedDay = entry.Property("startedDay").Int64(1);
+                    active.Add(new KeyValuePair<string, long>(id, startedDay));
+                }
+                long lastMerchantDay = section.Property("lastMerchantDay").Int64(-1);
+                var state = new EmergentEventState();
+                try
+                {
+                    state.Restore(new EmergentEventSnapshot(active, lastMerchantDay));
+                }
+                catch (ArgumentException failure)
+                {
+                    throw new LoadException("Invalid emergent event state: " + failure.Message, failure);
+                }
+                EmergentEvents = state;
             }
 
             private void ParseBeliefs(Reader root, ContentBundle bundle)
@@ -1087,6 +1177,13 @@ namespace LivingWorld.Simulation.Persistence
                 if (Breeding != null) state.RestoreBreeding(Breeding);
                 if (WinterPressure != null) state.RestoreWinterPressure(WinterPressure);
                 if (EggProduction != null) state.RestoreEggProduction(EggProduction);
+                // Phase 5 state (formatVersion 5): town stats, migration and
+                // emergent events. Older documents keep the fresh defaults — no
+                // computed stats, no migration, no active events — matching a
+                // world built before the town-development phase.
+                if (TownStats != null) state.RestoreTownStats(TownStats);
+                if (Migration != null) state.RestoreMigration(Migration);
+                if (EmergentEvents != null) state.RestoreEmergentEvents(EmergentEvents);
                 return state;
             }
 

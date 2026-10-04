@@ -48,5 +48,16 @@ namespace LivingWorld.Simulation.Agents
         public static bool operator !=(EmergentEventId left, EmergentEventId right) => !left.Equals(right);
 
         public override string ToString() => Value;
+
+        /// <summary>
+        /// Returns true if the ID is one of the 10 defined emergent events.
+        /// Used by Persistence to reject unknown event IDs in save documents.
+        /// </summary>
+        public static bool IsKnown(EmergentEventId id)
+        {
+            return id == FoodShortage || id == WolfAttack || id == Festival || id == Fire ||
+                id == TheftWave || id == MerchantArrival || id == Fever || id == Drought ||
+                id == WheelFailure || id == BridgeProject;
+        }
     }
 }
