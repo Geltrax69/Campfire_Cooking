@@ -148,7 +148,21 @@ and sinks, debts). All new mutable state must be save/load-compatible (P2-12).
 | P2-11b | Phase 2 acceptance: month-long village simulation | Test & Scenario | P2-11a | Total village copper stays within ±10% month-to-month; bakery sells out most days; relationships shift measurably | done (2026-10-04) |
 | P2-12 | Persist Phase 2 state: extend saver/loader/schema; round-trip + determinism | Persistence | P2-01 … P2-11b | Tests: save→load→save byte-identical; P1-21f determinism still green; full-village 400/save/load/600 proof | done (2026-10-04) |
 
-**Phase 2 DONE (2026-10-04).** All 12 tasks complete. 560 tests green.
+**Phase 2 DONE (2026-10-04).** All 12 tasks complete. 561 tests green.
+
+## Phase 3: Skills, crafting and cooking (simulation only, no graphics)
+
+Planned 2026-10-04. Focus: skill levels 1-5 earned through practice (never XP-from-killing);
+cooking recipes from Content with quality, failure, fuel and permission; crafting at forge/workbench;
+cooked-food quality affects NPC happiness/health, tavern popularity, ingredient demand and prices.
+All new mutable state must be save/load-compatible.
+
+| Task | What | Area | Depends on | Pass condition | Status |
+|---|---|---|---|---|---|
+| P3-01 | Skill state: SkillState with levels 1-5, practice points, thresholds (100/300/700/1500), daily cap 20, teaching x2, qualityBonus 0-4; NPC and player skill stores | Agents | P2-12 | Tests: practice grants points; level thresholds; daily cap enforced; teaching doubles; quality bonus by level | done (2026-10-04) |
+| P3-02 | Recipe execution: RecipeDefinition from Content/recipes; cooking/crafting sessions consume inputs + fuel, roll failure by (difficulty - level), output items with quality = clamp(avg input + bonus); level gates hard; permission from relationships | Economy | P3-01 | Tests: at-level recipe succeeds ~90%; 2-above fails 30%; failure loses inputs; quality scales with skill | todo |
+| P3-03 | Cooking effects: meal quality -> NPC happiness/health; tavern popularity from cook skill; ingredient demand shifts prices; better cooks waste less | Agents, Economy | P3-02 | Tests: quality-80 stew raises happiness more than quality-50; tavern revenue rises with skilled cook | todo |
+| P3-04 | Phase 3 acceptance: NPC cooks daily meals; player practices cooking; skill improves; effects visible in week-long run | Test & Scenario | P3-01 … P3-03 | Tests: 7-day run: meals cooked, skill points accrue, no errors; readable log | todo |
 
 ## Later simulation phases (plan in detail when the previous phase is done)
 
