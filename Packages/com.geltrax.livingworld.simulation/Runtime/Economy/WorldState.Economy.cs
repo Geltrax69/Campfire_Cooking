@@ -24,6 +24,7 @@ namespace LivingWorld.Simulation.Core
         public DebtLedgerState DebtLedger { get; private set; } = new DebtLedgerState();
         public TavernPopularityState TavernPopularity { get; private set; } = new TavernPopularityState();
         public IngredientDemandState IngredientDemand { get; private set; } = new IngredientDemandState();
+        public EggProductionState EggProduction { get; private set; } = new EggProductionState();
 
         /// <summary>Installs validated production progress for Persistence.</summary>
         internal void RestoreProduction(ProductionState state)
@@ -158,6 +159,12 @@ namespace LivingWorld.Simulation.Core
         internal void RestoreIngredientDemand(IngredientDemandState state)
         {
             IngredientDemand = state ?? throw new ArgumentNullException(nameof(state));
+        }
+
+        /// <summary>Installs validated egg-production progress for Persistence.</summary>
+        internal void RestoreEggProduction(EggProductionState state)
+        {
+            EggProduction = state ?? throw new ArgumentNullException(nameof(state));
         }
     }
 }
