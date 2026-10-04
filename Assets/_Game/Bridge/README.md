@@ -1,0 +1,7 @@
+# Apple slice boundary
+
+WorldRunner owns AppleSlice privately. DisplaySnapshot and NpcDisplay contain detached scalar data, never mutable simulation collections. Player purchase and theft queue simulation commands for the next tick. The clock advances one minute per real second, retains fractional remainder and catch-up debt, and processes at most eight ticks per frame. A failed tick pauses permanently.
+
+Initialization reads approved item, NPC wallet/identity, economy starting stock/price, and player money JSON. Fixed buyer times/counts, 50% witness chance, stock-count confidence 90, stock threshold 10, day-three production 45, wholesale price 1, and retail bounds 3–4 reproduce AppleTestHarness configuration. It is a bounded experiment, not the complete village bootstrap. NPC presence is a prototype marker anchored at workplaces; general schedule/travel, rumor conversations, advanced systems and saving are not enabled. Dialogue displays only NPC beliefs. Time begins at approved player arrival 06:30; theft always requires player input.
+
+Editor builds stage root Content JSON into StreamingAssets/Content, then remove the generated copies. The staging folder carries a generated ownership marker; an existing folder blocks staging. After an interrupted build, use Living World → Clean Generated Content. Cleanup refuses unmarked content and removes its meta together with the generated asset. Do not commit duplicate content. iOS IL2CPP build and device verification remain necessary.
