@@ -107,7 +107,17 @@ namespace LivingWorld.Simulation.Core
         /// primary truth record; this event lets perception, memory and rumor
         /// see it. ValidateType's upper bound was extended to cover it.
         /// </summary>
-        Birth
+        Birth,
+        /// <summary>
+        /// An inheritance transfer from a deceased NPC's estate (P7-03
+        /// addition, flagged for orchestrator ratification: the Agents
+        /// folder may not edit Core): actor is the deceased NPC; targets
+        /// name the heir receiving this transfer (empty when the village
+        /// fund receives it); copper carries a money share, quantity the
+        /// item units in an item transfer. ValidateType's upper bound was
+        /// extended to cover it.
+        /// </summary>
+        Inheritance
     }
 
     /// <summary>Describes noticeability, not whether anybody actually perceived the event.</summary>
@@ -170,7 +180,7 @@ namespace LivingWorld.Simulation.Core
 
         internal static void ValidateType(WorldEventType type)
         {
-            if (type < WorldEventType.Purchase || type > WorldEventType.Birth)
+            if (type < WorldEventType.Purchase || type > WorldEventType.Inheritance)
                 throw new ArgumentOutOfRangeException(nameof(type));
         }
 
