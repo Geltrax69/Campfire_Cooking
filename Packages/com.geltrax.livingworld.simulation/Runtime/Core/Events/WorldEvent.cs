@@ -8,7 +8,14 @@ namespace LivingWorld.Simulation.Core
     {
         Purchase, PartialPurchase, FailedPurchase, Theft, StockCounted, Conversation, Departure, Arrival,
         RestockOrdered, Produced, Restocked, PriceChanged, ReputationChanged,
-        Gift, DebtMissed, RelationshipShift, TurnedStale, Spoiled
+        Gift, DebtMissed, RelationshipShift, TurnedStale, Spoiled,
+        /// <summary>
+        /// An NPC ate a cooked meal. P3-03 addition (flagged for orchestrator
+        /// ratification: the Agents folder may not edit Core): itemType is the meal,
+        /// quantity carries the meal quality 0-100 (one meal is one event, so no
+        /// count is needed), actor is the eater.
+        /// </summary>
+        MealEaten
     }
 
     /// <summary>Describes noticeability, not whether anybody actually perceived the event.</summary>
@@ -71,7 +78,7 @@ namespace LivingWorld.Simulation.Core
 
         internal static void ValidateType(WorldEventType type)
         {
-            if (type < WorldEventType.Purchase || type > WorldEventType.Spoiled)
+            if (type < WorldEventType.Purchase || type > WorldEventType.MealEaten)
                 throw new ArgumentOutOfRangeException(nameof(type));
         }
 

@@ -95,6 +95,11 @@ namespace LivingWorld.Simulation.Economy
     {
         private readonly List<TravelerConfiguration> _configurations;
 
+        // The village's evening room, from the approved Content/world/locations.json.
+        // Only payees here feel the tavern-popularity bonus: longer stays mean more
+        // ale and bed sales, not more horseshoes.
+        private static readonly LocationId Tavern = new LocationId("loc_tavern");
+
         public TravelerSpendSystem(IEnumerable<TravelerConfiguration> configurations)
         {
             if (configurations == null) throw new ArgumentNullException(nameof(configurations));
@@ -149,12 +154,19 @@ namespace LivingWorld.Simulation.Economy
                 totalWeight += payee.Weight;
             int dayOfMonth = VillageCalendar.DayOfMonth(day);
             var paid = new List<int>(progress.PaidThisMonth);
+            // P3-03: a renowned tavern keeps travelers an extra night or two per
+            // 20 popularity above 50, which lands as proportionally more ale and
+            // bed sales for the tavern's own payees.
+            int extraNights = TavernPopularitySystem.ExtraNights(state.TavernPopularity.Popularity);
             for (int i = 0; i < configuration.Payees.Count; i++)
             {
                 TravelerPayee payee = configuration.Payees[i];
                 // Cumulative formula: the payee's exact monthly share, minus what they already
                 // got this month, is what's due through today.
                 int share = checked(monthlyRate * payee.Weight) / totalWeight;
+                if (extraNights > 0 && payee.Location == Tavern)
+                    share = checked(share * (VillageCalendar.DaysPerMonth + extraNights))
+                        / VillageCalendar.DaysPerMonth;
                 int due = checked(share * dayOfMonth) / VillageCalendar.DaysPerMonth - paid[i];
                 if (due < 1) continue;
                 state.Events.Append(eventTime, payee.Location, WorldEventType.Purchase,

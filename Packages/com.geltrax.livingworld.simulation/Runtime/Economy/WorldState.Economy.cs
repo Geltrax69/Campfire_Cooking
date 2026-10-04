@@ -22,6 +22,8 @@ namespace LivingWorld.Simulation.Core
         public EconomyBaselineState EconomyBaseline { get; private set; } = new EconomyBaselineState();
         public SpoilageState Spoilage { get; private set; } = new SpoilageState();
         public DebtLedgerState DebtLedger { get; private set; } = new DebtLedgerState();
+        public TavernPopularityState TavernPopularity { get; private set; } = new TavernPopularityState();
+        public IngredientDemandState IngredientDemand { get; private set; } = new IngredientDemandState();
 
         /// <summary>Installs validated production progress for Persistence.</summary>
         internal void RestoreProduction(ProductionState state)
@@ -138,6 +140,24 @@ namespace LivingWorld.Simulation.Core
         internal void RestoreDebtLedger(DebtLedgerState state)
         {
             DebtLedger = state ?? throw new ArgumentNullException(nameof(state));
+        }
+
+        /// <summary>
+        /// Installs validated tavern popularity for Persistence. The Phase 3 JSON
+        /// saver/loader must call this; tests use it directly until then.
+        /// </summary>
+        internal void RestoreTavernPopularity(TavernPopularityState state)
+        {
+            TavernPopularity = state ?? throw new ArgumentNullException(nameof(state));
+        }
+
+        /// <summary>
+        /// Installs validated ingredient demand for Persistence. The Phase 3 JSON
+        /// saver/loader must call this; tests use it directly until then.
+        /// </summary>
+        internal void RestoreIngredientDemand(IngredientDemandState state)
+        {
+            IngredientDemand = state ?? throw new ArgumentNullException(nameof(state));
         }
     }
 }

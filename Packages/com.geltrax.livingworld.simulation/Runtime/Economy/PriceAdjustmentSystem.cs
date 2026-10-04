@@ -117,9 +117,21 @@ namespace LivingWorld.Simulation.Economy
     public sealed class PriceAdjustmentSystem : IWorldSystem
     {
         private readonly List<PriceAdjustmentConfiguration> _configurations;
+        private readonly IngredientDemandState _demand;
 
         public PriceAdjustmentSystem(IEnumerable<PriceAdjustmentConfiguration> configurations,
             WorldState world)
+            : this(configurations, world, null)
+        {
+        }
+
+        /// <summary>
+        /// Creates the system with an ingredient-demand hook (P3-03): while an item's
+        /// demand is high, its price nudges upward like after a missed sale. Pass
+        /// null for the pre-P3-03 behavior.
+        /// </summary>
+        public PriceAdjustmentSystem(IEnumerable<PriceAdjustmentConfiguration> configurations,
+            WorldState world, IngredientDemandState demand)
         {
             if (configurations == null) throw new ArgumentNullException(nameof(configurations));
             if (world == null) throw new ArgumentNullException(nameof(world));
@@ -137,6 +149,7 @@ namespace LivingWorld.Simulation.Economy
             foreach (PriceAdjustmentProgress progress in world.Prices.Progress)
                 if (!known.Contains(progress.ConfigurationId))
                     throw new ArgumentException("Price state references an unknown configuration.");
+            _demand = demand;
         }
 
         public string Id => "economy.prices";
@@ -177,7 +190,10 @@ namespace LivingWorld.Simulation.Economy
             int currentPrice = configuration.Shop.UnitPrice(configuration.Item);
             int stock = configuration.Shop.Stock.Count(configuration.Item);
             int adjustedPrice = currentPrice;
-            if (missedSale || stock < configuration.LowStockThreshold)
+            // High ingredient demand (P3-03: good cooked food bids up raw ingredients)
+            // pushes the price up exactly like a missed sale would.
+            bool demandHigh = _demand != null && _demand.IsHigh(configuration.Item);
+            if (missedSale || demandHigh || stock < configuration.LowStockThreshold)
                 adjustedPrice = (int)Math.Min(configuration.MaximumPrice,
                     (long)currentPrice + configuration.PriceStep);
             else if (stock > configuration.HighStockThreshold)
