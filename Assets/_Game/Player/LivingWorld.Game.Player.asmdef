@@ -1,0 +1,1 @@
+{"name":"LivingWorld.Game.Player","rootNamespace":"LivingWorld.Game.Player","references":["LivingWorld.Game.Bridge","LivingWorld.Game.UI","Unity.InputSystem","Unity.Cinemachine"],"autoReferenced":true}

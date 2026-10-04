@@ -1,0 +1,14 @@
+{
+  "name": "LivingWorld.Game.Bridge.Tests",
+  "references": [
+    "LivingWorld.Game.Bridge",
+    "LivingWorld.Simulation"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "autoReferenced": false
+}

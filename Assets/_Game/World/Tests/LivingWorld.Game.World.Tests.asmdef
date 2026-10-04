@@ -1,0 +1,1 @@
+{"name": "LivingWorld.Game.World.Tests", "references": ["LivingWorld.Game.World", "LivingWorld.Game.Bridge", "LivingWorld.Game.UI", "Unity.InputSystem", "LivingWorld.Game.Player"], "optionalUnityReferences": ["TestAssemblies"], "defineConstraints": ["UNITY_INCLUDE_TESTS"], "autoReferenced": false}

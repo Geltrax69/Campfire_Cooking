@@ -1,0 +1,9 @@
+<linker>
+  <!-- Content DTOs are loaded by reflection; preserve them for player builds. -->
+  <assembly fullname="LivingWorld.Simulation" preserve="all" />
+  <assembly fullname="LivingWorld.Game.Bridge" preserve="all" />
+  <assembly fullname="System.Text.Json" preserve="all" />
+  <assembly fullname="System.Text.Encodings.Web" preserve="all" />
+  <assembly fullname="Microsoft.Bcl.AsyncInterfaces" preserve="all" />
+  <assembly fullname="System.Runtime.CompilerServices.Unsafe" preserve="all" />
+</linker>

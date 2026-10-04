@@ -1,0 +1,1 @@
+{"name":"LivingWorld.Game.UI.Tests","references":["LivingWorld.Game.UI","LivingWorld.Game.Bridge"],"includePlatforms":["Editor"],"optionalUnityReferences":["TestAssemblies"],"autoReferenced":false}

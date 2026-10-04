@@ -44,7 +44,7 @@ namespace LivingWorld.Simulation.Tests.Knowledge
             "thieves", "are", "merchant", "has", "come", "fever", "spreads",
             "drought", "grips", "mill", "wheel", "broke", "building", "bridge",
             "harvest", "no", "news", "reached", "just", "my", "house", "keep",
-            "this", "share", "business", "we", "goods",
+            "this", "share", "business", "we", "goods", "an",
         });
 
         private static FactSheet MakeSheet(
@@ -62,6 +62,24 @@ namespace LivingWorld.Simulation.Tests.Knowledge
                 memories ?? Array.Empty<FactSheetMemory>(),
                 news ?? Array.Empty<FactSheetNews>(),
                 household ?? Array.Empty<FactSheetHouseholdMember>());
+        }
+
+        [TestCase("apple-stall owner", "an")]
+        [TestCase("shopkeeper", "a")]
+        public void SmalltalkUsesCorrectArticleWithoutChangingOccupation(string occupation, string article)
+        {
+            bool checkedArticle = false;
+            foreach (int mood in new[] { 10, 30, 50, 70 })
+                for (ulong seed = 0; seed < 32; seed++)
+                {
+                    string line = new TemplatePhrasingEngine(seed).Phrase(MakeSheet(occupation: occupation, mood: mood), DialogueIntent.Smalltalk);
+                    Assert.That(line, Does.Contain(occupation));
+                    if (line.StartsWith("The ") || line.StartsWith("I like the ")) continue;
+                    Assert.That(line, Does.Contain(article + " " + occupation));
+                    Assert.That(line, Does.Not.Contain((article == "an" ? "a" : "an") + " " + occupation));
+                    checkedArticle = true;
+                }
+            Assert.That(checkedArticle, Is.True);
         }
 
         private static FactSheetBelief Belief(BeliefClaimKind kind, BeliefSourceKind source,
