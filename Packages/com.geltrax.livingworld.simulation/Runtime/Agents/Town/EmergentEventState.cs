@@ -65,6 +65,8 @@ namespace LivingWorld.Simulation.Agents
             {
                 var id = new EmergentEventId(kvp.Key);
                 if (!id.IsValid) throw new ArgumentException("Invalid event ID in snapshot.");
+                if (!EmergentEventId.IsKnown(id))
+                    throw new ArgumentException("Unknown emergent event ID in snapshot: " + kvp.Key + ".");
                 if (kvp.Value < 1) throw new ArgumentOutOfRangeException("Event start day must be positive.");
                 if (restored.ContainsKey(id)) throw new ArgumentException("Duplicate event in snapshot.");
                 restored.Add(id, kvp.Value);

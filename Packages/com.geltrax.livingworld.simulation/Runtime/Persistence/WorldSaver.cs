@@ -24,7 +24,7 @@ namespace LivingWorld.Simulation.Persistence
     public static class WorldSaver
     {
         /// <summary>The save format version written at the head of every document.</summary>
-        public const int FormatVersion = 4;
+        public const int FormatVersion = 5;
 
         /// <summary>Serializes the whole world state. Throws <see cref="SaveException"/> on failure.</summary>
         public static string Save(WorldState state)
@@ -93,6 +93,9 @@ namespace LivingWorld.Simulation.Persistence
             WriteBreeding(writer, state);
             WriteWinterPressure(writer, state);
             WriteEggProduction(writer, state);
+            WriteTownStats(writer, state);
+            WriteMigration(writer, state);
+            WriteEmergentEvents(writer, state);
             writer.WriteEndObject();
         }
 
@@ -811,6 +814,80 @@ namespace LivingWorld.Simulation.Persistence
             writer.WriteStartObject("eggProduction");
             writer.WriteBoolean("initialized", eggs.IsInitialized);
             writer.WriteNumber("lastLayDay", eggs.LastLayDay);
+            writer.WriteEndObject();
+        }
+
+        /// <summary>
+        /// Phase 5 town stats (formatVersion 5): the last monthly computation. The
+        /// values may be absent (null) when the TownStatsSystem has not run yet;
+        /// the computed month is -1 in that case. Always written so saves stay
+        /// byte-identical for equal states.
+        /// </summary>
+        private static void WriteTownStats(Utf8JsonWriter writer, WorldState state)
+        {
+            TownStatsState town = state.TownStats;
+            writer.WriteStartObject("townStats");
+            writer.WriteNumber("computedMonth", town.ComputedMonth);
+            if (town.IsComputed)
+            {
+                TownStats values = town.Values;
+                writer.WriteStartObject("values");
+                writer.WriteNumber("population", values.Population);
+                writer.WriteNumber("wealthCopper", values.WealthCopper);
+                writer.WriteNumber("foodSupply", values.FoodSupply);
+                writer.WriteNumber("safety", values.Safety);
+                writer.WriteNumber("housing", values.Housing);
+                writer.WriteNumber("employment", values.Employment);
+                writer.WriteNumber("trade", values.Trade);
+                writer.WriteNumber("happiness", values.Happiness);
+                writer.WriteNumber("crime", values.Crime);
+                writer.WriteNumber("infrastructure", values.Infrastructure);
+                writer.WriteNumber("reputation", values.Reputation);
+                writer.WriteEndObject();
+            }
+            else
+            {
+                writer.WriteNull("values");
+            }
+            writer.WriteEndObject();
+        }
+
+        /// <summary>
+        /// Phase 5 migration state (formatVersion 5): background-villager counts
+        /// added by in-migration and the season/year cursors, from
+        /// MigrationState.Capture().
+        /// </summary>
+        private static void WriteMigration(Utf8JsonWriter writer, WorldState state)
+        {
+            MigrationSnapshot snapshot = state.Migration.Capture();
+            writer.WriteStartObject("migration");
+            writer.WriteNumber("additionalVillagers", snapshot.AdditionalVillagers);
+            writer.WriteNumber("additionalHouseholds", snapshot.AdditionalHouseholds);
+            writer.WriteNumber("additionalSoundRoofs", snapshot.AdditionalSoundRoofs);
+            writer.WriteNumber("lastInMigrationSeason", snapshot.LastInMigrationSeason);
+            writer.WriteNumber("lastOutMigrationYear", snapshot.LastOutMigrationYear);
+            writer.WriteEndObject();
+        }
+
+        /// <summary>
+        /// Phase 5 emergent events (formatVersion 5): the active events with their
+        /// start days (in ordinal event-ID order) and the last merchant arrival
+        /// day, from EmergentEventState.Capture().
+        /// </summary>
+        private static void WriteEmergentEvents(Utf8JsonWriter writer, WorldState state)
+        {
+            EmergentEventSnapshot snapshot = state.EmergentEvents.Capture();
+            writer.WriteStartObject("emergentEvents");
+            writer.WriteStartArray("activeEvents");
+            foreach (KeyValuePair<string, long> entry in snapshot.ActiveEvents)
+            {
+                writer.WriteStartObject();
+                writer.WriteString("id", entry.Key);
+                writer.WriteNumber("startedDay", entry.Value);
+                writer.WriteEndObject();
+            }
+            writer.WriteEndArray();
+            writer.WriteNumber("lastMerchantDay", snapshot.LastMerchantDay);
             writer.WriteEndObject();
         }
 

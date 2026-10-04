@@ -58,7 +58,23 @@ namespace LivingWorld.Simulation.Core
         /// location is where the animal was. Emission from TamingSystem is
         /// future work.
         /// </summary>
-        BondBroken
+        BondBroken,
+        /// <summary>
+        /// An emergent town event fired (P5-04 addition, orchestrator-authorized:
+        /// the Agents folder may not edit Core): the town-level condition was met
+        /// and the event became active. Location is the market square; quantity
+        /// carries the event's ordinal index among the 10 defined events (0-9 in
+        /// EmergentEventId declaration order); visibility reflects the event's
+        /// noticeability (Loud for shortage/wolf attack/festival/fire, Normal for
+        /// the rest). The EmergentEventState is the primary truth record.
+        /// </summary>
+        EmergentEventFired,
+        /// <summary>
+        /// An emergent town event ended (P5-04 addition, orchestrator-authorized):
+        /// the end condition was met and the event deactivated. Same payload
+        /// convention as EmergentEventFired.
+        /// </summary>
+        EmergentEventEnded
     }
 
     /// <summary>Describes noticeability, not whether anybody actually perceived the event.</summary>
@@ -121,7 +137,7 @@ namespace LivingWorld.Simulation.Core
 
         internal static void ValidateType(WorldEventType type)
         {
-            if (type < WorldEventType.Purchase || type > WorldEventType.BondBroken)
+            if (type < WorldEventType.Purchase || type > WorldEventType.EmergentEventEnded)
                 throw new ArgumentOutOfRangeException(nameof(type));
         }
 

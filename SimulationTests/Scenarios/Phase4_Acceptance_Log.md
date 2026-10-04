@@ -47,4 +47,4 @@ The design's chicken bond threshold is 60 trust (species.json); 8 trust per dail
 - Chickens: 19, pigs: 12, deer: 38 (down from 40 — wolf predation), wolves: 6, bramblebacks: 25.
 - Eggs laid: 498 in autumn, 145 in winter — laying is strongly seasonal.
 - Bonded animals: animal_chicken_001 (species_chicken, trust 77, owner player).
-- WorldDigest (save/load-continued run): 5c217da8842ad1b25876831c98d16e31f977f9b3ec2f40861a8bbb9385189f45.
+- WorldDigest (save/load-continued run): 68b5cd93aeb9c16eb6b7e8efa7ef5758025d3e3d3433a2d8f1dc6885dc5c5289.

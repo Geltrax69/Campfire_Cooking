@@ -370,26 +370,25 @@ namespace LivingWorld.Simulation.Tests.Scenarios
                 Farm, 30, null, AnimalAge.Adult, 100));
             state.RestorePredation(new PredationState(initialized: true, lastHuntDay: 12));
 
-            string v4 = WorldSaver.Save(state);
-            Assert.That(v4, Does.Contain("\"formatVersion\": 4"));
-            WorldState loadedV4 = WorldLoader.Load(v4, root);
-            Assert.That(loadedV4.Animals.Count, Is.EqualTo(1));
-            Assert.That(loadedV4.Predation.LastHuntDay, Is.EqualTo(12));
+            string v5 = WorldSaver.Save(state);
+            Assert.That(v5, Does.Contain("\"formatVersion\": 5"));
+            WorldState loadedV5 = WorldLoader.Load(v5, root);
+            Assert.That(loadedV5.Animals.Count, Is.EqualTo(1));
+            Assert.That(loadedV5.Predation.LastHuntDay, Is.EqualTo(12));
 
-            WorldState loadedV3 = WorldLoader.Load(StripToVersion3(v4), root);
-            Assert.That(loadedV3.Animals.Count, Is.EqualTo(0),
-                "A v3 document has no animals: the store restores empty.");
-            Assert.That(loadedV3.Predation.IsInitialized, Is.False,
-                "A v3 document has no predation cursor: the system stays quiet.");
-            Assert.That(loadedV3.Breeding.IsInitialized, Is.False);
-            Assert.That(loadedV3.WinterPressure.IsInitialized, Is.False);
-            Assert.That(loadedV3.EggProduction.IsInitialized, Is.False);
+            WorldState loadedV4 = WorldLoader.Load(StripToVersion4(v5), root);
+            Assert.That(loadedV4.Animals.Count, Is.EqualTo(1),
+                "A v4 document keeps its animals.");
+            Assert.That(loadedV4.TownStats.IsComputed, Is.False,
+                "A v4 document has no town stats: uncomputed.");
+            Assert.That(loadedV4.Migration.AdditionalBackgroundVillagers, Is.EqualTo(0));
+            Assert.That(loadedV4.EmergentEvents.ActiveEvents, Is.Empty);
         }
 
-        /// <summary>Rewrites a version 4 document as version 3 (drops Phase 4 sections).</summary>
-        private static string StripToVersion3(string v4)
+        /// <summary>Rewrites a version 5 document as version 4 (drops Phase 5 sections).</summary>
+        private static string StripToVersion4(string v5)
         {
-            using (JsonDocument document = JsonDocument.Parse(v4))
+            using (JsonDocument document = JsonDocument.Parse(v5))
             {
                 using (var stream = new MemoryStream())
                 {
@@ -401,13 +400,11 @@ namespace LivingWorld.Simulation.Tests.Scenarios
                             switch (property.Name)
                             {
                                 case "formatVersion":
-                                    writer.WriteNumber("formatVersion", 3);
+                                    writer.WriteNumber("formatVersion", 4);
                                     break;
-                                case "animals":
-                                case "predation":
-                                case "breeding":
-                                case "winterPressure":
-                                case "eggProduction":
+                                case "townStats":
+                                case "migration":
+                                case "emergentEvents":
                                     break;
                                 default:
                                     property.WriteTo(writer);

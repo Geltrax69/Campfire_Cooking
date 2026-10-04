@@ -1,4 +1,4 @@
-# Save format schema (formatVersion 4)
+# Save format schema (formatVersion 5)
 
 Written by `WorldSaver.Save(WorldState)` → indented JSON string.
 Read by the loader. Top-level properties always appear in this order.
@@ -9,7 +9,9 @@ inventory ages. Version 3 (P3-04) adds every Phase 3 state section: skill
 stores (player + NPCs), NPC happiness, tavern popularity and ingredient
 demand. Version 4 (P4-04) adds every Phase 4 state section: the animal
 store and the four ecosystem cursors (predation, breeding, winter pressure,
-egg production). Older documents still load (see Compatibility below).
+egg production). Version 5 (P5-04) adds every Phase 5 state section: town
+stats, migration and emergent events. Older documents still load (see
+Compatibility below).
 
 ## Conventions
 
@@ -274,11 +276,34 @@ egg production). Older documents still load (see Compatibility below).
   "eggProduction": {                       // v4: laying cursor
     "initialized": true,
     "lastLayDay": 90
-  }
+  },
   // NOTE: the coop inventories the eggs land in are caller-owned EggConfiguration
   // state, not world state — laid eggs are not in the save document. A load
   // resumes laying (the Produced truth events are in the event log) but the
   // basket starts empty.
+  "townStats": {                           // v5: last monthly town-stats computation
+    "computedMonth": 11,                   // absolute 30-day month index; -1 = never computed
+    "values": {                            // null when never computed
+      "population": 120,                   // simulated NPCs + 100 background
+      "wealthCopper": 11000,
+      "foodSupply": 35, "safety": 65, "housing": 85, "employment": 90,
+      "trade": 75, "happiness": 70, "crime": 2,
+      "infrastructure": 57, "reputation": 65
+    }
+  },
+  "migration": {                           // v5: growth/decline state
+    "additionalVillagers": 0,              // background villagers added by in-migration
+    "additionalHouseholds": 0,
+    "additionalSoundRoofs": 0,
+    "lastInMigrationSeason": -1,           // -1 = never checked
+    "lastOutMigrationYear": -1             // -1 = never checked
+  },
+  "emergentEvents": {                      // v5: active town events
+    "activeEvents": [                      // ordinal event-ID order
+      { "id": "event_merchant_arrival", "startedDay": 200 }
+    ],
+    "lastMerchantDay": 200                  // -1 = none yet
+  }
 }
 ```
 
@@ -351,7 +376,11 @@ shop stock or an actor's belongings, makes saving fail with `SaveException`
    (`AnimalStore.Restore`; species validated against Content/animals, trust and
    health ranges enforced by `AnimalState.Restore`) and the four ecosystem
    cursors via their `Restore*` methods (skip when null for v1/v2/v3 — the
-   fresh defaults apply: an empty store and uninitialized cursors).
+   fresh defaults apply: an empty store and uninitialized cursors); v5 then
+   restores town stats (skip when null for v1-v4 — uncomputed), migration
+   (`MigrationState.Restore`; skip when null for v1-v4 — empty) and emergent
+   events (`EmergentEventState.Restore` with known-ID validation; skip when
+   null for v1-v4 — no active events).
 3. `AppleScenarioState` is harness-owned and intentionally not persisted.
 4. Wallet aliasing: the save records per shop whether the till is the owner's
    personal wallet (one shared object) or a separate till
@@ -360,10 +389,19 @@ shop stock or an actor's belongings, makes saving fail with `SaveException`
    saved balances contradict is a `LoadException`. Version 1 documents have no
    marker and default to separate tills.
 
-## Compatibility (v1 → v2 → v3 → v4)
+## Compatibility (v1 → v2 → v3 → v4 → v5)
 
-Version 4 adds sections; it removes nothing. The loader accepts all four:
+Version 5 adds sections; it removes nothing. The loader accepts all five:
 
+- **v5 → v5**: every section restores via its `Capture`/`Restore` pair.
+- **v4 → v5**: town stats restore uncomputed (month -1, no values), migration
+  restores empty (no added villagers, cursors at -1) and no emergent events are
+  active. Rationale: a v4 save predates the town systems, so "never computed"
+  is the truthful restore — matching a world built before the town-development
+  phase.
+- **v3 → v5**: as v4 → v5, plus the v3 → v4 rules below.
+- **v2 → v5**: as v3 → v5, plus the v2 → v3 rules below.
+- **v1 → v5**: as v2 → v5, plus the v1 → v2 rules below.
 - **v4 → v4**: every section restores via its `Capture`/`Restore` pair.
 - **v3 → v4**: the animal store restores empty and the four ecosystem cursors
   restore uninitialized (systems stay quiet until a world-build step initializes

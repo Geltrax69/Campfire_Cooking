@@ -263,14 +263,48 @@ namespace LivingWorld.Simulation.Agents
         private void FireEvent(WorldState state, EmergentEventId id, long day, string note)
         {
             state.EmergentEvents.Activate(id, day);
-            // Record truth event. Note: uses existing WorldEventType via the
-            // ratified pattern (see P5-03 report for the Core addition request).
-            // For now, we track via state only; the orchestrator will wire event types.
+            // Record truth so perception, memory and rumor can see the town-level
+            // event. The EmergentEventState is the primary record; quantity carries
+            // the event's ordinal index (0-9 in declaration order).
+            state.Events.Append(state.Clock, Square, WorldEventType.EmergentEventFired,
+                visibility: LoudEvents(id), quantity: EventOrdinal(id));
         }
 
         private void EndEvent(WorldState state, EmergentEventId id, long day, string note)
         {
             state.EmergentEvents.Deactivate(id);
+            state.Events.Append(state.Clock, Square, WorldEventType.EmergentEventEnded,
+                visibility: LoudEvents(id), quantity: EventOrdinal(id));
+        }
+
+        /// <summary>
+        /// Ordinal index of the event in EmergentEventId declaration order (0-9).
+        /// Deterministic and stable; stored as the truth event's quantity.
+        /// </summary>
+        private static int EventOrdinal(EmergentEventId id)
+        {
+            if (id == EmergentEventId.FoodShortage) return 0;
+            if (id == EmergentEventId.WolfAttack) return 1;
+            if (id == EmergentEventId.Festival) return 2;
+            if (id == EmergentEventId.Fire) return 3;
+            if (id == EmergentEventId.TheftWave) return 4;
+            if (id == EmergentEventId.MerchantArrival) return 5;
+            if (id == EmergentEventId.Fever) return 6;
+            if (id == EmergentEventId.Drought) return 7;
+            if (id == EmergentEventId.WheelFailure) return 8;
+            return 9; // BridgeProject
+        }
+
+        /// <summary>
+        /// The town-crier events are Loud (everyone hears); the rest are Normal.
+        /// </summary>
+        private static EventVisibility LoudEvents(EmergentEventId id)
+        {
+            if (id == EmergentEventId.FoodShortage) return EventVisibility.Loud;
+            if (id == EmergentEventId.WolfAttack) return EventVisibility.Loud;
+            if (id == EmergentEventId.Festival) return EventVisibility.Loud;
+            if (id == EmergentEventId.Fire) return EventVisibility.Loud;
+            return EventVisibility.Normal;
         }
     }
 }
