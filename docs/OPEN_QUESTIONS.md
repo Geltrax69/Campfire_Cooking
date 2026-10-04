@@ -33,3 +33,25 @@ Decisions the orchestrator made without the human that need review. The user ask
 These were approved by the human before implementation:
 1. ✅ Added `item_cloth_local` to general store `sells` in `locations.json` (matches economy.json and design).
 2. ✅ Flipped 7 cooked-food hunger values to negative (ITEMS.md convention: eating lowers hunger). Added `NoFoodItemHasPositiveHungerEffect` test.
+
+## Phase 4 (2026-10-04)
+
+### Wolf bond pacing
+**Decision:** Mechanically, a wolf pup bonds in ~17 days of optimal interaction, but ANIMALS.md says "~60 days — two full seasons".
+**Question:** Should the trust gains be tuned down to match the 60-day design, or is the faster mechanical pace acceptable?
+
+### Egg coop inventories not persisted
+**Decision:** Laid eggs go to caller-owned coop inventories (not world state), so they don't survive save/load. The Produced truth events do survive.
+**Question:** Should coop inventories become world state, or should eggs route into an NPC/shop inventory?
+
+### Bonded/BondBroken events not emitted
+**Decision:** Added the event types but TamingSystem doesn't emit them yet (needs payload design: actor/location/visibility).
+**Question:** What should the bond event payload contain?
+
+### AnimalState.Owner type change
+**Decision:** Changed from `NpcId?` to `ActorId?` so the player can bond animals.
+**Question:** Ratify this change (P4-02's `SetOwner(NpcId?)` was updated to match).
+
+### Core event type additions
+**Decision:** Added `WorldEventType.Predation`, `AnimalBirth`, `AnimalCulled`, `CropDamage`, `Bonded`, `BondBroken` (one line each).
+**Question:** Ratify these additions (P3-03 MealEaten precedent).

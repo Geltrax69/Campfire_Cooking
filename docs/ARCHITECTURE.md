@@ -256,3 +256,11 @@ Add new entries at the bottom: date, decision, reason.
 | 2026-10-04 | P3-04: save format v3 (skills, happiness, tavern popularity, ingredient demand); v2/v1 load with defaults | All Phase 3 state must survive save/load |
 | 2026-10-04 | P3-04: meal happiness recalibrated (51+ -> +1, 85+ -> +2) because ordinary cooking maxes at quality 54 | Old formula made happiness unreachable; WORLD.md promises "small daily happiness" |
 | 2026-10-04 | P3-04: NpcState.Restore no longer requires sleeping-flag/intention agreement | NeedsSystem drives IsSleeping from schedule; intentions unwired; flag recomputed each tick |
+| 2026-10-04 | P4-01: 5 species (chicken, pig/boar, deer, wolf, brambleback); trust 0-100; domestic start 20-30, wild start 0 | Per ANIMALS.md; 6 forest pigs treated as wild boars (never tameable) |
+| 2026-10-04 | P4-02: wolves hunt deer daily (higher in winter); 2-4 livestock losses per winter; spring breeding with population caps | Per WORLD.md load-bearing 2-4 winter incidents; no scripted triggers |
+| 2026-10-04 | P4-02: egg production 0.7/day warm months, 0.2/day winter | Heritage birds, not modern layers (ANIMALS.md) |
+| 2026-10-04 | P4-03: taming trust gains per species; one meaningful gain per day; bond thresholds 60/70/80/85; wolf needs council approval | Per ANIMALS.md and SKILLS.md; wild boars and stags never tameable |
+| 2026-10-04 | P4-03: AnimalState.Owner changed from NpcId? to ActorId? (player can bond animals) | Player is an actor, not an NPC |
+| 2026-10-04 | P4-03: taming skill multiplies trust gains (L2 x1.5, L3 x2) | Per SKILLS.md |
+| 2026-10-04 | P4-04: save format v4 (animals + ecosystem cursors); v1-v3 load with empty animal store | Matches world built without animal-population step |
+| 2026-10-04 | P4-04: added WorldEventType.Bonded/BondBroken (not yet emitted by TamingSystem) | P3-03 MealEaten precedent; payload design deferred |

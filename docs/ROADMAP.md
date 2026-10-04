@@ -166,13 +166,29 @@ All new mutable state must be save/load-compatible.
 
 **Phase 3 DONE (2026-10-04).** All 4 tasks complete. 639 tests green. Skills (levels 1-5, practice, teaching, daily cap), recipe execution (21 recipes, quality, failure, fuel, permission), cooking effects (happiness, tavern popularity, ingredient demand, waste reduction), 7-day acceptance with save/load determinism (save format v3).
 
+**Phase 4 DONE (2026-10-04).** All 4 tasks complete. 697 tests green. Animal state (5 species, trust 0-100), ecosystem dynamics (predation, breeding, winter pressure, 2-4 livestock losses/winter), taming through trust (bond thresholds, council approval for wolves), 90-day acceptance with save/load determinism (save format v4).
+
 ## Later simulation phases (plan in detail when the previous phase is done)
 
 | Phase | Focus | Status |
 |---|---|---|
 | 2 | Relationships and economy — see Phase 2 section above | DONE (2026-10-04) |
 | 3 | Skills, crafting and cooking (cooking affects health, happiness, tavern popularity, prices) | next |
-| 4 | Animal ecosystem (wolves, deer, livestock) and taming through trust | |
+| 4 | Animal ecosystem (wolves, deer, livestock) and taming through trust | next |
+
+## Phase 4: Animal ecosystem and taming (simulation only, no graphics)
+
+Planned 2026-10-04. Focus: 5 species (chicken, pig/boar, deer, wolf, brambleback) with populations,
+predation, breeding, and winter pressure; taming as trust 0-100 through repeated calm interactions
+(one meaningful gain per day); bonded animals provide services; wolf taming needs council approval.
+All new mutable state must be save/load-compatible.
+
+| Task | What | Area | Depends on | Pass condition | Status |
+|---|---|---|---|---|---|
+| P4-01 | Animal state: species definitions from Content; population counts; individual animals with trust 0-100; AnimalStore per location | Agents | P3-04 | Tests: species load; populations track; trust 0-100; individual animals identifiable | done (2026-10-04) |
+| P4-02 | Ecosystem dynamics: predation (wolves→deer/livestock), breeding (spring), winter pressure (deer→farms, wolves→livestock), livestock losses 2-4 per winter | Agents, Economy | P4-01 | Tests: winter increases livestock losses; wolf predation reduces deer; spring breeding increases populations | done (2026-10-04) |
+| P4-03 | Taming: trust gains/losses per interaction type; one meaningful gain per day; bonded thresholds (chicken 60, pig 70, deer 80, wolf 85); wolf needs council approval; bonded services | Agents | P4-01 | Tests: chicken bonds in ~7 days; cruelty breaks trust; wolf pup takes ~60 days; council approval required | done (2026-10-04) |
+| P4-04 | Phase 4 acceptance: season-long run; populations shift with winter; player tames a chicken; wolf incident occurs; readable log | Test & Scenario | P4-01 … P4-03 | Tests: winter→livestock losses; taming works; incident logged; save/load preserves animals | done (2026-10-04) |
 | 5 | Town development emerging from population, food, housing, trade and safety; emergent events | |
 | 6 | Expanded world: more villages, trade routes, level-of-detail simulation |
 | 7 | Reincarnation and generations (aging, families, inheritance) |
