@@ -295,3 +295,7 @@ Add new entries at the bottom: date, decision, reason.
 | 2026-10-04 | Ship System.Text.Json 8.0.6 and its non-platform runtime dependencies with simulation package, retaining MIT licenses | Unity lacks the serializer used by existing simulation; preserve schema and behavior instead of rewriting persistence. Orchestrator approved; IL2CPP remains to verify. |
 
 | 2026-10-04 | Enable Both input backends and reject builds without active Input System compilation | Real Mac mouse testing exposed legacy-only setting; enforce the fixed touch-first Input System choice while preserving editor tooling. |
+
+| 2026-10-04 | Owner requested town walkthrough and NPC conversations; central approved positions are scaled uniformly for an exterior preview, using Kenney models and generated buildings | Player movement is collision-aware presentation; authoritative player travel, full NPC schedules/NavMesh and the surrounding farm/river remain separate work. |
+| 2026-10-04 | Bridge loads approved NPC identities and household data, then phrases conversations through FactSheetBuilder/DialogueSession; stall topic reads only that NPC’s beliefs | Preserve truth versus knowledge and make missing-stock consequences discoverable without inventing a culprit. Conversation tests compare complete serialized state before/after. |
+| 2026-10-04 | Use installed Cinemachine for follow/orbit/obstruction handling and imported Mecanim clips through playable graphs | Respect fixed camera technology and animate without editing licensed vendor metadata. No new dependency. |

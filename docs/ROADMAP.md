@@ -275,13 +275,13 @@ mock with a clean contract an AI model could later implement.
 | ID | Task | Role |
 |---|---|---|
 | U-01 | `WorldRunner` bridge: tick at chosen time scale, publish state changes | Bridge — implemented for Apple slice; tested clock/commands/snapshots |
-| U-02 | Village scene from Kenney kits (shop, farm, tavern, homes, square, forest edge, river); NavMesh | World — doing: static shop slice; full village/NavMesh remain |
-| U-03 | NPC prefabs (MiniCharacters) walking to their simulated locations with matching animations | World |
-| U-04 | Day/night lighting from game time | World |
-| U-05 | Player: virtual joystick + tap-to-move, third-person camera (rotate, pinch zoom) | Player & UI |
-| U-06 | Tap NPC/object → contextual radial menu (Talk, Trade, Steal, Inspect…) sending commands | Player & UI |
+| U-02 | Village scene from Kenney kits (shop, farm, tavern, homes, square, forest edge, river); NavMesh | World — doing: walkable central village exterior; farm/river/full village and NavMesh remain |
+| U-03 | NPC prefabs (MiniCharacters) walking to their simulated locations with matching animations | World — doing: named MiniCharacters with idle animation; workplace positions static; simulated navigation remains |
+| U-04 | Day/night lighting from game time | World — implemented for slice; sunlight and ambient light read game minutes |
+| U-05 | Player: virtual joystick + tap-to-move, third-person camera (rotate, pinch zoom) | Player & UI — doing: collision-aware keyboard/touch directional controls, ground tap walking, Cinemachine follow/Mac orbit/zoom; joystick/pinch and authoritative travel remain |
+| U-06 | Tap NPC/object → contextual radial menu (Talk, Trade, Steal, Inspect…) sending commands | Player & UI — doing: direct NPC conversation and apple shop; radial/inspect/full trade remain |
 | U-07 | Minimal HUD (time, weather, location) and shop/inventory panels | Player & UI — doing: time/location + apple shop/inventory slice; no weather simulation |
-| U-08 | Template dialogue from NPC fact sheets (what they know, how they feel) | Player & UI |
+| U-08 | Template dialogue from NPC fact sheets (what they know, how they feel) | Player & UI — implemented for slice: identity, smalltalk, player beliefs, news, family, farewell and local stall beliefs |
 | U-09 | First iPad build via Xcode; human play-test of the Apple Test | Human + Orchestrator |
 | U-10 | iPad/iPhone/Mac optimization, polish, App Store release | All |
 

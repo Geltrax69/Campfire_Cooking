@@ -74,3 +74,44 @@ the real app are kept under ignored TestResults/mac-*.png.
 
 Follow-up checks: 17/17 EditMode and 2/2 PlayMode passed; the extra PlayMode
 check rejects legacy-only Active Input Handling.
+
+## Town walkthrough follow-up
+
+Added a compact central village exterior using uniformly scaled approved
+location coordinates, licensed Kenney characters and generated buildings.
+The player has collision-aware keyboard/touch directional controls, ground
+click destinations, Cinemachine follow/orbit/zoom and camera obstruction
+handling. Imported Mecanim idle/walk clips animate through playable graphs.
+Named NPCs open read-only conversation panels with identity, smalltalk,
+player knowledge, news, family, farewell and local apple-stall beliefs.
+Sunlight and ambient lighting follow simulation minutes.
+
+Validation: 875/875 simulation tests; 28/28 Unity EditMode tests; 3/3 PlayMode
+integration tests. Tests cover queued purchasing, controller movement,
+building/boundary blocking, dialogue modal movement blocking, actual topic
+button submission, known identity/occupation, day/night intensity, and shop
+plus dialogue captures at 1366×1024 and 844×390. Conversation tests prove
+complete serialized state remains identical after talking and that Mira
+does not identify an unseen thief, even after discovering missing stock.
+All four final layout captures were inspected.
+
+Visual review found and fixed a blocked starting camera, overlarge fountain
+(height scaling had produced a 10.7-metre footprint), NPCs intersecting the
+fountain, unreadable labels, noon overexposure, and player animation targeting
+the wrong Unity animation system. All live UI documents guard world clicks,
+including movement buttons, to prevent shop/NPC click-through.
+
+The Mac development build succeeds and its process starts with the Input
+System and Metal initialized; startup log has no runtime exceptions. Native
+mouse walkthrough of this new town build is **pending**: Computer Use reports
+the Mac locked and automatic unlock failed. The owner was asked to unlock.
+The previous shop-only native click results above do not validate new town
+pointer controls. Current captures are automated Unity Game View captures.
+
+Remaining: NPCs stay at workplace preview positions with idle animation;
+NavMesh/schedule movement, full village simulation assembly/rumor propagation,
+authoritative player travel/save, joystick/pinch gestures, controller support,
+radial menus, the farm/river exterior, and iPad device testing remain unfinished.
+Other visible businesses are exterior landmarks; only the apple stall trades.
+No weather or health facts were invented. This remains a prototype slice,
+not a claim that the complete game works or that there are no remaining issues.
