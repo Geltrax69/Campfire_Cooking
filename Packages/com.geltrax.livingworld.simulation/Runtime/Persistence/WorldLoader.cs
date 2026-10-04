@@ -106,6 +106,12 @@ namespace LivingWorld.Simulation.Persistence
             private TownStatsState TownStats { get; set; }
             private MigrationState Migration { get; set; }
             private EmergentEventState EmergentEvents { get; set; }
+            // Phase 6 (formatVersion 6) sections; absent when loading an older
+            // document, in which case the world keeps its fresh defaults (empty
+            // village registry, empty trade ledger, empty news store).
+            private VillageRegistrySnapshot Villages { get; set; }
+            private TradeRouteLedgerSnapshot TradeLedger { get; set; }
+            private NewsStoreSnapshot News { get; set; }
 
             public static SavePlan Parse(string json, ContentBundle bundle)
             {
@@ -171,6 +177,12 @@ namespace LivingWorld.Simulation.Persistence
                         plan.ParseTownStats(root);
                         plan.ParseMigration(root);
                         plan.ParseEmergentEvents(root);
+                    }
+                    if (version >= 6)
+                    {
+                        plan.ParseVillages(root);
+                        plan.ParseTradeLedger(root, bundle);
+                        plan.ParseNews(root);
                     }
                     plan.CrossCheckCommands();
                     plan.CrossCheckLots();
@@ -552,6 +564,203 @@ namespace LivingWorld.Simulation.Persistence
                     throw new LoadException("Invalid emergent event state: " + failure.Message, failure);
                 }
                 EmergentEvents = state;
+            }
+
+            /// <summary>
+            /// Phase 6 village registry (formatVersion 6). Every village is rebuilt
+            /// from its persisted fields; validation happens in the snapshot
+            /// constructor (unique IDs, stat ranges).
+            /// </summary>
+            private void ParseVillages(Reader root)
+            {
+                Reader section = root.Property("villages");
+                long lastDriftDay = section.Property("lastDriftDay").Int64(0);
+                var villages = new List<AbstractVillageState>();
+                foreach (Reader entry in section.Property("villages").Items())
+                {
+                    var id = new VillageId(entry.Property("id").Text());
+                    string name = entry.Property("name").Text();
+                    VillageLod lod = ParseVillageLod(entry.Property("lod").Text(), entry.Path);
+                    var anchor = new LocationId(entry.Property("anchorLocation").Text());
+                    int travelDays = entry.Property("travelDaysFromMillbrook").Int32(0);
+                    int population = entry.Property("population").Int32(0);
+                    int wealth = entry.Property("wealthCopper").Int32(0);
+                    int foodSupply = entry.Property("foodSupply").Int32(0, 100);
+                    int mood = entry.Property("mood").Int32(0, 100);
+                    try
+                    {
+                        villages.Add(new AbstractVillageState(id, name, lod, anchor,
+                            travelDays, population, wealth, foodSupply, mood));
+                    }
+                    catch (ArgumentException failure)
+                    {
+                        throw new LoadException("Invalid village '" + id + "': " + failure.Message, failure);
+                    }
+                }
+                try
+                {
+                    Villages = new VillageRegistrySnapshot(villages, lastDriftDay);
+                }
+                catch (ArgumentException failure)
+                {
+                    throw new LoadException("Invalid village registry: " + failure.Message, failure);
+                }
+            }
+
+            private static VillageLod ParseVillageLod(string text, string path)
+            {
+                try
+                {
+                    return (VillageLod)Enum.Parse(typeof(VillageLod), text);
+                }
+                catch (ArgumentException failure)
+                {
+                    throw new LoadException("Unknown village LOD '" + text + "' at " + path + ".", failure);
+                }
+            }
+
+            /// <summary>
+            /// Phase 6 trade-route ledger (formatVersion 6). Journeys are rebuilt
+            /// from their snapshots; item IDs are validated against the content
+            /// bundle. Validation happens in the snapshot constructors.
+            /// </summary>
+            private void ParseTradeLedger(Reader root, ContentBundle bundle)
+            {
+                Reader section = root.Property("tradeLedger");
+                long lastProcessedDay = section.Property("lastProcessedDay").Int64(0);
+                long nextDepartureDay = section.Property("nextDepartureDay").Int64(1);
+                var journeys = new List<MerchantJourneySnapshot>();
+                foreach (Reader entry in section.Property("journeys").Items())
+                {
+                    var routeId = new TradeRouteId(entry.Property("routeId").Text());
+                    var cargo = new List<KeyValuePair<ItemTypeId, int>>();
+                    foreach (Reader lot in entry.Property("cargo").Items())
+                    {
+                        var item = new ItemTypeId(lot.Property("item").Text());
+                        bundle.RequireItem(item, lot.Path);
+                        int units = lot.Property("units").Int32(1);
+                        cargo.Add(new KeyValuePair<ItemTypeId, int>(item, units));
+                    }
+                    long departureDay = entry.Property("departureDay").Int64(1);
+                    long arrivalDay = entry.Property("arrivalDay").Int64(1);
+                    int boughtCopper = entry.Property("boughtCopper").Int32(0);
+                    int soldCopper = entry.Property("soldCopper").Int32(0);
+                    bool isComplete = entry.Property("isComplete").Flag();
+                    try
+                    {
+                        journeys.Add(new MerchantJourneySnapshot(routeId, cargo, departureDay,
+                            arrivalDay, boughtCopper, soldCopper, isComplete));
+                    }
+                    catch (ArgumentException failure)
+                    {
+                        throw new LoadException("Invalid merchant journey: " + failure.Message, failure);
+                    }
+                }
+                try
+                {
+                    TradeLedger = new TradeRouteLedgerSnapshot(lastProcessedDay, nextDepartureDay, journeys);
+                }
+                catch (ArgumentException failure)
+                {
+                    throw new LoadException("Invalid trade ledger: " + failure.Message, failure);
+                }
+            }
+
+            /// <summary>
+            /// Phase 6 news store (formatVersion 6). News items, opinions, and the
+            /// scan/delivery cursors are rebuilt; validation happens in the
+            /// snapshot constructor (unique news IDs, ID-below-cursor, opinion ranges).
+            /// </summary>
+            private void ParseNews(Reader root)
+            {
+                Reader section = root.Property("news");
+                long nextId = section.Property("nextId").Int64(1);
+                long lastProcessedEventId = section.Property("lastProcessedEventId").Int64(0);
+                long lastDeliveryDay = section.Property("lastDeliveryDay").Int64(0);
+                var inTransit = new List<NewsInTransit>();
+                foreach (Reader entry in section.Property("inTransit").Items())
+                {
+                    VillageNews news = ParseVillageNews(entry.Property("news"), entry.Path);
+                    var from = new VillageId(entry.Property("from").Text());
+                    var to = new VillageId(entry.Property("to").Text());
+                    long arrivalDay = entry.Property("arrivalDay").Int64(1);
+                    try
+                    {
+                        inTransit.Add(new NewsInTransit(news, from, to, arrivalDay));
+                    }
+                    catch (ArgumentException failure)
+                    {
+                        throw new LoadException("Invalid in-transit news: " + failure.Message, failure);
+                    }
+                }
+                var arrived = new List<ArrivedNews>();
+                foreach (Reader entry in section.Property("arrived").Items())
+                {
+                    VillageNews news = ParseVillageNews(entry.Property("news"), entry.Path);
+                    var deliveredTo = new VillageId(entry.Property("deliveredTo").Text());
+                    try
+                    {
+                        arrived.Add(new ArrivedNews(news, deliveredTo));
+                    }
+                    catch (ArgumentException failure)
+                    {
+                        throw new LoadException("Invalid arrived news: " + failure.Message, failure);
+                    }
+                }
+                var opinions = new List<OpinionRecord>();
+                foreach (Reader entry in section.Property("opinions").Items())
+                {
+                    var from = new VillageId(entry.Property("from").Text());
+                    var to = new VillageId(entry.Property("to").Text());
+                    int opinion = entry.Property("opinion").Int32(0, 100);
+                    try
+                    {
+                        opinions.Add(new OpinionRecord(from, to, opinion));
+                    }
+                    catch (ArgumentException failure)
+                    {
+                        throw new LoadException("Invalid opinion record: " + failure.Message, failure);
+                    }
+                }
+                try
+                {
+                    News = new NewsStoreSnapshot(nextId, inTransit, arrived, opinions,
+                        lastProcessedEventId, lastDeliveryDay);
+                }
+                catch (ArgumentException failure)
+                {
+                    throw new LoadException("Invalid news store: " + failure.Message, failure);
+                }
+            }
+
+            private static VillageNews ParseVillageNews(Reader entry, string path)
+            {
+                long id = entry.Property("id").Int64(1);
+                var origin = new VillageId(entry.Property("origin").Text());
+                var about = new VillageId(entry.Property("about").Text());
+                NewsKind kind = ParseNewsKind(entry.Property("kind").Text(), path);
+                long dayCreated = entry.Property("dayCreated").Int64(1);
+                int severity = entry.Property("severity").Int32(0, 100);
+                try
+                {
+                    return new VillageNews(new NewsId(id), origin, about, kind, dayCreated, severity);
+                }
+                catch (ArgumentException failure)
+                {
+                    throw new LoadException("Invalid village news at " + path + ": " + failure.Message, failure);
+                }
+            }
+
+            private static NewsKind ParseNewsKind(string text, string path)
+            {
+                try
+                {
+                    return (NewsKind)Enum.Parse(typeof(NewsKind), text);
+                }
+                catch (ArgumentException failure)
+                {
+                    throw new LoadException("Unknown news kind '" + text + "' at " + path + ".", failure);
+                }
             }
 
             private void ParseBeliefs(Reader root, ContentBundle bundle)
@@ -1184,6 +1393,13 @@ namespace LivingWorld.Simulation.Persistence
                 if (TownStats != null) state.RestoreTownStats(TownStats);
                 if (Migration != null) state.RestoreMigration(Migration);
                 if (EmergentEvents != null) state.RestoreEmergentEvents(EmergentEvents);
+                // Phase 6 state (formatVersion 6). Older documents keep the fresh
+                // defaults — an empty village registry, an empty trade ledger,
+                // and an empty news store — matching a world built before the
+                // expanded-world phase.
+                if (Villages != null) state.RestoreVillages(Villages);
+                if (TradeLedger != null) state.RestoreTradeLedger(TradeLedger);
+                if (News != null) state.RestoreNews(News);
                 return state;
             }
 

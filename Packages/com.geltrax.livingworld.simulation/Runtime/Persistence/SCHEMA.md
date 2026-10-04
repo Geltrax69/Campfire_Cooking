@@ -1,4 +1,4 @@
-# Save format schema (formatVersion 5)
+# Save format schema (formatVersion 6)
 
 Written by `WorldSaver.Save(WorldState)` → indented JSON string.
 Read by the loader. Top-level properties always appear in this order.
@@ -10,8 +10,10 @@ stores (player + NPCs), NPC happiness, tavern popularity and ingredient
 demand. Version 4 (P4-04) adds every Phase 4 state section: the animal
 store and the four ecosystem cursors (predation, breeding, winter pressure,
 egg production). Version 5 (P5-04) adds every Phase 5 state section: town
-stats, migration and emergent events. Older documents still load (see
-Compatibility below).
+stats, migration and emergent events. Version 6 (P6-04) adds every Phase 6
+state section: the village registry, the trade-route ledger, and the
+inter-village news store. Older documents still load (see Compatibility
+below).
 
 ## Conventions
 
@@ -303,6 +305,69 @@ Compatibility below).
       { "id": "event_merchant_arrival", "startedDay": 200 }
     ],
     "lastMerchantDay": 200                  // -1 = none yet
+  },
+  "villages": {                            // v6: village registry (LOD state)
+    "lastDriftDay": 30,                    // 0 = never drifted
+    "villages": [                          // ordinal VillageId order
+      {
+        "id": "village_kings_rest",
+        "name": "King's Rest",
+        "lod": "Abstract",                 // "Full" or "Abstract"
+        "anchorLocation": "loc_square",
+        "travelDaysFromMillbrook": 2,
+        "population": 4997,
+        "wealthCopper": 199810,
+        "foodSupply": 90,                  // 0-100
+        "mood": 50                         // 0-100
+      }
+    ]
+  },
+  "tradeLedger": {                         // v6: merchant journeys and cursors
+    "lastProcessedDay": 30,                // 0 = never ticked
+    "nextDepartureDay": 36,                // 1 = first departure pending
+    "journeys": [                          // departure order
+      {
+        "routeId": "route_kings_rest_oakhollow",
+        "cargo": [                         // non-empty
+          { "item": "item_cloth_imported", "units": 7 }
+        ],
+        "departureDay": 1,
+        "arrivalDay": 4,                   // > departureDay
+        "boughtCopper": 175,
+        "soldCopper": 280,
+        "isComplete": true
+      }
+    ]
+  },
+  "news": {                                // v6: inter-village news store
+    "nextId": 3,                           // >= 1; every news ID is below this
+    "lastProcessedEventId": 42,            // 0 = never scanned
+    "lastDeliveryDay": 12,                 // 0 = never delivered
+    "inTransit": [                         // publish order
+      {
+        "news": {
+          "id": 1,
+          "origin": "village_millbrook",
+          "about": "village_millbrook",
+          "kind": "WolfAttack",            // NewsKind C# name
+          "dayCreated": 10,                // >= 1
+          "severity": 80                   // 0-100
+        },
+        "from": "village_millbrook",
+        "to": "village_kings_rest",        // != from
+        "arrivalDay": 12                   // >= dayCreated
+      }
+    ],
+    "arrived": [                           // delivery order
+      {
+        "news": { "id": 2, "origin": "village_millbrook", "about": "village_millbrook",
+                  "kind": "WolfAttack", "dayCreated": 10, "severity": 60 },
+        "deliveredTo": "village_oakhollow"
+      }
+    ],
+    "opinions": [                          // one per village pair, 0-100
+      { "from": "village_kings_rest", "to": "village_millbrook", "opinion": 48 }
+    ]
   }
 }
 ```
@@ -389,9 +454,20 @@ shop stock or an actor's belongings, makes saving fail with `SaveException`
    saved balances contradict is a `LoadException`. Version 1 documents have no
    marker and default to separate tills.
 
-## Compatibility (v1 → v2 → v3 → v4 → v5)
+## Compatibility (v1 → v2 → v3 → v4 → v5 → v6)
 
-Version 5 adds sections; it removes nothing. The loader accepts all five:
+Version 6 adds sections; it removes nothing. The loader accepts all six:
+
+- **v6 → v6**: every section restores via its `Capture`/`Restore` pair.
+- **v5 → v6**: the village registry restores empty (no villages), the trade
+  ledger restores empty (no journeys, cursors at 0/1) and the news store
+  restores empty (next ID 1, no transit/arrived/opinions, cursors at 0).
+  Rationale: a v5 save predates the expanded-world systems, so "no villages
+  yet" is the truthful restore — matching a world built before Phase 6.
+- **v4 → v6**: as v5 → v6, plus the v4 → v5 rules below.
+- **v3 → v6**: as v4 → v6, plus the v3 → v4 rules below.
+- **v2 → v6**: as v3 → v6, plus the v2 → v3 rules below.
+- **v1 → v6**: as v2 → v6, plus the v1 → v2 rules below.
 
 - **v5 → v5**: every section restores via its `Capture`/`Restore` pair.
 - **v4 → v5**: town stats restore uncomputed (month -1, no values), migration

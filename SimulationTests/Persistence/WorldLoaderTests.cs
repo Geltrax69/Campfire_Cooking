@@ -251,7 +251,7 @@ namespace LivingWorld.Simulation.Tests.Persistence
         {
             string root = RepositoryRoot();
             string json = WorldSaver.Save(RichWorld(ContentBundle.Load(root)));
-            string bad = json.Replace("\"formatVersion\": 5", "\"formatVersion\": 99");
+            string bad = json.Replace("\"formatVersion\": 6", "\"formatVersion\": 99");
             Assert.That(bad, Is.Not.EqualTo(json));
             Assert.Throws<LoadException>(() => WorldLoader.Load(bad, root));
         }
@@ -367,7 +367,7 @@ namespace LivingWorld.Simulation.Tests.Persistence
 
             Assert.Throws<LoadException>(() => WorldLoader.Load("{oops", root));
             Assert.Throws<LoadException>(() => WorldLoader.Load(
-                valid.Replace("\"formatVersion\": 5", "\"formatVersion\": 99"), root));
+                valid.Replace("\"formatVersion\": 6", "\"formatVersion\": 99"), root));
             Assert.Throws<LoadException>(() => WorldLoader.Load(
                 valid.Replace("\"happiness\": 50", "\"happiness\": 101"), root));
 

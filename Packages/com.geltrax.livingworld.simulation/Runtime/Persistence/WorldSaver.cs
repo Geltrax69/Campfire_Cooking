@@ -24,7 +24,7 @@ namespace LivingWorld.Simulation.Persistence
     public static class WorldSaver
     {
         /// <summary>The save format version written at the head of every document.</summary>
-        public const int FormatVersion = 5;
+        public const int FormatVersion = 6;
 
         /// <summary>Serializes the whole world state. Throws <see cref="SaveException"/> on failure.</summary>
         public static string Save(WorldState state)
@@ -96,6 +96,9 @@ namespace LivingWorld.Simulation.Persistence
             WriteTownStats(writer, state);
             WriteMigration(writer, state);
             WriteEmergentEvents(writer, state);
+            WriteVillages(writer, state);
+            WriteTradeLedger(writer, state);
+            WriteNews(writer, state);
             writer.WriteEndObject();
         }
 
@@ -888,6 +891,133 @@ namespace LivingWorld.Simulation.Persistence
             }
             writer.WriteEndArray();
             writer.WriteNumber("lastMerchantDay", snapshot.LastMerchantDay);
+            writer.WriteEndObject();
+        }
+
+        /// <summary>
+        /// Phase 6 village registry (formatVersion 6): every village with its
+        /// level-of-detail state plus the drift day cursor, from
+        /// VillageRegistry.Capture(). Villages are written in ordinal VillageId
+        /// order for determinism.
+        /// </summary>
+        private static void WriteVillages(Utf8JsonWriter writer, WorldState state)
+        {
+            VillageRegistrySnapshot snapshot = state.Villages.Capture();
+            writer.WriteStartObject("villages");
+            writer.WriteNumber("lastDriftDay", snapshot.LastDriftDay);
+            writer.WriteStartArray("villages");
+            foreach (AbstractVillageState village in snapshot.Villages)
+            {
+                writer.WriteStartObject();
+                writer.WriteString("id", village.Id.Value);
+                writer.WriteString("name", village.Name);
+                writer.WriteString("lod", village.Lod.ToString());
+                writer.WriteString("anchorLocation", village.AnchorLocation.Value);
+                writer.WriteNumber("travelDaysFromMillbrook", village.TravelDaysFromMillbrook);
+                writer.WriteNumber("population", village.Population);
+                writer.WriteNumber("wealthCopper", village.WealthCopper);
+                writer.WriteNumber("foodSupply", village.FoodSupply);
+                writer.WriteNumber("mood", village.Mood);
+                writer.WriteEndObject();
+            }
+            writer.WriteEndArray();
+            writer.WriteEndObject();
+        }
+
+        /// <summary>
+        /// Phase 6 trade-route ledger (formatVersion 6): the day cursors and every
+        /// merchant journey, from TradeRouteLedger.Capture(). The route registry
+        /// itself is static configuration (rebuilt by the caller), so only the
+        /// mutable ledger is persisted.
+        /// </summary>
+        private static void WriteTradeLedger(Utf8JsonWriter writer, WorldState state)
+        {
+            TradeRouteLedgerSnapshot snapshot = state.TradeLedger.Capture();
+            writer.WriteStartObject("tradeLedger");
+            writer.WriteNumber("lastProcessedDay", snapshot.LastProcessedDay);
+            writer.WriteNumber("nextDepartureDay", snapshot.NextDepartureDay);
+            writer.WriteStartArray("journeys");
+            foreach (MerchantJourneySnapshot journey in snapshot.Journeys)
+            {
+                writer.WriteStartObject();
+                writer.WriteString("routeId", journey.RouteId.Value);
+                writer.WriteStartArray("cargo");
+                foreach (KeyValuePair<ItemTypeId, int> lot in journey.Cargo)
+                {
+                    writer.WriteStartObject();
+                    writer.WriteString("item", lot.Key.Value);
+                    writer.WriteNumber("units", lot.Value);
+                    writer.WriteEndObject();
+                }
+                writer.WriteEndArray();
+                writer.WriteNumber("departureDay", journey.DepartureDay);
+                writer.WriteNumber("arrivalDay", journey.ArrivalDay);
+                writer.WriteNumber("boughtCopper", journey.BoughtCopper);
+                writer.WriteNumber("soldCopper", journey.SoldCopper);
+                writer.WriteBoolean("isComplete", journey.IsComplete);
+                writer.WriteEndObject();
+            }
+            writer.WriteEndArray();
+            writer.WriteEndObject();
+        }
+
+        /// <summary>
+        /// Phase 6 news store (formatVersion 6): the next-ID cursor, in-transit
+        /// news, arrived news, inter-village opinions, and the scan/delivery day
+        /// cursors, from NewsStore.Capture().
+        /// </summary>
+        private static void WriteNews(Utf8JsonWriter writer, WorldState state)
+        {
+            NewsStoreSnapshot snapshot = state.News.Capture();
+            writer.WriteStartObject("news");
+            writer.WriteNumber("nextId", snapshot.NextId);
+            writer.WriteNumber("lastProcessedEventId", snapshot.LastProcessedEventId);
+            writer.WriteNumber("lastDeliveryDay", snapshot.LastDeliveryDay);
+            writer.WriteStartArray("inTransit");
+            foreach (NewsInTransit transit in snapshot.InTransit)
+                WriteNewsInTransit(writer, transit);
+            writer.WriteEndArray();
+            writer.WriteStartArray("arrived");
+            foreach (ArrivedNews record in snapshot.Arrived)
+            {
+                writer.WriteStartObject();
+                WriteVillageNews(writer, "news", record.News);
+                writer.WriteString("deliveredTo", record.DeliveredTo.Value);
+                writer.WriteEndObject();
+            }
+            writer.WriteEndArray();
+            writer.WriteStartArray("opinions");
+            foreach (OpinionRecord opinion in snapshot.Opinions)
+            {
+                writer.WriteStartObject();
+                writer.WriteString("from", opinion.From.Value);
+                writer.WriteString("to", opinion.To.Value);
+                writer.WriteNumber("opinion", opinion.Opinion);
+                writer.WriteEndObject();
+            }
+            writer.WriteEndArray();
+            writer.WriteEndObject();
+        }
+
+        private static void WriteNewsInTransit(Utf8JsonWriter writer, NewsInTransit transit)
+        {
+            writer.WriteStartObject();
+            WriteVillageNews(writer, "news", transit.News);
+            writer.WriteString("from", transit.From.Value);
+            writer.WriteString("to", transit.To.Value);
+            writer.WriteNumber("arrivalDay", transit.ArrivalDay);
+            writer.WriteEndObject();
+        }
+
+        private static void WriteVillageNews(Utf8JsonWriter writer, string name, VillageNews news)
+        {
+            writer.WriteStartObject(name);
+            writer.WriteNumber("id", news.Id.Value);
+            writer.WriteString("origin", news.Origin.Value);
+            writer.WriteString("about", news.About.Value);
+            writer.WriteString("kind", news.Kind.ToString());
+            writer.WriteNumber("dayCreated", news.DayCreated);
+            writer.WriteNumber("severity", news.Severity);
             writer.WriteEndObject();
         }
 
