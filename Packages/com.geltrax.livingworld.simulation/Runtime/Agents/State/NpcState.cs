@@ -19,6 +19,8 @@ namespace LivingWorld.Simulation.Agents
             CurrentIntention = intention;
             Skills = new SkillStore();
             Happiness = NeutralHappiness;
+            Age = definition.Age;
+            IsDeceased = false;
         }
 
         /// <summary>
@@ -39,12 +41,28 @@ namespace LivingWorld.Simulation.Agents
             bool isSleeping, NpcIntention intention)
         {
             if (definition == null) throw new ArgumentNullException(nameof(definition));
+            return Restore(definition, needs, isSleeping, intention, definition.Age, false);
+        }
+
+        /// <summary>
+        /// Rebuilds NPC state with an exact age and deceased flag (P7-01). The
+        /// four-argument overload keeps older callers (including Persistence)
+        /// compiling: it restores the Content age with the NPC alive.
+        /// </summary>
+        internal static NpcState Restore(NpcDefinition definition, NeedState needs,
+            bool isSleeping, NpcIntention intention, int age, bool isDeceased)
+        {
+            if (definition == null) throw new ArgumentNullException(nameof(definition));
             if (needs == null) throw new ArgumentNullException(nameof(needs));
+            if (age < 0) throw new ArgumentOutOfRangeException(nameof(age), "Age must not be negative.");
             // Copy the exact sixtieths so the restored NPC owns its needs and later caller
             // changes to the snapshot cannot leak into the world.
             var exact = NeedState.FromSixtieths(needs.HungerSixtieths, needs.EnergySixtieths,
                 needs.SocialSixtieths);
-            return new NpcState(definition, exact, isSleeping, intention);
+            var npc = new NpcState(definition, exact, isSleeping, intention);
+            npc.Age = age;
+            npc.IsDeceased = isDeceased;
+            return npc;
         }
 
         public NpcDefinition Definition { get; }
@@ -53,6 +71,20 @@ namespace LivingWorld.Simulation.Agents
         public NpcIntention CurrentIntention { get; private set; }
         /// <summary>This NPC's skill states (levels earned through practice and teaching).</summary>
         public SkillStore Skills { get; }
+        /// <summary>
+        /// Age in years (P7-01). Starts at the Content definition's age and advances
+        /// one year per birthday via the AgingSystem. Mutable world truth, unlike
+        /// the immutable approved definition.
+        /// </summary>
+        public int Age { get; private set; }
+        /// <summary>
+        /// True once the NPC has died of old age (P7-01). The body stays in the
+        /// registry so inheritance (P7-03) can find it; systems must skip the dead.
+        /// </summary>
+        public bool IsDeceased { get; private set; }
+        /// <summary>Child (0-14), Adult (15-59), or Elder (60+), computed from age.</summary>
+        public LifeStage LifeStage =>
+            Age < 15 ? LifeStage.Child : Age < 60 ? LifeStage.Adult : LifeStage.Elder;
         /// <summary>
         /// Mood on a 0-100 scale, 50 neutral. Good meals nudge it up, bad ones down
         /// (P3-03, SKILLS.md: a small daily happiness that compounds). Clamped 0-100.
@@ -94,6 +126,20 @@ namespace LivingWorld.Simulation.Agents
         {
             CurrentIntention = intention ?? throw new ArgumentNullException(nameof(intention));
             IsSleeping = intention.Kind == ActivityKind.Sleep;
+        }
+
+        /// <summary>Turns one year older on a birthday (P7-01, AgingSystem).</summary>
+        internal void AdvanceAge()
+        {
+            if (IsDeceased) throw new InvalidOperationException("The deceased do not age.");
+            Age++;
+        }
+
+        /// <summary>Marks the NPC deceased from old age (P7-01, AgingSystem).</summary>
+        internal void MarkDeceased()
+        {
+            if (IsDeceased) throw new InvalidOperationException("The NPC is already deceased.");
+            IsDeceased = true;
         }
     }
 }
