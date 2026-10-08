@@ -1,5 +1,7 @@
 # Campfire Cooking — Living World Simulation
 
+> 📖 The full game design document lives in [docs/DESIGN.md](docs/DESIGN.md).
+
 > ## Status: 🟢 Completed
 >
 > <progress value="95" max="100"></progress>
