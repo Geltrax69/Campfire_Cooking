@@ -1,393 +1,93 @@
-# Living World — Isekai Life RPG
+# Campfire Cooking — Living World Simulation
 
-A third-person, anime-inspired fantasy life RPG for iPad first, then iPhone and Mac. Built in Unity by AI coding agents, play-tested by a human.
+> ## Status: 🟢 Completed
+>
+> <progress value="95" max="100"></progress>
+>
+> **Progress: 95%** — Simulation phases 1–8 complete (875/875 tests green); Unity visuals not yet started.
 
-> **Status:** Design Phase (world, characters, money and more) about to start. Simulation comes next; Unity last. This document is the game design. For how the game is built, see [AGENTS.md](AGENTS.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/ROADMAP.md](docs/ROADMAP.md).
+<p align="center">
+  <img src="./banner.webp" alt="Campfire Cooking banner" width="100%" />
+</p>
 
----
+![C#](https://img.shields.io/badge/language-C%23-239120) ![.NET 8](https://img.shields.io/badge/.NET-8-512BD4) ![CI](https://img.shields.io/badge/CI-GitHub%20Actions-green)
 
-## The core idea
+## What it is
 
-**The world exists independently of the player.**
+**Living World** is a pure-C# deterministic simulation of a living village — the backend heart of a planned Isekai Life RPG (third-person, iPad first). The core idea: the world exists independently of the player. NPCs have their own lives, animals behave, shops hold real inventories, towns grow and decline, and generations turn over — all ticked by a fixed-order simulation that can run faster than real time and is proven by automated tests, not graphics. A Unity presentation layer (player input, visuals) is planned but explicitly **not started**; the simulation is complete and playable as text-only scenario runs.
 
-The player is not the center of the universe. NPCs have their own lives, animals have their own behavior, shops have real inventories, and resources exist physically in the world. People earn, spend, consume, and remember. Towns grow, decline, and change. The world keeps reacting after the player leaves.
+## What works (verified)
 
-```
-PLAYER ACTION
-  → WORLD STATE CHANGES
-  → NPCS OBSERVE / EXPERIENCE THE CHANGE
-  → NPCS MAKE THEIR OWN DECISIONS
-  → WORLD STATE CHANGES AGAIN
-  → NEW EVENTS EMERGE
-```
+Verified by reading `docs/ROADMAP.md`, `docs/ARCHITECTURE.md`, the code tree, and GitHub Actions CI (all recent runs green):
 
-The reward is the moment the player realizes: *"I did something earlier, and now something completely different is happening because of it."* The game does not always explain the connection; the player discovers it.
+- ✅ Design phase D-01–D-12 complete — world, locations, ~20 villagers, economy, items, skills, recipes, animals, knowledge, town, player start, all in `docs/design/` + JSON data in `Content/`
+- ✅ Phase 0–1: foundation + "Apple Test" scenario (278 foundation tests)
+- ✅ Phase 3: skills, crafting & cooking — skill levels 1–5, 21 recipes, cooking effects on town mood (639 tests)
+- ✅ Phase 4: animal ecosystem & taming — 5 species, trust 0–100, predation, breeding, winter losses, wolf taming (697 tests)
+- ✅ Phase 5: town development — 11 monthly stats, growth/decline migration, 10 emergent events (742 tests)
+- ✅ Phase 6: multi-village — LOD state, trade routes, delayed/distorted news travel (787 tests)
+- ✅ Phase 7: generations — 360-day calendar, aging, families, inheritance (875 tests)
+- ✅ Phase 8: dialogue — immutable `FactSheet` builder + seeded deterministic template phrasing, read-only, never leaks secrets or changes state
+- ✅ Save formats v1–v7 with load determinism proven per phase; CI runs `dotnet test SimulationTests` on every push
 
-### Inspiration (feel only)
+## Tech stack
 
-The tone draws on *Campfire Cooking in Another World with My Absurd Skill*, *Log Horizon*, *Sword Art Online*, *The Rising of the Shield Hero*, and *Free Guy*.
-
-**Everything in this game is original.** No characters, names, stories, artwork, locations, or proprietary mechanics are taken from these works.
-
----
-
-## Design pillars
-
-1. **Systems, not scripts.** Build rules, characters, and mechanics that produce stories. Do not script every story.
-2. **Game state is the source of truth.** The deterministic engine owns all facts. AI may only describe them.
-3. **Knowledge is not truth.** What happened and what each NPC *knows* happened are tracked separately.
-4. **No single correct playstyle.** Peaceful, adventurous, criminal, economic, social, or any mix.
-5. **Consequences ripple.** Direct → indirect → secondary → long-term. The player rarely sees the whole chain at once.
-6. **Prove the simulation first.** One village before any open world.
-
----
-
-## The player
-
-The player is transported or reincarnated into the world. They are **not** a chosen hero. They can become an adventurer, merchant, farmer, cook, tamer, blacksmith, healer, alchemist, fisher, hunter, explorer, builder, trader, mage, warrior, craftsman, or anything else the systems allow.
-
-The player can help, ignore, steal, trade, fight, cook, tame, farm, explore, build, and become wealthy, famous, feared, or completely unknown.
-
----
-
-## Skills
-
-At the start, the player receives or selects an unusual ability. Skills are not limited to classic RPG classes.
-
-| Category | Examples |
+| Layer | Technology |
 |---|---|
-| Combat | Swordsmanship, Archery, Spearmanship, Shield Mastery, Martial Arts, Magic |
-| Life | Cooking, Farming, Fishing, Hunting, Mining, Woodworking, Blacksmithing, Tailoring |
-| Special | Animal/Monster Taming, Appraisal, Teleportation, Merchant, Cooking Magic, Beast Communication, Plant Growth, Item Creation, Tracking, Cartography |
-| Absurd | Cleaning, Bread Making, Smelling, Talking to Chickens, Collecting, Rope Making, Shoe Repair, Gardening, Soup Making |
+| Simulation | C# / .NET 8, pure, no Unity dependencies |
+| Package | `Packages/com.geltrax.livingworld.simulation` (Unity package layout, but Unity-free) |
+| Tests | NUnit, scenario + acceptance runs with readable logs |
+| CI | GitHub Actions — `dotnet tests` on every push/PR |
+| Data | JSON content packs in `Content/` (world, NPCs, economy, recipes, animals) |
 
-**No skill is useless.** Every skill must touch the world's systems. For example:
+## How to run
 
-- **Cooking** affects food quality, NPC happiness and health, tavern popularity, food prices, tourism, trade, farm demand, monster attraction, and relationships.
-- **Taming** affects animal and monster populations, transport, farming, security, hunting, breeding, trade, and town defense.
+The simulation is pure C# and needs **no Unity** to build or test. On the development Mac (verified 2026-10-03 with .NET 8 SDK):
 
-Two players entering the same village with different skills (Cooking, Taming, Blacksmithing, Farming, Merchant) should end up with noticeably different villages.
-
----
-
-## NPCs
-
-NPCs are simulated individuals, not quest dispensers.
-
-| Aspect | Contents |
-|---|---|
-| Identity | Name, age, gender, appearance, occupation, home, family |
-| Personality | Friendly, aggressive, shy, ambitious, greedy, honest, curious, cautious, adventurous, lazy, generous |
-| Needs | Hunger, sleep, safety, money, social contact, entertainment, health |
-| Goals | Buy a house, marry, protect family, become a knight, open a shop, travel, get rich, learn magic, retire |
-| Relationships | Family, friends, enemies, coworkers, neighbors, merchants, the player |
-| Memory | Important events involving the player, family, friends, enemies, the town |
-| Knowledge | Only what they could reasonably have learned |
-
-### Daily life
-
-NPCs follow flexible schedules (wake, eat, work, lunch, work, home, dinner, socialize, sleep) and break them when events demand it. A monster attack sends a farmer home, a sick child sends them to the healer, heavy rain keeps them indoors, and a festival draws them to the town square.
-
-### Memory
-
-Memories are weighted by importance and fade accordingly:
-
-| Importance | Example | Retention |
-|---|---|---|
-| Minor | "Player bought bread." | Short |
-| Important | "Player saved my daughter." | Long |
-| Major | "Player killed my brother." | Very long |
-
-### Knowledge vs. world truth
-
-This distinction is critical.
-
-- **World truth:** The player stole six apples.
-- **Shopkeeper knows:** Six apples are missing.
-- **Witness knows:** "I saw someone near the shop."
-- **Guard later learns:** "A witness saw the player."
-
-Information spreads only through believable channels. An NPC never magically knows what happened elsewhere, and never accuses the player without evidence.
-
-#### Systems this needs (to be specified)
-
-- **Perception:** Whether an NPC notices an event depends on line of sight, distance, lighting, and attention.
-- **Information propagation (rumors):** Who tells whom, when, how accurately, and how much the listener believes it.
-
----
-
-## Example: the apple chain
-
-| Step | Event | Apples in stock |
-|---|---|---|
-| 0 | Shop starts the day | 20 |
-| 1 | Player steals 6 | 14 |
-| 2 | NPC A buys 5 | 9 |
-| 3 | NPC B buys 7 | 2 |
-| 4 | NPC C wants 5; only 2 left | 2 |
-
-NPC C may buy something else, try another shop, come back later, complain, or pay more elsewhere. The shopkeeper notices the demand and may reorder, raise prices, contact the farmer, check the inventory, or suspect theft.
-
-No artificial quest penalty is needed. The consequences come from the simulation.
-
----
-
-## Consequence layers
-
-| Layer | Example |
-|---|---|
-| Direct | Player steals an item; inventory changes immediately |
-| Indirect | The shop loses stock |
-| Secondary | A customer can't buy what they came for |
-| Tertiary | The customer shops elsewhere |
-| Long-term | The original shop loses revenue |
-| Very long-term | The shopkeeper changes their business strategy |
-
----
-
-## Objects and resources
-
-Everything important has persistent state. For example:
-
-```
-APPLE_1842
-  Origin:   Farm_07
-  Owner:    Shopkeeper_Mira
-  Location: Market Shop
-  Quality:  82%
-  Age:      2 days
-  Status:   Fresh
+```sh
+dotnet test SimulationTests
+dotnet test SimulationTests --configuration Release
 ```
 
-When stolen, the owner becomes the Player. When sold, the owner becomes the buyer and the location becomes their house. When eaten, the status becomes Consumed.
+In this sandbox, `dotnet test` can't run (the sandbox redirects localhost TCP, which breaks vstest↔testhost); use the custom runner instead:
 
-**Not every object needs its own record.** Track important objects individually and large quantities as totals.
+```sh
+~/workspace/run-sim-tests.sh
+```
 
----
+It builds `SimulationTests` and runs the full suite via a local FrameworkController runner. I did not re-run the suite in this audit — the latest CI runs (2026-10-04) are all **completed/success**.
 
-## Economy
+## Screenshots
 
-| Production | Consumption |
-|---|---|
-| Farm → crops | NPCs → food |
-| Mine → minerals | Blacksmith → iron |
-| Forest → wood | Builder → wood + stone |
-| Fishing area → fish | Tavern → food + drink |
-| | Adventurers → equipment |
+None — this is a text-only simulation; scenario runs produce readable event logs (see `docs/tasks/completed/` for run evidence). The banner above is the only visual.
 
-Core resources include food, wood, stone, iron, cloth, herbs, livestock, and magical materials. Prices respond to supply, demand, scarcity, distance, quality, season, and local events. Shop inventories are never static.
+## What you can add more
 
-**To be specified:** where money enters the world and where it leaves. Without both, prices drift upward forever or the economy stalls.
+- [ ] **Unity presentation layer** — per the roadmap: visuals, controls, iPad/iPhone/Mac builds; the `Bridge` is the only code that touches both sim and Unity
+- [ ] **Playable player loop** — player-driven commands (currently the world ticks itself)
+- [ ] **Ratify the ~20 open questions** in `docs/OPEN_QUESTIONS.md` — `Death`/`Birth`/`Inheritance` event types, 360-day calendar, tavern-hearth recipes, "Oakhollow" name, wolf-bond pacing
+- [ ] **Unity PlayMode tests** for the village tour (branches `task/U-00-*` exist with CI)
+- [ ] Performance profiling of large runs (270-day / 5-year acceptances)
 
----
-
-## Towns
-
-A town tracks population, wealth, food supply, safety, housing, employment, trade, happiness, crime, infrastructure, and reputation.
-
-Towns grow from conditions, not upgrade buttons. When population, food, housing, trade, and safety all rise, a village eventually *becomes* a town. The player can contribute without directly controlling it.
-
-**Emergent events** come from world conditions and can trigger further events: food shortages, monster attacks, festivals, fires, thefts, droughts, merchant arrivals, new mines, outbreaks of a fictional disease, wealthy travelers, a new adventurer guild, new farms, migration, political conflict, and new trade routes.
-
----
-
-## Animals and taming
-
-Animals are part of the ecosystem, with species, hunger, health, age, temperament, territory, reproduction, relationships, fear, aggression, and trust. Wolves hunt deer, deer eat plants, and farmers protect livestock.
-
-**Taming is a relationship, not a button.** The animal encounters the player, gets fed, watches the player, is protected by them, and gradually builds trust until it accepts them. Different animals need different approaches: a wolf may respect strength, a horse may respond to patience, and a magical creature may need a problem solved.
-
-Tamed animals can fight, carry items, guard farms, hunt, breed, travel with the player, help with farming, and find resources.
-
----
-
-## Reputation
-
-There is no single good/evil meter. Reputation depends on the group or person:
-
-| Group / NPC | Example |
-|---|---|
-| Town guards | Trust: low |
-| Farmers | Trust: high |
-| Merchants | Trust: medium |
-| Adventurers | Respect: high |
-| A specific NPC | Friendship: high |
-| Another NPC | Hatred: high |
-
-The player can be a hero to farmers and a criminal to the guards at the same time.
-
----
-
-## Quests and dialogue
-
-There are no `!` markers over heads. Opportunities come from conversation:
-
-> "I've been trying to find someone who can deliver this medicine to my sister."
-
-The player may help, refuse, negotiate, steal the medicine, make their own, ask someone else, or ignore it.
-
-Dialogue reflects who the player is, what the NPC remembers, what they need, what they know, their relationship with the player, and recent local events. If the player stole from an NPC yesterday, the conversation changes, but only if that NPC knows about it.
-
----
-
-## Death, reincarnation, and generations
-
-Death does not necessarily mean reloading a save. The player can reincarnate as a new character in the **same, already changed world**. The previous life's relationships, property, buildings, money, descendants, reputation, enemies, friends, achievements, crimes, and discoveries all remain.
-
-NPCs age, marry, have children, and pass on businesses and property. Over generations the town changes, and time feels like it is really passing.
-
----
-
-## AI architecture
-
-**The deterministic game engine controls** inventory, money, relationships, world state, schedules, production, consumption, combat, health, ownership, time, and events.
-
-**An LLM may assist with** natural dialogue, contextual conversation, personality expression, rumors, explanations, and story narration.
-
-The AI must never contradict the game state. It receives a structured summary of what the NPC knows, not the whole world.
-
-> **Game state is the source of truth.**
-
----
-
-## Saving
-
-A save preserves the **world**, not just the player's position: world time, NPC states, inventories, ownership, relationships, buildings, economy, player state, animal states, important events, and memories.
-
----
-
-## iPad design
-
-- Landscape orientation, touch first, large touch targets, minimal clutter
-- Optional controller and Apple Pencil support
-
-| Input | Action |
-|---|---|
-| Virtual joystick or tap-to-move | Movement |
-| Tap NPC | Interaction menu |
-| Tap object | Inspect / interact |
-| Long press | Contextual info |
-| Swipe | Rotate camera |
-| Pinch | Zoom |
-
-**Camera:** third person, cinematic but practical, with rotation, zoom, target focus, and an optional lock.
-
-**UI:** immersive, not an MMO-style HUD.
-
-- **Top:** time, weather, location
-- **Bottom left:** movement
-- **Bottom right:** contextual actions
-- **On interaction:** a radial menu (e.g. Talk, Trade, Give, Ask, Follow, Inspect) that only shows options that make sense
-
-Combat avoids requiring many tiny buttons.
-
----
-
-## First playable prototype
-
-Build **one village** only.
-
-| Content | Amount |
-|---|---|
-| NPCs | 20 |
-| Shops | 3 |
-| Farm, tavern, blacksmith | 1 each |
-| Forest, river | 1 each |
-| Resources | 10–20 |
-| Animal species | 5 |
-| Player skills | Cooking, Taming, Swordsmanship |
-
-Plus a day/night cycle, basic economy, NPC schedules, memory and relationships, persistent inventory, and basic town development.
-
-> **Open question:** This list includes systems from later phases (skills, taming, town development). A smaller first step would include only what the apple experiment needs: schedules, shop inventories, farm supply, perception, memory, and rumors.
-
-### The first experiment
-
-1. Player enters the village and visits the apple shop (20 apples).
-2. Player steals 6 apples and leaves.
-3. Time passes. NPCs keep living their lives.
-4. Customers try to buy apples, and the inventory changes.
-5. The shopkeeper notices the shortage. NPCs react naturally.
-6. Player returns and can discover that their action affected the town.
-
-**If this feels convincing, the core concept works.**
-
----
-
-## Success criteria
-
-The prototype succeeds when the player can say: *"I did something yesterday, and the world changed because of it."*
-
-Eventually the player should have moments like:
-
-- "I didn't know that NPC saw me."
-- "I didn't realize that shop depended on that farmer."
-- "I stole those seeds months ago, and now food is expensive."
-- "That child I helped grew up."
-- "That wolf I tamed now has offspring."
-- "That shop exists because of something I did."
-
-The central experience is the player shifting from *"What quest does the game want me to do?"* to *"What can I do in this world?"*
-
----
-
-## Development roadmap
-
-| Phase | Focus |
-|---|---|
-| 1 | Living village prototype |
-| 2 | NPC memory and relationships |
-| 3 | Economy and persistent resources |
-| 4 | Skills, crafting, cooking |
-| 5 | Animal ecosystem and taming |
-| 6 | Town development |
-| 7 | Expanded world |
-| 8 | Reincarnation and generations |
-| 9 | Advanced AI dialogue |
-| 10 | iPad optimization |
-
-**Do not begin with a huge open world. Prove the simulation first.**
-
----
-
-## Decisions made
-
-| Area | Decision |
-|---|---|
-| Engine | Unity 6 with URP |
-| Platforms | iPad (primary), iPhone, Mac |
-| Development | AI coding agents (Muse agent "Geltrax" with sub-agents) following [AGENTS.md](AGENTS.md); the human tests on device |
-| Order of work | Design (world, characters, money...) → text-only simulation → Unity visuals last |
-| Art style | Kenney low-poly as the main look |
-| Simulation | Pure C#, deterministic, 1 tick = 1 game minute, integer money |
-
-## Open decisions
-
-- **Time scale:** how many real minutes equal one in-game day (default: 24 real minutes)
-- **Dialogue AI:** on-device or cloud (Phase 8)
-- **Off-screen simulation detail** (Phase 7)
-
----
-
-## Repository layout
+## Project structure
 
 ```
-/
-├── README.md        ← this game design document
-├── AGENTS.md        ← rules and workflow for AI agents (read first)
-├── CLAUDE.md        ← points to AGENTS.md
+Campfire_Cooking/
+├── Packages/com.geltrax.livingworld.simulation/  # Pure-C# simulation (WorldState, systems, RNG)
+├── SimulationTests/                               # NUnit suite: Agents, Core, Economy, Knowledge,
+│                                                  # Persistence, Scenarios, Tools (875 tests)
+├── Content/                                       # JSON data packs: world, npcs, economy, items,
+│                                                  # skills, recipes, animals, social, player
+├── Assets/                                        # (Unity assets — currently unused)
 ├── docs/
-│   ├── ARCHITECTURE.md  ← how the simulation and Unity fit together
-│   ├── ROADMAP.md       ← phases and task list with status
-│   ├── KICKOFF_PROMPT.md← prompts to start/continue the main agent
-│   ├── DESIGN_PROMPTS.md← prompts for designing world, characters, money...
-│   ├── design/          ← approved design documents
-│   └── tasks/           ← task briefs (created as work starts)
-├── Packages/com.geltrax.livingworld.simulation/  ← pure C# simulation (no Unity)
-├── Content/         ← game data (JSON) from the Design Phase
-├── SimulationTests/ ← automated tests, run with `dotnet test SimulationTests`
-└── Assets/          ← Unity project assets (see Assets/README.md)
-    ├── _Game/       ← our Unity code, scenes, prefabs (Unity Phase)
-    ├── Models/  Packs/  Audio/  UI/  Sky/   ← art and audio
-    └── _OffTheme/   ← modern/sci-fi assets kept aside
+│   ├── ROADMAP.md                                 # Phase checklist, all phases 1–8 DONE
+│   ├── ARCHITECTURE.md                            # Sim/Unity/Bridge split
+│   ├── DEVELOPMENT.md                             # Build & test commands
+│   ├── OPEN_QUESTIONS.md                          # ~20 decisions awaiting human review
+│   ├── design/                                    # D-01–D-12 design docs (WORLD, CHARACTERS, …)
+│   └── tasks/                                     # Per-task briefs + completed run evidence
+└── .github/workflows/                             # CI: dotnet tests on push/PR
 ```
+
+---
+*README written after code audit on 2026-10-08.*
